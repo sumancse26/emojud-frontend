@@ -1,16 +1,13 @@
-import React from 'react'
-import { MainLayout } from '@/layouts'
-import { AppProvider } from './providers/AppProvider'
-import { AppRouter } from './routes'
+import React from 'react';
+import { AppProvider } from './providers/AppProvider';
+import { AppRouter } from './routes';
 
 export const App: React.FC = () => {
-  return (
-    <AppProvider>
-      <MainLayout>
-        <AppRouter />
-      </MainLayout>
-    </AppProvider>
-  )
-}
+    return (
+        <AppProvider>
+            <AppRouter />
+        </AppProvider>
+    );
+};
 
-export default App
+export default App;
