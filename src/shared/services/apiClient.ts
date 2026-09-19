@@ -1,73 +1,68 @@
-import { ENV_CONFIG } from '@/config/env.config'
+import axiosLib from 'axios';
+import type { AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
+import { ENV_CONFIG } from '@/config/env.config';
+import { tokenStorage } from './tokenStorage';
+import { APP_CONSTANTS } from '@/shared/constants/app.constants';
 
-export interface RequestOptions extends RequestInit {
-  params?: Record<string, string | number | boolean | undefined>
-}
-
-class ApiClient {
-  private baseUrl: string
-
-  constructor(baseUrl: string) {
-    this.baseUrl = baseUrl
-  }
-
-  private buildUrl(endpoint: string, params?: Record<string, string | number | boolean | undefined>): string {
-    const url = new URL(
-      endpoint.startsWith('http') ? endpoint : `${window.location.origin}${this.baseUrl}${endpoint.startsWith('/') ? '' : '/'}${endpoint}`
-    )
-    if (params) {
-      Object.entries(params).forEach(([key, value]) => {
-        if (value !== undefined) {
-          url.searchParams.append(key, String(value))
-        }
-      })
-    }
-    return url.toString()
-  }
-
-  async request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
-    const { params, headers, ...rest } = options
-    const url = this.buildUrl(endpoint, params)
-
-    const response = await fetch(url, {
-      headers: {
+// ─── Axios Instance ────────────────────────────────────────────────────────────
+const axiosInstance: AxiosInstance = axiosLib.create({
+    baseURL: ENV_CONFIG.API_BASE_URL,
+    headers: {
         'Content-Type': 'application/json',
-        ...headers,
-      },
-      ...rest,
-    })
+        Accept: 'application/json'
+    },
+    timeout: APP_CONSTANTS.API.TIMEOUT_MS
+});
 
-    if (!response.ok) {
-      const errorText = await response.text().catch(() => 'Unknown error')
-      throw new Error(`API Request failed with status ${response.status}: ${errorText}`)
+// ─── Request Interceptor ───────────────────────────────────────────────────────
+// Automatically attach Bearer token from cookie on every request
+axiosInstance.interceptors.request.use(
+    (config: InternalAxiosRequestConfig) => {
+        const token = tokenStorage.getToken();
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+    },
+    (error) => Promise.reject(error)
+);
+
+// ─── Response Interceptor ──────────────────────────────────────────────────────
+// Handle 401 Unauthorized: clear session and redirect to login
+axiosInstance.interceptors.response.use(
+    (response: AxiosResponse) => response,
+    (error) => {
+        const isLoginRequest = error.config?.url?.endsWith('login');
+        if (error.response?.status === 401 && !isLoginRequest) {
+            tokenStorage.clearAll();
+            window.location.href = '/login';
+        }
+        return Promise.reject(error);
     }
+);
 
-    return response.json() as Promise<T>
-  }
+// ─── API Client Wrapper ────────────────────────────────────────────────────────
+export const axios = {
+    get<T>(url: string, params?: Record<string, unknown>): Promise<T> {
+        return axiosInstance.get<T>(url, { params }).then((res) => res.data);
+    },
 
-  get<T>(endpoint: string, options?: RequestOptions): Promise<T> {
-    return this.request<T>(endpoint, { ...options, method: 'GET' })
-  }
+    post<T>(url: string, data?: unknown): Promise<T> {
+        return axiosInstance.post<T>(url, data).then((res) => res.data);
+    },
 
-  post<T>(endpoint: string, body?: unknown, options?: RequestOptions): Promise<T> {
-    return this.request<T>(endpoint, {
-      ...options,
-      method: 'POST',
-      body: body ? JSON.stringify(body) : undefined,
-    })
-  }
+    put<T>(url: string, data?: unknown): Promise<T> {
+        return axiosInstance.put<T>(url, data).then((res) => res.data);
+    },
 
-  put<T>(endpoint: string, body?: unknown, options?: RequestOptions): Promise<T> {
-    return this.request<T>(endpoint, {
-      ...options,
-      method: 'PUT',
-      body: body ? JSON.stringify(body) : undefined,
-    })
-  }
+    patch<T>(url: string, data?: unknown): Promise<T> {
+        return axiosInstance.patch<T>(url, data).then((res) => res.data);
+    },
 
-  delete<T>(endpoint: string, options?: RequestOptions): Promise<T> {
-    return this.request<T>(endpoint, { ...options, method: 'DELETE' })
-  }
-}
+    delete<T>(url: string): Promise<T> {
+        return axiosInstance.delete<T>(url).then((res) => res.data);
+    }
+};
 
-export const apiClient = new ApiClient(ENV_CONFIG.API_BASE_URL)
+// Export the raw instance for advanced use cases (e.g., file uploads)
+export { axiosInstance };

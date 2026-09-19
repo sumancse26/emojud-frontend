@@ -11,8 +11,11 @@ import {
   ShieldCheck,
   ArrowRight,
   ExternalLink,
+  AlertCircle,
+  Loader2,
 } from 'lucide-react'
 import { useApp } from '@/app/providers/AppProvider'
+import { authService } from '../services/authService'
 
 export const LoginPage: React.FC = () => {
   const { setActiveView } = useApp()
@@ -20,16 +23,31 @@ export const LoginPage: React.FC = () => {
   const [password, setPassword] = useState('12345678')
   const [showPassword, setShowPassword] = useState(false)
   const [rememberMe, setRememberMe] = useState(true)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const handleFillDemo = () => {
     setUsername('suman')
     setPassword('12345678')
+    setError(null)
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setActiveView('view-dashboard')
+    setError(null)
+    setIsLoading(true)
+    try {
+      await authService.login({ username, password, rememberMe })
+      setActiveView('view-dashboard')
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : 'Login failed. Please check your credentials.'
+      setError(message)
+    } finally {
+      setIsLoading(false)
+    }
   }
+
 
   return (
     <section className="min-h-[calc(100vh-45px)] w-full flex flex-col items-center justify-center bg-white dark:bg-[#060d17] relative overflow-hidden p-4 sm:p-6 lg:p-12 transition-colors">
@@ -180,6 +198,14 @@ export const LoginPage: React.FC = () => {
               </button>
             </div>
 
+            {/* Error Banner */}
+            {error && (
+              <div className="mb-4 flex items-start gap-2.5 p-3 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 text-red-700 dark:text-red-400 text-xs">
+                <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                <span>{error}</span>
+              </div>
+            )}
+
             {/* Login Form */}
             <form className="space-y-4" onSubmit={handleSubmit}>
               <div>
@@ -245,10 +271,20 @@ export const LoginPage: React.FC = () => {
 
               <button
                 type="submit"
-                className="w-full py-3 px-4 rounded-xl btn-shimmer text-white font-bold text-sm shadow-lg shadow-indigo-500/25 transition-all transform active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer"
+                disabled={isLoading}
+                className="w-full py-3 px-4 rounded-xl btn-shimmer text-white font-bold text-sm shadow-lg shadow-indigo-500/25 transition-all transform active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                <span>Sign In to Emojud</span>
-                <ArrowRight className="w-4 h-4" />
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Signing in…</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Sign In to Emojud</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
               </button>
             </form>
 

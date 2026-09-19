@@ -1,4 +1,6 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import type { NavMenuItem } from '@/app/routes/types';
+import { NAV_MENU_DATA } from '@/config/nav-menu.data';
 
 export type AppModuleView =
     | 'view-login'
@@ -26,6 +28,12 @@ export interface AppContextType {
     toggleMobileSidebar: () => void;
     selectedBranch: string;
     setSelectedBranch: (branch: string) => void;
+    // Dynamic API Navigation State & Methods
+    menuData: NavMenuItem[];
+    setMenuData: React.Dispatch<React.SetStateAction<NavMenuItem[]>>;
+    updateMenuDataFromApi: (data: NavMenuItem[]) => void;
+    isLoadingMenu: boolean;
+    fetchNavMenuData: () => Promise<NavMenuItem[]>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -38,6 +46,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
     const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState<boolean>(false);
     const [selectedBranch, setSelectedBranch] = useState<string>('1');
+
+    // Dynamic Navigation Menu Data loaded from API
+    const [menuData, setMenuData] = useState<NavMenuItem[]>(NAV_MENU_DATA);
+    const [isLoadingMenu, setIsLoadingMenu] = useState<boolean>(false);
 
     useEffect(() => {
         const root = document.documentElement;
@@ -57,6 +69,27 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const toggleSidebarCollapse = () => setIsSidebarCollapsed((prev) => !prev);
     const toggleMobileSidebar = () => setIsMobileSidebarOpen((prev) => !prev);
 
+    const updateMenuDataFromApi = useCallback((data: NavMenuItem[]) => {
+        if (Array.isArray(data)) {
+            setMenuData(data);
+        }
+    }, []);
+
+    // Method to call an API endpoint dynamically
+    const fetchNavMenuData = useCallback(async (): Promise<NavMenuItem[]> => {
+        setIsLoadingMenu(true);
+        try {
+            const responseData = NAV_MENU_DATA;
+            setMenuData(responseData);
+            return responseData;
+        } catch (error) {
+            console.error('Failed to fetch dynamic nav menu data from API:', error);
+            return NAV_MENU_DATA;
+        } finally {
+            setIsLoadingMenu(false);
+        }
+    }, []);
+
     return (
         <AppContext.Provider
             value={{
@@ -75,7 +108,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 isMobileSidebarOpen,
                 toggleMobileSidebar,
                 selectedBranch,
-                setSelectedBranch
+                setSelectedBranch,
+                menuData,
+                setMenuData,
+                updateMenuDataFromApi,
+                isLoadingMenu,
+                fetchNavMenuData
             }}>
             {children}
         </AppContext.Provider>

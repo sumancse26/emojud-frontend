@@ -54,7 +54,7 @@ const NavIconRenderer: React.FC<{ item: NavMenuItem; isActive?: boolean }> = ({ 
     return <span className="shrink-0">{getFallbackIcon(item.module_name)}</span>;
 };
 
-export const Sidebar: React.FC<{ menuData?: NavMenuItem[] }> = ({ menuData = NAV_MENU_DATA }) => {
+export const Sidebar: React.FC<{ menuData?: NavMenuItem[] }> = ({ menuData: propsMenuData }) => {
     const location = useLocation();
     const navigate = useNavigate();
     const {
@@ -62,9 +62,11 @@ export const Sidebar: React.FC<{ menuData?: NavMenuItem[] }> = ({ menuData = NAV
         toggleSidebarCollapse,
         isMobileSidebarOpen,
         selectedBranch,
-        setSelectedBranch
+        setSelectedBranch,
+        menuData: contextMenuData
     } = useApp();
 
+    const activeMenuData = propsMenuData || contextMenuData || NAV_MENU_DATA;
     const [openAccordions, setOpenAccordions] = useState<Record<string, boolean>>({});
 
     // Auto-expand accordion if child route is active on page load or navigation
@@ -72,7 +74,7 @@ export const Sidebar: React.FC<{ menuData?: NavMenuItem[] }> = ({ menuData = NAV
         const currentPath = location.pathname;
         const newAccordionState: Record<string, boolean> = {};
 
-        menuData.forEach((parent) => {
+        activeMenuData.forEach((parent) => {
             if (parent.children && parent.children.length > 0) {
                 const hasActiveChild = parent.children.some(
                     (child) => child.route_url && currentPath.startsWith(child.route_url)
@@ -86,7 +88,7 @@ export const Sidebar: React.FC<{ menuData?: NavMenuItem[] }> = ({ menuData = NAV
         if (Object.keys(newAccordionState).length > 0) {
             setOpenAccordions((prev) => ({ ...prev, ...newAccordionState }));
         }
-    }, [location.pathname, menuData]);
+    }, [location.pathname, activeMenuData]);
 
     const toggleAccordion = (parentId: string) => {
         setOpenAccordions((prev) => ({
@@ -97,8 +99,8 @@ export const Sidebar: React.FC<{ menuData?: NavMenuItem[] }> = ({ menuData = NAV
 
     // Grouping items into sections for enterprise ERP UX
     const groupedMenu = useMemo(() => {
-        return menuData;
-    }, [menuData]);
+        return activeMenuData;
+    }, [activeMenuData]);
 
     return (
         <aside
