@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { UserPlus, Search, Edit3, Trash2, Save } from 'lucide-react';
+import { UserPlus, Search, Edit3, Trash2, Save, ShoppingCart } from 'lucide-react';
 import { SliderDrawer, FormField, inputClasses } from '@/shared';
 
 interface Customer {
@@ -204,15 +204,21 @@ export const CustomersPage: React.FC = () => {
                     <p className="text-2xl font-black text-slate-900 dark:text-white mt-1">{customers.length}</p>
                 </div>
                 <div className="bg-white dark:bg-[#080d1a] p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800/60 shadow-xs">
-                    <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Total Receivable Due</p>
-                    <p className="text-2xl font-black text-rose-500 mt-1 font-mono">৳ {totalDues.toLocaleString('en-BD')}</p>
+                    <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                        Total Receivable Due
+                    </p>
+                    <p className="text-2xl font-black text-rose-500 mt-1 font-mono">
+                        ৳ {totalDues.toLocaleString('en-BD')}
+                    </p>
                 </div>
                 <div className="bg-white dark:bg-[#080d1a] p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800/60 shadow-xs">
                     <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Total Invoices</p>
                     <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1">48</p>
                 </div>
                 <div className="bg-white dark:bg-[#080d1a] p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800/60 shadow-xs">
-                    <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Avg Credit Limit</p>
+                    <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                        Avg Credit Limit
+                    </p>
                     <p className="text-2xl font-black text-blue-600 dark:text-blue-400 mt-1 font-mono">৳ 35,000</p>
                 </div>
             </div>
@@ -246,7 +252,9 @@ export const CustomersPage: React.FC = () => {
                         </thead>
                         <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
                             {filtered.map((cust) => (
-                                <tr key={cust.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-900/40 transition">
+                                <tr
+                                    key={cust.id}
+                                    className="hover:bg-slate-50/60 dark:hover:bg-slate-900/40 transition">
                                     <td className="px-5 py-3.5">
                                         <div className="flex items-center gap-2.5">
                                             <div
@@ -259,7 +267,9 @@ export const CustomersPage: React.FC = () => {
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="px-5 py-3.5 text-slate-600 dark:text-slate-300 font-mono">{cust.phone}</td>
+                                    <td className="px-5 py-3.5 text-slate-600 dark:text-slate-300 font-mono">
+                                        {cust.phone}
+                                    </td>
                                     <td className="px-5 py-3.5 text-slate-500">{cust.address}</td>
                                     <td className="px-5 py-3.5 font-mono text-right font-medium text-slate-700 dark:text-slate-300">
                                         ৳ {cust.creditLimit.toLocaleString('en-BD')}
@@ -297,99 +307,129 @@ export const CustomersPage: React.FC = () => {
             </div>
 
             {/* Slider Drawer */}
-            <SliderDrawer
-                isOpen={isDrawerOpen}
-                onClose={() => setIsDrawerOpen(false)}
-                title={editingCustomer ? 'Edit Customer Profile' : 'Register New Customer'}
-                subtitle="Create customer ledger and credit account parameters"
-                width="max-w-lg">
-                <form onSubmit={handleSave} className="space-y-4">
-                    <div className="grid grid-cols-2 gap-3">
-                        <FormField label="Customer Code" required>
+            <SliderDrawer isOpen={isDrawerOpen} onClose={() => setIsDrawerOpen(false)} width="max-w-lg">
+                <SliderDrawer.Header>
+                    {' '}
+                    <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-xl bg-emerald-500 text-slate-950 flex items-center justify-center font-bold">
+                            <ShoppingCart className="w-4 h-4" />
+                        </div>
+                        <div>
+                            <h2 className="font-bold text-sm text-slate-900 dark:text-white">Add New Customer</h2>
+                            <p className="text-[10px] text-slate-400">Enter the details to create a new employee</p>
+                        </div>
+                    </div>
+                </SliderDrawer.Header>
+                <SliderDrawer.Body>
+                    <form onSubmit={handleSave} className="space-y-4">
+                        <div className="grid grid-cols-2 gap-3">
+                            <FormField label="Customer Code" required>
+                                <input
+                                    type="text"
+                                    value={formState.code}
+                                    onChange={(e) => setFormState({ ...formState, code: e.target.value })}
+                                    className={inputClasses}
+                                    required
+                                />
+                            </FormField>
+                            <FormField label="Account Status">
+                                <select
+                                    value={formState.status}
+                                    onChange={(e) =>
+                                        setFormState({ ...formState, status: e.target.value as 'Active' | 'Blocked' })
+                                    }
+                                    className={inputClasses}>
+                                    <option value="Active">Active</option>
+                                    <option value="Blocked">Blocked</option>
+                                </select>
+                            </FormField>
+                        </div>
+
+                        <FormField label="Customer Full Name" required>
                             <input
                                 type="text"
-                                value={formState.code}
-                                onChange={(e) => setFormState({ ...formState, code: e.target.value })}
+                                placeholder="e.g. Rahim Chowdhury"
+                                value={formState.name}
+                                onChange={(e) => setFormState({ ...formState, name: e.target.value })}
                                 className={inputClasses}
                                 required
                             />
                         </FormField>
-                        <FormField label="Account Status">
-                            <select
-                                value={formState.status}
-                                onChange={(e) => setFormState({ ...formState, status: e.target.value as 'Active' | 'Blocked' })}
-                                className={inputClasses}>
-                                <option value="Active">Active</option>
-                                <option value="Blocked">Blocked</option>
-                            </select>
-                        </FormField>
-                    </div>
 
-                    <FormField label="Customer Full Name" required>
-                        <input
-                            type="text"
-                            placeholder="e.g. Rahim Chowdhury"
-                            value={formState.name}
-                            onChange={(e) => setFormState({ ...formState, name: e.target.value })}
-                            className={inputClasses}
-                            required
-                        />
-                    </FormField>
+                        <div className="grid grid-cols-2 gap-3">
+                            <FormField label="Mobile Phone Number" required>
+                                <input
+                                    type="text"
+                                    placeholder="+880 1712-xxxxxx"
+                                    value={formState.phone}
+                                    onChange={(e) => setFormState({ ...formState, phone: e.target.value })}
+                                    className={inputClasses}
+                                    required
+                                />
+                            </FormField>
+                            <FormField label="Email Address">
+                                <input
+                                    type="email"
+                                    placeholder="customer@mail.com"
+                                    value={formState.email}
+                                    onChange={(e) => setFormState({ ...formState, email: e.target.value })}
+                                    className={inputClasses}
+                                />
+                            </FormField>
+                        </div>
 
-                    <div className="grid grid-cols-2 gap-3">
-                        <FormField label="Mobile Phone Number" required>
-                            <input
-                                type="text"
-                                placeholder="+880 1712-xxxxxx"
-                                value={formState.phone}
-                                onChange={(e) => setFormState({ ...formState, phone: e.target.value })}
-                                className={inputClasses}
-                                required
-                            />
-                        </FormField>
-                        <FormField label="Email Address">
-                            <input
-                                type="email"
-                                placeholder="customer@mail.com"
-                                value={formState.email}
-                                onChange={(e) => setFormState({ ...formState, email: e.target.value })}
-                                className={inputClasses}
-                            />
-                        </FormField>
-                    </div>
+                        <div className="grid grid-cols-2 gap-3">
+                            <FormField label="Credit Limit Ceiling (৳)">
+                                <input
+                                    type="number"
+                                    min="0"
+                                    step="1000"
+                                    value={formState.creditLimit}
+                                    onChange={(e) =>
+                                        setFormState({ ...formState, creditLimit: Number(e.target.value) })
+                                    }
+                                    className={inputClasses}
+                                />
+                            </FormField>
+                            <FormField label="Opening Due Receivable (৳)">
+                                <input
+                                    type="number"
+                                    min="0"
+                                    value={formState.dueAmount}
+                                    onChange={(e) => setFormState({ ...formState, dueAmount: Number(e.target.value) })}
+                                    className={inputClasses}
+                                />
+                            </FormField>
+                        </div>
 
-                    <div className="grid grid-cols-2 gap-3">
-                        <FormField label="Credit Limit Ceiling (৳)">
-                            <input
-                                type="number"
-                                min="0"
-                                step="1000"
-                                value={formState.creditLimit}
-                                onChange={(e) => setFormState({ ...formState, creditLimit: Number(e.target.value) })}
-                                className={inputClasses}
-                            />
-                        </FormField>
-                        <FormField label="Opening Due Receivable (৳)">
-                            <input
-                                type="number"
-                                min="0"
-                                value={formState.dueAmount}
-                                onChange={(e) => setFormState({ ...formState, dueAmount: Number(e.target.value) })}
+                        <FormField label="Customer Delivery / Billing Address">
+                            <textarea
+                                rows={2}
+                                placeholder="Road, House, Area, City..."
+                                value={formState.address}
+                                onChange={(e) => setFormState({ ...formState, address: e.target.value })}
                                 className={inputClasses}
                             />
                         </FormField>
-                    </div>
 
-                    <FormField label="Customer Delivery / Billing Address">
-                        <textarea
-                            rows={2}
-                            placeholder="Road, House, Area, City..."
-                            value={formState.address}
-                            onChange={(e) => setFormState({ ...formState, address: e.target.value })}
-                            className={inputClasses}
-                        />
-                    </FormField>
+                        <div className="pt-4 flex items-center justify-end gap-2.5 border-t border-slate-100 dark:border-slate-800">
+                            <button
+                                type="button"
+                                onClick={() => setIsDrawerOpen(false)}
+                                className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition cursor-pointer">
+                                Cancel
+                            </button>
+                            <button
+                                type="submit"
+                                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md shadow-emerald-600/20 transition cursor-pointer">
+                                <Save className="w-4 h-4" />
+                                <span>{editingCustomer ? 'Update Customer' : 'Save Customer Profile'}</span>
+                            </button>
+                        </div>
+                    </form>
+                </SliderDrawer.Body>
 
+                <SliderDrawer.Footer>
                     <div className="pt-4 flex items-center justify-end gap-2.5 border-t border-slate-100 dark:border-slate-800">
                         <button
                             type="button"
@@ -399,12 +439,13 @@ export const CustomersPage: React.FC = () => {
                         </button>
                         <button
                             type="submit"
-                            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md shadow-emerald-600/20 transition cursor-pointer">
+                            form="shop-form"
+                            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-bold shadow-md shadow-emerald-600/20 transition cursor-pointer">
                             <Save className="w-4 h-4" />
-                            <span>{editingCustomer ? 'Update Customer' : 'Save Customer Profile'}</span>
+                            <span> Create Employee</span>
                         </button>
                     </div>
-                </form>
+                </SliderDrawer.Footer>
             </SliderDrawer>
         </section>
     );

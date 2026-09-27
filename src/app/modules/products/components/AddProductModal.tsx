@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
-import { X } from 'lucide-react'
+import { Package, Save } from 'lucide-react'
 import { useApp } from '@/app/providers/AppProvider'
+import { SliderDrawer, FormField, inputClasses, selectClasses } from '@/shared'
 
 export const AddProductModal: React.FC = () => {
   const { isAddProductModalOpen, setIsAddProductModalOpen } = useApp()
@@ -11,7 +12,9 @@ export const AddProductModal: React.FC = () => {
   const [sellingPrice, setSellingPrice] = useState('')
   const [stock, setStock] = useState('')
 
-  if (!isAddProductModalOpen) return null
+  const handleClose = () => {
+    setIsAddProductModalOpen(false)
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -25,106 +28,117 @@ export const AddProductModal: React.FC = () => {
   }
 
   return (
-    <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-lg bg-white dark:bg-[#0d1729] border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-2xl space-y-4">
-        <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-          <h3 className="font-bold text-base text-slate-900 dark:text-white">Register New Product Item</h3>
-          <button
-            onClick={() => setIsAddProductModalOpen(false)}
-            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        <form className="space-y-3 text-xs" onSubmit={handleSubmit}>
+    <SliderDrawer
+      isOpen={isAddProductModalOpen}
+      onClose={handleClose}
+      width="max-w-xl"
+    >
+      <SliderDrawer.Header onClose={handleClose}>
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-xl bg-emerald-500 text-slate-950 flex items-center justify-center font-bold">
+            <Package className="w-4 h-4" />
+          </div>
           <div>
-            <label className="block font-bold text-slate-600 dark:text-slate-300 mb-1">Product Name & Title</label>
+            <h2 className="font-bold text-sm text-slate-900 dark:text-white">Register New Product Item</h2>
+            <p className="text-[10px] text-slate-400">Add an inventory SKU and configure pricing</p>
+          </div>
+        </div>
+      </SliderDrawer.Header>
+
+      <SliderDrawer.Body>
+        <form id="add-product-form" className="space-y-4 text-xs" onSubmit={handleSubmit}>
+          <FormField label="Product Name & Title" required>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Premium Cotton Oxford Shirt"
-              className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 focus:ring-1 focus:ring-emerald-500 font-medium"
+              className={inputClasses}
               required
             />
-          </div>
+          </FormField>
 
           <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block font-bold text-slate-600 dark:text-slate-300 mb-1">Inventory Category</label>
+            <FormField label="Inventory Category" required>
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 focus:ring-1 focus:ring-emerald-500 font-medium cursor-pointer"
+                className={selectClasses}
               >
                 <option>Men's Apparel</option>
                 <option>Casual Bottoms</option>
                 <option>Accessories</option>
               </select>
-            </div>
-            <div>
-              <label className="block font-bold text-slate-600 dark:text-slate-300 mb-1">Barcode / SKU Code</label>
+            </FormField>
+
+            <FormField label="Barcode / SKU Code">
               <input
                 type="text"
                 value={sku}
                 onChange={(e) => setSku(e.target.value)}
                 placeholder="e.g. SHT-OXF-001"
-                className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 focus:ring-1 focus:ring-emerald-500 font-mono"
+                className={`${inputClasses} font-mono`}
               />
-            </div>
+            </FormField>
           </div>
 
           <div className="grid grid-cols-3 gap-3">
-            <div>
-              <label className="block font-bold text-slate-600 dark:text-slate-300 mb-1">Unit Cost Price (৳)</label>
+            <FormField label="Unit Cost Price (৳)" required>
               <input
                 type="number"
                 value={costPrice}
                 onChange={(e) => setCostPrice(e.target.value)}
                 placeholder="500"
-                className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 focus:ring-1 focus:ring-emerald-500 font-mono"
+                className={`${inputClasses} font-mono`}
+                required
               />
-            </div>
-            <div>
-              <label className="block font-bold text-slate-600 dark:text-slate-300 mb-1">Retail Selling Price (৳)</label>
+            </FormField>
+
+            <FormField label="Retail Selling Price (৳)" required>
               <input
                 type="number"
                 value={sellingPrice}
                 onChange={(e) => setSellingPrice(e.target.value)}
                 placeholder="850"
-                className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 focus:ring-1 focus:ring-emerald-500 font-mono"
+                className={`${inputClasses} font-mono`}
+                required
               />
-            </div>
-            <div>
-              <label className="block font-bold text-slate-600 dark:text-slate-300 mb-1">Initial Stock Qty</label>
+            </FormField>
+
+            <FormField label="Initial Stock Qty" required>
               <input
                 type="number"
                 value={stock}
                 onChange={(e) => setStock(e.target.value)}
                 placeholder="50"
-                className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 focus:ring-1 focus:ring-emerald-500 font-mono"
+                className={`${inputClasses} font-mono`}
+                required
               />
-            </div>
-          </div>
-
-          <div className="flex justify-end gap-2 pt-3">
-            <button
-              type="button"
-              onClick={() => setIsAddProductModalOpen(false)}
-              className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 font-semibold text-slate-600 dark:text-slate-300 cursor-pointer"
-            >
-              Cancel & Close
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold shadow-sm cursor-pointer"
-            >
-              Save & Publish Product
-            </button>
+            </FormField>
           </div>
         </form>
-      </div>
-    </div>
+      </SliderDrawer.Body>
+
+      <SliderDrawer.Footer>
+        <div className="flex items-center justify-end gap-2.5">
+          <button
+            type="button"
+            onClick={handleClose}
+            className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition cursor-pointer"
+          >
+            Cancel & Close
+          </button>
+          <button
+            type="submit"
+            form="add-product-form"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md shadow-emerald-600/20 transition cursor-pointer"
+          >
+            <Save className="w-4 h-4" />
+            <span>Save & Publish Product</span>
+          </button>
+        </div>
+      </SliderDrawer.Footer>
+    </SliderDrawer>
   )
 }
+

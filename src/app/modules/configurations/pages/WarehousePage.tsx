@@ -77,7 +77,7 @@ const emptyForm: WarehouseFormData = {
     capacityTotal: '',
     manager: '',
     zonesCount: '',
-    status: 'Optimal',
+    status: 'Optimal'
 };
 
 export const WarehousePage: React.FC = () => {
@@ -110,7 +110,7 @@ export const WarehousePage: React.FC = () => {
             capacityTotal: String(wh.capacityTotal),
             manager: wh.manager,
             zonesCount: String(wh.zonesCount),
-            status: wh.status,
+            status: wh.status
         });
         setDrawerOpen(true);
     };
@@ -130,7 +130,7 @@ export const WarehousePage: React.FC = () => {
                               capacityTotal: parseInt(formData.capacityTotal) || 0,
                               manager: formData.manager,
                               zonesCount: parseInt(formData.zonesCount) || 0,
-                              status: formData.status,
+                              status: formData.status
                           }
                         : w
                 )
@@ -149,8 +149,8 @@ export const WarehousePage: React.FC = () => {
                     manager: formData.manager,
                     zonesCount: parseInt(formData.zonesCount) || 0,
                     totalSKUs: 0,
-                    status: formData.status,
-                },
+                    status: formData.status
+                }
             ]);
         }
         setDrawerOpen(false);
@@ -175,8 +175,7 @@ export const WarehousePage: React.FC = () => {
                     </button>
                     <button
                         onClick={openCreate}
-                        className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-md shadow-emerald-600/20 transition cursor-pointer"
-                    >
+                        className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-md shadow-emerald-600/20 transition cursor-pointer">
                         <Plus className="w-4 h-4" />
                         <span>Add Warehouse</span>
                     </button>
@@ -219,8 +218,7 @@ export const WarehousePage: React.FC = () => {
                                 <div className="flex items-center gap-1.5">
                                     <button
                                         onClick={() => openEdit(wh)}
-                                        className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition"
-                                    >
+                                        className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition">
                                         <Edit3 className="w-3.5 h-3.5" />
                                     </button>
                                     <span
@@ -253,7 +251,8 @@ export const WarehousePage: React.FC = () => {
                                 <div className="flex justify-between text-xs">
                                     <span className="text-slate-400 font-semibold">Capacity Usage</span>
                                     <span className="font-mono font-bold text-slate-900 dark:text-white">
-                                        {wh.capacityUsed.toLocaleString()} / {wh.capacityTotal.toLocaleString()} units ({usagePercent}%)
+                                        {wh.capacityUsed.toLocaleString()} / {wh.capacityTotal.toLocaleString()} units (
+                                        {usagePercent}%)
                                     </span>
                                 </div>
                                 <div className="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
@@ -262,8 +261,8 @@ export const WarehousePage: React.FC = () => {
                                             usagePercent > 80
                                                 ? 'bg-amber-500'
                                                 : usagePercent > 90
-                                                ? 'bg-rose-500'
-                                                : 'bg-emerald-500'
+                                                  ? 'bg-rose-500'
+                                                  : 'bg-emerald-500'
                                         }`}
                                         style={{ width: `${usagePercent}%` }}
                                     />
@@ -272,12 +271,12 @@ export const WarehousePage: React.FC = () => {
 
                             <div className="pt-3 border-t border-slate-100 dark:border-slate-800/60 flex items-center justify-between text-xs">
                                 <span className="text-slate-400">
-                                    Manager: <strong className="text-slate-700 dark:text-slate-200">{wh.manager}</strong>
+                                    Manager:{' '}
+                                    <strong className="text-slate-700 dark:text-slate-200">{wh.manager}</strong>
                                 </span>
                                 <button
                                     onClick={() => openEdit(wh)}
-                                    className="text-blue-600 dark:text-blue-400 font-bold hover:underline cursor-pointer"
-                                >
+                                    className="text-blue-600 dark:text-blue-400 font-bold hover:underline cursor-pointer">
                                     Zone Map →
                                 </button>
                             </div>
@@ -287,133 +286,152 @@ export const WarehousePage: React.FC = () => {
             </div>
 
             {/* Slider Drawer for Create / Edit */}
-            <SliderDrawer
-                isOpen={drawerOpen}
-                onClose={() => setDrawerOpen(false)}
-                title={editingId ? 'Edit Warehouse' : 'Add New Warehouse'}
-                subtitle={editingId ? `Editing: ${formData.name || 'Untitled'}` : 'Configure a new storage & distribution hub'}
-                icon={<WarehouseIcon className="w-4 h-4" />}
-                footer={
+            <SliderDrawer isOpen={drawerOpen} onClose={() => setDrawerOpen(false)}>
+                <SliderDrawer.Header>
+                    <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-xl bg-emerald-500 text-slate-950 flex items-center justify-center font-bold">
+                            <WarehouseIcon className="w-4 h-4" />
+                        </div>
+                        <div>
+                            <h2 className="font-bold text-sm text-slate-900 dark:text-white">
+                                {editingId ? 'Edit Warehouse' : 'Add New Warehouse'}
+                            </h2>
+                            <p className="text-[10px] text-slate-400">
+                                {editingId
+                                    ? `Editing: ${formData.name || 'Untitled'}`
+                                    : 'Enter the details to create a new Warehouse'}
+                            </p>
+                        </div>
+                    </div>
+                </SliderDrawer.Header>
+                <SliderDrawer.Body>
+                    <form className="space-y-5" onSubmit={handleSubmit}>
+                        <div>
+                            <h3 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-4 flex items-center gap-2">
+                                <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                                Warehouse Details
+                            </h3>
+                            <div className="space-y-4">
+                                <div className="grid grid-cols-2 gap-3">
+                                    <FormField label="Warehouse Code" required>
+                                        <input
+                                            type="text"
+                                            className={inputClasses}
+                                            placeholder="e.g. WH-SAVAR-01"
+                                            value={formData.code}
+                                            onChange={(e) =>
+                                                setFormData((p) => ({ ...p, code: e.target.value.toUpperCase() }))
+                                            }
+                                        />
+                                    </FormField>
+                                    <FormField label="Type" required>
+                                        <select
+                                            className={selectClasses}
+                                            value={formData.type}
+                                            onChange={(e) =>
+                                                setFormData((p) => ({
+                                                    ...p,
+                                                    type: e.target.value as WarehouseItem['type']
+                                                }))
+                                            }>
+                                            <option>Central Distribution</option>
+                                            <option>Regional Hub</option>
+                                            <option>Transit Hub</option>
+                                        </select>
+                                    </FormField>
+                                </div>
+
+                                <FormField label="Warehouse Name" required>
+                                    <input
+                                        type="text"
+                                        className={inputClasses}
+                                        placeholder="e.g. Central Mega Warehouse (Savar)"
+                                        value={formData.name}
+                                        onChange={(e) => setFormData((p) => ({ ...p, name: e.target.value }))}
+                                    />
+                                </FormField>
+
+                                <FormField label="Location / Address">
+                                    <input
+                                        type="text"
+                                        className={inputClasses}
+                                        placeholder="e.g. Hemayetpur Industrial Zone, Savar"
+                                        value={formData.location}
+                                        onChange={(e) => setFormData((p) => ({ ...p, location: e.target.value }))}
+                                    />
+                                </FormField>
+
+                                <div className="grid grid-cols-2 gap-3">
+                                    <FormField label="Status">
+                                        <select
+                                            className={selectClasses}
+                                            value={formData.status}
+                                            onChange={(e) =>
+                                                setFormData((p) => ({
+                                                    ...p,
+                                                    status: e.target.value as WarehouseItem['status']
+                                                }))
+                                            }>
+                                            <option>Optimal</option>
+                                            <option>Near Capacity</option>
+                                            <option>Maintenance</option>
+                                        </select>
+                                    </FormField>
+                                    <FormField label="Manager Name">
+                                        <input
+                                            type="text"
+                                            className={inputClasses}
+                                            placeholder="e.g. Engr. Kamrul Islam"
+                                            value={formData.manager}
+                                            onChange={(e) => setFormData((p) => ({ ...p, manager: e.target.value }))}
+                                        />
+                                    </FormField>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-4 flex items-center gap-2">
+                                <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                                Capacity & Zones
+                            </h3>
+                            <div className="grid grid-cols-2 gap-3">
+                                <FormField label="Total Capacity (units)">
+                                    <input
+                                        type="number"
+                                        className={inputClasses}
+                                        placeholder="e.g. 100000"
+                                        value={formData.capacityTotal}
+                                        onChange={(e) => setFormData((p) => ({ ...p, capacityTotal: e.target.value }))}
+                                    />
+                                </FormField>
+                                <FormField label="Storage Zones">
+                                    <input
+                                        type="number"
+                                        className={inputClasses}
+                                        placeholder="e.g. 16"
+                                        value={formData.zonesCount}
+                                        onChange={(e) => setFormData((p) => ({ ...p, zonesCount: e.target.value }))}
+                                    />
+                                </FormField>
+                            </div>
+                        </div>
+                    </form>
+                </SliderDrawer.Body>
+                <SliderDrawer.Footer>
+                    {' '}
                     <div className="flex items-center gap-3">
                         <button
                             onClick={() => setDrawerOpen(false)}
-                            className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 font-semibold text-xs text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
-                        >
+                            className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 font-semibold text-xs text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer">
                             Cancel
                         </button>
-                        <button
-                            onClick={handleSubmit}
-                            disabled={!formData.name || !formData.code}
-                            className="flex-[2] py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-xs shadow-md shadow-emerald-600/20 flex items-center justify-center gap-1.5 transition cursor-pointer"
-                        >
+                        <button className="flex-[2] py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-xs shadow-md shadow-emerald-600/20 flex items-center justify-center gap-1.5 transition cursor-pointer">
                             <Save className="w-3.5 h-3.5" />
                             <span>{editingId ? 'Update Warehouse' : 'Create Warehouse'}</span>
                         </button>
                     </div>
-                }
-            >
-                <div className="space-y-5">
-                    <div>
-                        <h3 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-4 flex items-center gap-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                            Warehouse Details
-                        </h3>
-                        <div className="space-y-4">
-                            <div className="grid grid-cols-2 gap-3">
-                                <FormField label="Warehouse Code" required>
-                                    <input
-                                        type="text"
-                                        className={inputClasses}
-                                        placeholder="e.g. WH-SAVAR-01"
-                                        value={formData.code}
-                                        onChange={(e) => setFormData((p) => ({ ...p, code: e.target.value.toUpperCase() }))}
-                                    />
-                                </FormField>
-                                <FormField label="Type" required>
-                                    <select
-                                        className={selectClasses}
-                                        value={formData.type}
-                                        onChange={(e) => setFormData((p) => ({ ...p, type: e.target.value as WarehouseItem['type'] }))}
-                                    >
-                                        <option>Central Distribution</option>
-                                        <option>Regional Hub</option>
-                                        <option>Transit Hub</option>
-                                    </select>
-                                </FormField>
-                            </div>
-
-                            <FormField label="Warehouse Name" required>
-                                <input
-                                    type="text"
-                                    className={inputClasses}
-                                    placeholder="e.g. Central Mega Warehouse (Savar)"
-                                    value={formData.name}
-                                    onChange={(e) => setFormData((p) => ({ ...p, name: e.target.value }))}
-                                />
-                            </FormField>
-
-                            <FormField label="Location / Address">
-                                <input
-                                    type="text"
-                                    className={inputClasses}
-                                    placeholder="e.g. Hemayetpur Industrial Zone, Savar"
-                                    value={formData.location}
-                                    onChange={(e) => setFormData((p) => ({ ...p, location: e.target.value }))}
-                                />
-                            </FormField>
-
-                            <div className="grid grid-cols-2 gap-3">
-                                <FormField label="Status">
-                                    <select
-                                        className={selectClasses}
-                                        value={formData.status}
-                                        onChange={(e) => setFormData((p) => ({ ...p, status: e.target.value as WarehouseItem['status'] }))}
-                                    >
-                                        <option>Optimal</option>
-                                        <option>Near Capacity</option>
-                                        <option>Maintenance</option>
-                                    </select>
-                                </FormField>
-                                <FormField label="Manager Name">
-                                    <input
-                                        type="text"
-                                        className={inputClasses}
-                                        placeholder="e.g. Engr. Kamrul Islam"
-                                        value={formData.manager}
-                                        onChange={(e) => setFormData((p) => ({ ...p, manager: e.target.value }))}
-                                    />
-                                </FormField>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div>
-                        <h3 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-4 flex items-center gap-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                            Capacity & Zones
-                        </h3>
-                        <div className="grid grid-cols-2 gap-3">
-                            <FormField label="Total Capacity (units)">
-                                <input
-                                    type="number"
-                                    className={inputClasses}
-                                    placeholder="e.g. 100000"
-                                    value={formData.capacityTotal}
-                                    onChange={(e) => setFormData((p) => ({ ...p, capacityTotal: e.target.value }))}
-                                />
-                            </FormField>
-                            <FormField label="Storage Zones">
-                                <input
-                                    type="number"
-                                    className={inputClasses}
-                                    placeholder="e.g. 16"
-                                    value={formData.zonesCount}
-                                    onChange={(e) => setFormData((p) => ({ ...p, zonesCount: e.target.value }))}
-                                />
-                            </FormField>
-                        </div>
-                    </div>
-                </div>
+                </SliderDrawer.Footer>
             </SliderDrawer>
         </section>
     );

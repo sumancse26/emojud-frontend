@@ -117,7 +117,7 @@ export const Sidebar: React.FC<{ menuData?: NavMenuItem[] }> = ({ menuData: prop
                     <div
                         onClick={() => navigate(ROUTES.HOME.DASHBOARD)}
                         className="flex items-center gap-2.5 cursor-pointer">
-                        <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center text-white font-extrabold text-[11px] tracking-tight shadow-lg shadow-blue-500/30 shrink-0 font-mono">
+                        <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white font-extrabold text-[11px] tracking-tight shadow-lg shadow-emerald-500/30 shrink-0 font-mono">
                             E
                         </div>
                         {!isSidebarCollapsed && (

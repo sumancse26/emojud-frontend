@@ -1,9 +1,8 @@
 import React, { useState } from 'react'
 import { Printer, Eye } from 'lucide-react'
-import { useApp } from '@/app/providers/AppProvider'
 import type { Invoice } from '../types/invoice.types'
 
-const MOCK_INVOICES: Invoice[] = [
+export const MOCK_INVOICES: Invoice[] = [
   {
     id: '1',
     invoiceNumber: 'INV-2026-0842',
@@ -15,6 +14,11 @@ const MOCK_INVOICES: Invoice[] = [
     paidAmount: 4850.0,
     dueAmount: 0.0,
     status: 'Paid',
+    items: [
+      { id: '1', name: 'Premium Cotton Polo Shirt (XL)', sku: 'POLO-CTN-XL-01', quantity: 2, unitPrice: 850.0, total: 1700.0 },
+      { id: '2', name: 'Slim Fit Denim Jeans 32', sku: 'JNS-SLM-32', quantity: 2, unitPrice: 1500.0, total: 3000.0 },
+      { id: '3', name: 'Packaging & Bag', sku: 'PKG-BAG-01', quantity: 1, unitPrice: 150.0, total: 150.0 },
+    ],
   },
   {
     id: '2',
@@ -27,6 +31,10 @@ const MOCK_INVOICES: Invoice[] = [
     paidAmount: 8000.0,
     dueAmount: 4400.0,
     status: 'Partial',
+    items: [
+      { id: '1', name: 'Designer Silk Saree - Ruby Red', sku: 'SAR-SLK-RD', quantity: 1, unitPrice: 9500.0, total: 9500.0 },
+      { id: '2', name: 'Matching Blouse Piece', sku: 'BLS-PC-01', quantity: 1, unitPrice: 2900.0, total: 2900.0 },
+    ],
   },
   {
     id: '3',
@@ -39,12 +47,34 @@ const MOCK_INVOICES: Invoice[] = [
     paidAmount: 3200.0,
     dueAmount: 0.0,
     status: 'Paid',
+    items: [
+      { id: '1', name: 'Casual Oxford Button-down Shirt', sku: 'SHT-OXF-BL', quantity: 2, unitPrice: 1600.0, total: 3200.0 },
+    ],
   },
 ]
 
-export const InvoiceTable: React.FC = () => {
-  const { openPOSDrawer } = useApp()
+export interface InvoiceTableProps {
+  onViewInvoice?: (invoice: Invoice) => void
+  onPrintInvoice?: (invoice: Invoice) => void
+  searchTerm?: string
+}
+
+export const InvoiceTable: React.FC<InvoiceTableProps> = ({
+  onViewInvoice,
+  onPrintInvoice,
+  searchTerm = '',
+}) => {
   const [currentPage, setCurrentPage] = useState(1)
+
+  const filteredInvoices = MOCK_INVOICES.filter((inv) => {
+    if (!searchTerm) return true
+    const term = searchTerm.toLowerCase()
+    return (
+      inv.invoiceNumber.toLowerCase().includes(term) ||
+      inv.customerName.toLowerCase().includes(term) ||
+      inv.customerPhone.includes(term)
+    )
+  })
 
   return (
     <div className="bg-white dark:bg-[#0d1729] border border-slate-200/80 dark:border-slate-800/50 rounded-2xl shadow-sm overflow-hidden">
@@ -64,10 +94,15 @@ export const InvoiceTable: React.FC = () => {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-slate-800/40">
-            {MOCK_INVOICES.map((inv) => (
+            {filteredInvoices.map((inv) => (
               <tr key={inv.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/30 transition-colors">
                 <td className="px-5 py-3.5 font-mono font-bold text-emerald-600 dark:text-emerald-400">
-                  {inv.invoiceNumber}
+                  <button
+                    onClick={() => onViewInvoice?.(inv)}
+                    className="hover:underline cursor-pointer font-bold text-left"
+                  >
+                    {inv.invoiceNumber}
+                  </button>
                 </td>
                 <td className="px-5 py-3.5 font-medium text-slate-900 dark:text-white">
                   {inv.customerName}
@@ -105,15 +140,15 @@ export const InvoiceTable: React.FC = () => {
                 </td>
                 <td className="px-5 py-3.5 text-right space-x-1">
                   <button
-                    onClick={openPOSDrawer}
-                    className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-emerald-500 cursor-pointer"
+                    onClick={() => onPrintInvoice?.(inv)}
+                    className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-emerald-500 cursor-pointer transition-colors"
                     title="Print Receipt"
                   >
                     <Printer className="w-3.5 h-3.5" />
                   </button>
                   <button
-                    onClick={openPOSDrawer}
-                    className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-blue-500 cursor-pointer"
+                    onClick={() => onViewInvoice?.(inv)}
+                    className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-blue-500 cursor-pointer transition-colors"
                     title="View Details"
                   >
                     <Eye className="w-3.5 h-3.5" />

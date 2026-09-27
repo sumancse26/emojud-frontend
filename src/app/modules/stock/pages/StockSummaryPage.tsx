@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Search, Download, Plus } from 'lucide-react';
+import { Search, Download, Plus, Boxes, Save } from 'lucide-react';
+import { SliderDrawer, FormField, inputClasses, selectClasses } from '@/shared';
 
 interface StockSummaryItem {
     id: string;
@@ -86,6 +87,16 @@ const MOCK_STOCK: StockSummaryItem[] = [
 export const StockSummaryPage: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState('All');
+    const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+    const [formData, setFormData] = useState({
+        sku: '',
+        name: '',
+        outlet: 'Dhanmondi Outlet',
+        quantity: 10,
+        unitCost: 0,
+        sellingPrice: 0,
+        reorderLevel: 10
+    });
 
     const filtered = MOCK_STOCK.filter((item) => {
         const matchesSearch =
@@ -97,6 +108,10 @@ export const StockSummaryPage: React.FC = () => {
     });
 
     const totalValuation = MOCK_STOCK.reduce((acc, item) => acc + item.inStock * item.unitCost, 0);
+
+    const handleSaveEntry = () => {
+        setIsDrawerOpen(false);
+    };
 
     return (
         <section className="space-y-6">
@@ -115,7 +130,9 @@ export const StockSummaryPage: React.FC = () => {
                         <Download className="w-4 h-4" />
                         <span>Export Stock Sheet</span>
                     </button>
-                    <button className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-md shadow-emerald-600/20 transition cursor-pointer">
+                    <button
+                        onClick={() => setIsDrawerOpen(true)}
+                        className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-md shadow-emerald-600/20 transition cursor-pointer">
                         <Plus className="w-4 h-4" />
                         <span>Add Stock Entry</span>
                     </button>
@@ -233,6 +250,111 @@ export const StockSummaryPage: React.FC = () => {
                     </table>
                 </div>
             </div>
+
+            {/* SliderDrawer modal for Stock Entry */}
+            <SliderDrawer
+                isOpen={isDrawerOpen}
+                onClose={() => setIsDrawerOpen(false)}
+                width="max-w-xl">
+                <SliderDrawer.Header onClose={() => setIsDrawerOpen(false)}>
+                    <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                            <Boxes className="w-4 h-4" />
+                        </div>
+                        <div>
+                            <h2 className="font-bold text-sm text-slate-900 dark:text-white leading-tight">
+                                Add Stock Entry / Adjustment
+                            </h2>
+                            <p className="text-[10px] text-slate-400 dark:text-slate-400 mt-0.5 leading-tight">
+                                Record inventory replenishment, stock receipt, or manual inventory counts
+                            </p>
+                        </div>
+                    </div>
+                </SliderDrawer.Header>
+
+                <SliderDrawer.Body>
+                    <div className="space-y-4">
+                        <FormField label="Product Name" required>
+                            <input
+                                type="text"
+                                className={inputClasses}
+                                placeholder="e.g. Executive Slim-Fit Cotton Shirt"
+                                value={formData.name}
+                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                            />
+                        </FormField>
+
+                        <div className="grid grid-cols-2 gap-3">
+                            <FormField label="SKU Code" required>
+                                <input
+                                    type="text"
+                                    className={inputClasses}
+                                    placeholder="e.g. SHIRT-SLM-001"
+                                    value={formData.sku}
+                                    onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
+                                />
+                            </FormField>
+
+                            <FormField label="Branch / Warehouse" required>
+                                <select
+                                    className={selectClasses}
+                                    value={formData.outlet}
+                                    onChange={(e) => setFormData({ ...formData, outlet: e.target.value })}>
+                                    <option value="Dhanmondi Outlet">Dhanmondi Outlet</option>
+                                    <option value="Gulshan Outlet">Gulshan Outlet</option>
+                                    <option value="Uttara Outlet">Uttara Outlet</option>
+                                    <option value="Central WH (Savar)">Central WH (Savar)</option>
+                                </select>
+                            </FormField>
+                        </div>
+
+                        <div className="grid grid-cols-3 gap-3">
+                            <FormField label="Received Qty" required>
+                                <input
+                                    type="number"
+                                    className={inputClasses}
+                                    value={formData.quantity}
+                                    onChange={(e) => setFormData({ ...formData, quantity: Number(e.target.value) })}
+                                />
+                            </FormField>
+
+                            <FormField label="Unit Cost (৳)" required>
+                                <input
+                                    type="number"
+                                    className={inputClasses}
+                                    value={formData.unitCost}
+                                    onChange={(e) => setFormData({ ...formData, unitCost: Number(e.target.value) })}
+                                />
+                            </FormField>
+
+                            <FormField label="Selling Price (৳)" required>
+                                <input
+                                    type="number"
+                                    className={inputClasses}
+                                    value={formData.sellingPrice}
+                                    onChange={(e) => setFormData({ ...formData, sellingPrice: Number(e.target.value) })}
+                                />
+                            </FormField>
+                        </div>
+                    </div>
+                </SliderDrawer.Body>
+
+                <SliderDrawer.Footer>
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={() => setIsDrawerOpen(false)}
+                            className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 font-semibold text-xs text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer">
+                            Cancel
+                        </button>
+                        <button
+                            onClick={handleSaveEntry}
+                            className="flex-[2] py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md shadow-emerald-600/20 flex items-center justify-center gap-1.5 transition cursor-pointer">
+                            <Save className="w-3.5 h-3.5" />
+                            <span>Save Stock Entry</span>
+                        </button>
+                    </div>
+                </SliderDrawer.Footer>
+            </SliderDrawer>
         </section>
     );
 };

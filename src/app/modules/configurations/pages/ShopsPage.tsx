@@ -1,5 +1,17 @@
 import React, { useState } from 'react';
-import { Store, Plus, MapPin, Phone, User, CheckCircle2, Search, Filter, Save, Edit3 } from 'lucide-react';
+import {
+    Store,
+    Plus,
+    MapPin,
+    Phone,
+    User,
+    CheckCircle2,
+    Search,
+    Filter,
+    Save,
+    Edit3,
+    ShoppingCart
+} from 'lucide-react';
 import { SliderDrawer, FormField, inputClasses, selectClasses } from '@/shared';
 
 interface ShopOutlet {
@@ -94,7 +106,7 @@ const emptyShopForm: ShopFormData = {
     manager: '',
     countersCount: '',
     activeStaff: '',
-    status: 'Active',
+    status: 'Active'
 };
 
 export const ShopsPage: React.FC = () => {
@@ -129,12 +141,14 @@ export const ShopsPage: React.FC = () => {
             manager: shop.manager,
             countersCount: String(shop.countersCount),
             activeStaff: String(shop.activeStaff),
-            status: shop.status,
+            status: shop.status
         });
         setDrawerOpen(true);
     };
 
-    const handleSubmit = () => {
+    const handleSubmit = (e?: React.FormEvent) => {
+        if (e) e.preventDefault();
+        alert(1);
         if (!formData.name || !formData.code) return;
         if (editingId) {
             setShops((prev) =>
@@ -144,7 +158,7 @@ export const ShopsPage: React.FC = () => {
                               ...s,
                               ...formData,
                               countersCount: parseInt(formData.countersCount) || 0,
-                              activeStaff: parseInt(formData.activeStaff) || 0,
+                              activeStaff: parseInt(formData.activeStaff) || 0
                           }
                         : s
                 )
@@ -156,8 +170,8 @@ export const ShopsPage: React.FC = () => {
                     id: String(Date.now()),
                     ...formData,
                     countersCount: parseInt(formData.countersCount) || 0,
-                    activeStaff: parseInt(formData.activeStaff) || 0,
-                },
+                    activeStaff: parseInt(formData.activeStaff) || 0
+                }
             ]);
         }
         setDrawerOpen(false);
@@ -181,8 +195,7 @@ export const ShopsPage: React.FC = () => {
 
                 <button
                     onClick={openCreate}
-                    className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-md shadow-emerald-600/20 transition cursor-pointer self-start sm:self-auto"
-                >
+                    className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-md shadow-emerald-600/20 transition cursor-pointer self-start sm:self-auto">
                     <Plus className="w-4 h-4" />
                     <span>Add New Shop Outlet</span>
                 </button>
@@ -195,15 +208,21 @@ export const ShopsPage: React.FC = () => {
                     <p className="text-2xl font-black text-slate-900 dark:text-white mt-1">{shops.length}</p>
                 </div>
                 <div className="bg-white dark:bg-[#080d1a] p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800/60 shadow-xs">
-                    <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Active POS Counters</p>
+                    <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                        Active POS Counters
+                    </p>
                     <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1">{totalCounters}</p>
                 </div>
                 <div className="bg-white dark:bg-[#080d1a] p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800/60 shadow-xs">
-                    <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Total Floor Staff</p>
+                    <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                        Total Floor Staff
+                    </p>
                     <p className="text-2xl font-black text-blue-600 dark:text-blue-400 mt-1">{totalStaff}</p>
                 </div>
                 <div className="bg-white dark:bg-[#080d1a] p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800/60 shadow-xs">
-                    <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Operational Status</p>
+                    <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                        Operational Status
+                    </p>
                     <div className="flex items-center gap-1.5 mt-1 text-emerald-600 font-bold text-sm">
                         <CheckCircle2 className="w-4 h-4" />
                         <span>100% Online</span>
@@ -257,8 +276,7 @@ export const ShopsPage: React.FC = () => {
                             <div className="flex items-center gap-1.5">
                                 <button
                                     onClick={() => openEdit(shop)}
-                                    className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition"
-                                >
+                                    className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition">
                                     <Edit3 className="w-3.5 h-3.5" />
                                 </button>
                                 <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
@@ -270,7 +288,9 @@ export const ShopsPage: React.FC = () => {
                         <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800/60 space-y-2 text-xs">
                             <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
                                 <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                                <span className="truncate">{shop.address}, {shop.city}</span>
+                                <span className="truncate">
+                                    {shop.address}, {shop.city}
+                                </span>
                             </div>
                             <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
                                 <Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" />
@@ -278,18 +298,21 @@ export const ShopsPage: React.FC = () => {
                             </div>
                             <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
                                 <User className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                                <span>Branch Manager: <strong className="text-slate-700 dark:text-slate-200">{shop.manager}</strong></span>
+                                <span>
+                                    Branch Manager:{' '}
+                                    <strong className="text-slate-700 dark:text-slate-200">{shop.manager}</strong>
+                                </span>
                             </div>
                         </div>
 
                         <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/60 flex items-center justify-between text-xs">
                             <span className="text-slate-400 font-medium">
-                                <strong>{shop.countersCount}</strong> POS Terminals • <strong>{shop.activeStaff}</strong> Staff
+                                <strong>{shop.countersCount}</strong> POS Terminals •{' '}
+                                <strong>{shop.activeStaff}</strong> Staff
                             </span>
                             <button
                                 onClick={() => openEdit(shop)}
-                                className="text-emerald-600 dark:text-emerald-400 font-bold hover:underline cursor-pointer"
-                            >
+                                className="text-emerald-600 dark:text-emerald-400 font-bold hover:underline cursor-pointer">
                                 Manage Shop →
                             </button>
                         </div>
@@ -298,163 +321,190 @@ export const ShopsPage: React.FC = () => {
             </div>
 
             {/* Slider Drawer for Create / Edit */}
-            <SliderDrawer
-                isOpen={drawerOpen}
-                onClose={() => setDrawerOpen(false)}
-                title={editingId ? 'Edit Shop Outlet' : 'Add New Shop Outlet'}
-                subtitle={editingId ? `Editing: ${formData.name || 'Untitled'}` : 'Configure a new physical store location'}
-                icon={<Store className="w-4 h-4" />}
-                footer={
-                    <div className="flex items-center gap-3">
-                        <button
-                            onClick={() => setDrawerOpen(false)}
-                            className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 font-semibold text-xs text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            onClick={handleSubmit}
-                            disabled={!formData.name || !formData.code}
-                            className="flex-[2] py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-xs shadow-md shadow-emerald-600/20 flex items-center justify-center gap-1.5 transition cursor-pointer"
-                        >
-                            <Save className="w-3.5 h-3.5" />
-                            <span>{editingId ? 'Update Shop' : 'Create Shop'}</span>
-                        </button>
+            <SliderDrawer isOpen={drawerOpen} onClose={() => setDrawerOpen(false)}>
+                <SliderDrawer.Header onClose={() => setDrawerOpen(false)}>
+                    <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-xl bg-emerald-500 text-slate-950 flex items-center justify-center font-bold">
+                            <ShoppingCart className="w-4 h-4" />
+                        </div>
+                        <div>
+                            <h2 className="font-bold text-sm text-slate-900 dark:text-white">
+                                {editingId ? 'Edit Shop Outlet' : 'Add New Shop'}
+                            </h2>
+                            <p className="text-[10px] text-slate-400">
+                                {editingId
+                                    ? `Editing: ${formData.name || 'Untitled'}`
+                                    : 'Enter the details to create a new shop'}
+                            </p>
+                        </div>
                     </div>
-                }
-            >
-                <div className="space-y-5">
-                    {/* Basic Info */}
-                    <div>
-                        <h3 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-4 flex items-center gap-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                            Outlet Information
-                        </h3>
-                        <div className="space-y-4">
-                            <div className="grid grid-cols-2 gap-3">
-                                <FormField label="Outlet Code" required>
+                </SliderDrawer.Header>
+                <SliderDrawer.Body>
+                    <form id="shop-form" onSubmit={handleSubmit} className="space-y-5">
+                        {/* Basic Info */}
+                        <div>
+                            <h3 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-4 flex items-center gap-2">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                Outlet Information
+                            </h3>
+                            <div className="space-y-4">
+                                <div className="grid grid-cols-2 gap-3">
+                                    <FormField label="Outlet Code" required>
+                                        <input
+                                            type="text"
+                                            className={inputClasses}
+                                            placeholder="e.g. OUTLET-005"
+                                            value={formData.code}
+                                            onChange={(e) =>
+                                                setFormData((p) => ({ ...p, code: e.target.value.toUpperCase() }))
+                                            }
+                                        />
+                                    </FormField>
+                                    <FormField label="Branch Type" required>
+                                        <select
+                                            className={selectClasses}
+                                            value={formData.branchType}
+                                            onChange={(e) =>
+                                                setFormData((p) => ({
+                                                    ...p,
+                                                    branchType: e.target.value as ShopFormData['branchType']
+                                                }))
+                                            }>
+                                            <option>Flagship Outlet</option>
+                                            <option>Branch Store</option>
+                                            <option>Distribution Hub</option>
+                                        </select>
+                                    </FormField>
+                                </div>
+
+                                <FormField label="Outlet Name" required>
                                     <input
                                         type="text"
                                         className={inputClasses}
-                                        placeholder="e.g. OUTLET-005"
-                                        value={formData.code}
-                                        onChange={(e) => setFormData((p) => ({ ...p, code: e.target.value.toUpperCase() }))}
+                                        placeholder="e.g. Dhanmondi Flagship Outlet"
+                                        value={formData.name}
+                                        onChange={(e) => setFormData((p) => ({ ...p, name: e.target.value }))}
                                     />
                                 </FormField>
-                                <FormField label="Branch Type" required>
+
+                                <FormField label="Status">
                                     <select
                                         className={selectClasses}
-                                        value={formData.branchType}
-                                        onChange={(e) => setFormData((p) => ({ ...p, branchType: e.target.value as ShopFormData['branchType'] }))}
-                                    >
-                                        <option>Flagship Outlet</option>
-                                        <option>Branch Store</option>
-                                        <option>Distribution Hub</option>
+                                        value={formData.status}
+                                        onChange={(e) =>
+                                            setFormData((p) => ({
+                                                ...p,
+                                                status: e.target.value as ShopFormData['status']
+                                            }))
+                                        }>
+                                        <option>Active</option>
+                                        <option>Under Maintenance</option>
                                     </select>
                                 </FormField>
                             </div>
-
-                            <FormField label="Outlet Name" required>
-                                <input
-                                    type="text"
-                                    className={inputClasses}
-                                    placeholder="e.g. Dhanmondi Flagship Outlet"
-                                    value={formData.name}
-                                    onChange={(e) => setFormData((p) => ({ ...p, name: e.target.value }))}
-                                />
-                            </FormField>
-
-                            <FormField label="Status">
-                                <select
-                                    className={selectClasses}
-                                    value={formData.status}
-                                    onChange={(e) => setFormData((p) => ({ ...p, status: e.target.value as ShopFormData['status'] }))}
-                                >
-                                    <option>Active</option>
-                                    <option>Under Maintenance</option>
-                                </select>
-                            </FormField>
                         </div>
-                    </div>
 
-                    {/* Location */}
-                    <div>
-                        <h3 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-4 flex items-center gap-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                            Location & Contact
-                        </h3>
-                        <div className="space-y-4">
-                            <div className="grid grid-cols-2 gap-3">
-                                <FormField label="City" required>
+                        {/* Location */}
+                        <div>
+                            <h3 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-4 flex items-center gap-2">
+                                <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                                Location & Contact
+                            </h3>
+                            <div className="space-y-4">
+                                <div className="grid grid-cols-2 gap-3">
+                                    <FormField label="City" required>
+                                        <input
+                                            type="text"
+                                            className={inputClasses}
+                                            placeholder="e.g. Dhaka"
+                                            value={formData.city}
+                                            onChange={(e) => setFormData((p) => ({ ...p, city: e.target.value }))}
+                                        />
+                                    </FormField>
+                                    <FormField label="Phone">
+                                        <input
+                                            type="text"
+                                            className={inputClasses}
+                                            placeholder="+880 1XXX-XXXXXX"
+                                            value={formData.phone}
+                                            onChange={(e) => setFormData((p) => ({ ...p, phone: e.target.value }))}
+                                        />
+                                    </FormField>
+                                </div>
+                                <FormField label="Full Address">
                                     <input
                                         type="text"
                                         className={inputClasses}
-                                        placeholder="e.g. Dhaka"
-                                        value={formData.city}
-                                        onChange={(e) => setFormData((p) => ({ ...p, city: e.target.value }))}
-                                    />
-                                </FormField>
-                                <FormField label="Phone">
-                                    <input
-                                        type="text"
-                                        className={inputClasses}
-                                        placeholder="+880 1XXX-XXXXXX"
-                                        value={formData.phone}
-                                        onChange={(e) => setFormData((p) => ({ ...p, phone: e.target.value }))}
-                                    />
-                                </FormField>
-                            </div>
-                            <FormField label="Full Address">
-                                <input
-                                    type="text"
-                                    className={inputClasses}
-                                    placeholder="House/Plot, Road, Area"
-                                    value={formData.address}
-                                    onChange={(e) => setFormData((p) => ({ ...p, address: e.target.value }))}
-                                />
-                            </FormField>
-                        </div>
-                    </div>
-
-                    {/* Operations */}
-                    <div>
-                        <h3 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-4 flex items-center gap-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                            Operations
-                        </h3>
-                        <div className="space-y-4">
-                            <FormField label="Branch Manager Name">
-                                <input
-                                    type="text"
-                                    className={inputClasses}
-                                    placeholder="e.g. Tanvir Hossain"
-                                    value={formData.manager}
-                                    onChange={(e) => setFormData((p) => ({ ...p, manager: e.target.value }))}
-                                />
-                            </FormField>
-                            <div className="grid grid-cols-2 gap-3">
-                                <FormField label="POS Counter Terminals">
-                                    <input
-                                        type="number"
-                                        className={inputClasses}
-                                        placeholder="e.g. 4"
-                                        value={formData.countersCount}
-                                        onChange={(e) => setFormData((p) => ({ ...p, countersCount: e.target.value }))}
-                                    />
-                                </FormField>
-                                <FormField label="Active Staff Count">
-                                    <input
-                                        type="number"
-                                        className={inputClasses}
-                                        placeholder="e.g. 12"
-                                        value={formData.activeStaff}
-                                        onChange={(e) => setFormData((p) => ({ ...p, activeStaff: e.target.value }))}
+                                        placeholder="House/Plot, Road, Area"
+                                        value={formData.address}
+                                        onChange={(e) => setFormData((p) => ({ ...p, address: e.target.value }))}
                                     />
                                 </FormField>
                             </div>
                         </div>
+
+                        {/* Operations */}
+                        <div>
+                            <h3 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-4 flex items-center gap-2">
+                                <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                                Operations
+                            </h3>
+                            <div className="space-y-4">
+                                <FormField label="Branch Manager Name">
+                                    <input
+                                        type="text"
+                                        className={inputClasses}
+                                        placeholder="e.g. Tanvir Hossain"
+                                        value={formData.manager}
+                                        onChange={(e) => setFormData((p) => ({ ...p, manager: e.target.value }))}
+                                    />
+                                </FormField>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <FormField label="POS Counter Terminals">
+                                        <input
+                                            type="number"
+                                            className={inputClasses}
+                                            placeholder="e.g. 4"
+                                            value={formData.countersCount}
+                                            onChange={(e) =>
+                                                setFormData((p) => ({ ...p, countersCount: e.target.value }))
+                                            }
+                                        />
+                                    </FormField>
+                                    <FormField label="Active Staff Count">
+                                        <input
+                                            type="number"
+                                            className={inputClasses}
+                                            placeholder="e.g. 12"
+                                            value={formData.activeStaff}
+                                            onChange={(e) =>
+                                                setFormData((p) => ({ ...p, activeStaff: e.target.value }))
+                                            }
+                                        />
+                                    </FormField>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </SliderDrawer.Body>
+
+                <SliderDrawer.Footer>
+                    <div className="pt-4 flex items-center justify-end gap-2.5 border-t border-slate-100 dark:border-slate-800">
+                        <button
+                            type="button"
+                            onClick={() => setDrawerOpen(false)}
+                            className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition cursor-pointer">
+                            Cancel
+                        </button>
+                        <button
+                            type="submit"
+                            form="shop-form"
+                            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-bold shadow-md shadow-emerald-600/20 transition cursor-pointer">
+                            <Save className="w-4 h-4" />
+                            <span>{editingId ? 'Update Shop' : 'Create Shop'}</span>
+                        </button>
                     </div>
-                </div>
+                </SliderDrawer.Footer>
             </SliderDrawer>
         </section>
     );

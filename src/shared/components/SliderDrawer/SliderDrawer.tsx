@@ -1,134 +1,136 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
+
+/* ================= TYPES & INTERFACES ================= */
 
 export interface SliderDrawerProps {
     isOpen: boolean;
     onClose: () => void;
-    title: string;
-    subtitle?: string;
-    icon?: React.ReactNode;
     width?: string;
     children: React.ReactNode;
+    className?: string;
+    /** Convenience prop – auto-generates a Header when provided */
+    title?: string;
+    /** Subtitle shown below the title */
+    subtitle?: string;
+    /** Icon element rendered in the header badge */
+    icon?: React.ReactNode;
+    /** Footer content rendered inside SliderDrawer.Footer */
     footer?: React.ReactNode;
 }
 
-export const SliderDrawer: React.FC<SliderDrawerProps> = ({
-    isOpen,
-    onClose,
-    title,
-    subtitle,
-    icon,
-    width = 'max-w-xl',
-    children,
-    footer,
-}) => {
+export interface SliderDrawerHeaderProps {
+    children?: React.ReactNode;
+    onClose?: () => void;
+    className?: string;
+}
+
+export interface SliderDrawerBodyProps {
+    children: React.ReactNode;
+    className?: string;
+}
+
+export interface SliderDrawerFooterProps {
+    children: React.ReactNode;
+    className?: string;
+}
+
+const SliderDrawerHeader: React.FC<SliderDrawerHeaderProps> = ({ children, onClose, className = '' }) => {
+    const handleClose = onClose;
+
+    return (
+        <div
+            className={`shrink-0 px-5 py-4 border-b border-slate-200/80 dark:border-slate-800/70 flex items-center justify-between gap-3 bg-slate-50/50 dark:bg-slate-900/30 ${className}`}>
+            {children}
+            {handleClose && (
+                <button
+                    type="button"
+                    onClick={handleClose}
+                    className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer shrink-0"
+                    title="Close">
+                    <X className="w-5 h-5" />
+                </button>
+            )}
+        </div>
+    );
+};
+
+const SliderDrawerBody: React.FC<SliderDrawerBodyProps> = ({ children, className = '' }) => (
+    <div className={`flex-1 overflow-y-auto px-5 py-5 ${className}`}>{children}</div>
+);
+
+const SliderDrawerFooter: React.FC<SliderDrawerFooterProps> = ({ children, className = '' }) => (
+    <div
+        className={`shrink-0 px-5 py-4 border-t border-slate-200/80 dark:border-slate-800/70 bg-slate-50/80 dark:bg-slate-900/40 ${className}`}>
+        {children}
+    </div>
+);
+
+/* ================= PRESENTER COMPONENT ================= */
+
+export const SliderDrawer: React.FC<SliderDrawerProps> & {
+    Header: typeof SliderDrawerHeader;
+    Body: typeof SliderDrawerBody;
+    Footer: typeof SliderDrawerFooter;
+} = ({ isOpen, onClose, width = 'max-w-xl', children, className = '' }) => {
+    const [isMounted, setIsMounted] = useState(isOpen);
     const [isVisible, setIsVisible] = useState(false);
-    const [isAnimating, setIsAnimating] = useState(false);
-    const drawerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         if (isOpen) {
-            setIsVisible(true);
-            // Small delay to trigger CSS transition
-            requestAnimationFrame(() => {
+            setIsMounted(true);
+            const animFrame = requestAnimationFrame(() => {
                 requestAnimationFrame(() => {
-                    setIsAnimating(true);
+                    setIsVisible(true);
                 });
             });
+            return () => cancelAnimationFrame(animFrame);
         } else {
-            setIsAnimating(false);
-            const timer = setTimeout(() => setIsVisible(false), 350);
+            setIsVisible(false);
+            const timer = setTimeout(() => {
+                setIsMounted(false);
+            }, 400);
             return () => clearTimeout(timer);
         }
     }, [isOpen]);
 
-    // Close on ESC key
     useEffect(() => {
+        if (!isMounted) return;
         const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === 'Escape' && isOpen) onClose();
+            if (e.key === 'Escape') onClose();
         };
         document.addEventListener('keydown', handleKeyDown);
         return () => document.removeEventListener('keydown', handleKeyDown);
-    }, [isOpen, onClose]);
+    }, [isMounted, onClose]);
 
-    // Lock body scroll when open
-    useEffect(() => {
-        if (isOpen) {
-            document.body.style.overflow = 'hidden';
-        } else {
-            document.body.style.overflow = '';
-        }
-        return () => { document.body.style.overflow = ''; };
-    }, [isOpen]);
-
-    if (!isVisible) return null;
+    if (!isMounted) return null;
 
     return (
-        <>
+        <div className="fixed inset-0 z-50 overflow-hidden">
             {/* Backdrop */}
             <div
-                className="fixed inset-0 z-50"
-                style={{
-                    backgroundColor: isAnimating ? 'rgba(2, 6, 23, 0.6)' : 'rgba(2, 6, 23, 0)',
-                    backdropFilter: isAnimating ? 'blur(6px)' : 'blur(0px)',
-                    WebkitBackdropFilter: isAnimating ? 'blur(6px)' : 'blur(0px)',
-                    transition: 'background-color 350ms cubic-bezier(0.4, 0, 0.2, 1), backdrop-filter 350ms cubic-bezier(0.4, 0, 0.2, 1)',
-                }}
+                className={`fixed inset-0 bg-slate-950/60 backdrop-blur-xs transition-opacity duration-400 ease-in-out ${
+                    isVisible ? 'opacity-100' : 'opacity-0'
+                }`}
                 onClick={onClose}
+                aria-hidden="true"
             />
 
-            {/* Drawer Panel */}
+            {/* Aside Panel */}
             <aside
-                ref={drawerRef}
-                className={`fixed inset-y-0 right-0 z-50 w-full ${width} flex flex-col bg-white dark:bg-[#0a1020] border-l border-slate-200 dark:border-slate-800/80`}
-                style={{
-                    transform: isAnimating ? 'translateX(0)' : 'translateX(100%)',
-                    boxShadow: isAnimating
-                        ? '-20px 0 60px -10px rgba(0, 0, 0, 0.35), -8px 0 20px -6px rgba(0, 0, 0, 0.2)'
-                        : 'none',
-                    transition: 'transform 350ms cubic-bezier(0.32, 0.72, 0, 1), box-shadow 350ms cubic-bezier(0.4, 0, 0.2, 1)',
-                }}
-            >
-                {/* Header */}
-                <div className="shrink-0 px-5 py-4 border-b border-slate-200/80 dark:border-slate-800/70 flex items-center justify-between gap-3 bg-slate-50/50 dark:bg-slate-900/30">
-                    <div className="flex items-center gap-3 min-w-0">
-                        {icon && (
-                            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-emerald-500/20">
-                                {icon}
-                            </div>
-                        )}
-                        <div className="min-w-0">
-                            <h2 className="font-bold text-sm text-slate-900 dark:text-white truncate">
-                                {title}
-                            </h2>
-                            {subtitle && (
-                                <p className="text-[10px] text-slate-400 dark:text-slate-500 truncate mt-0.5">
-                                    {subtitle}
-                                </p>
-                            )}
-                        </div>
-                    </div>
-                    <button
-                        onClick={onClose}
-                        className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer shrink-0"
-                        title="Close (Esc)"
-                    >
-                        <X className="w-5 h-5" />
-                    </button>
-                </div>
-
-                {/* Scrollable Body */}
-                <div className="flex-1 overflow-y-auto px-5 py-5">
-                    {children}
-                </div>
-
-                {/* Footer (optional) */}
-                {footer && (
-                    <div className="shrink-0 px-5 py-4 border-t border-slate-200/80 dark:border-slate-800/70 bg-slate-50/80 dark:bg-slate-900/40">
-                        {footer}
-                    </div>
-                )}
+                role="dialog"
+                aria-modal="true"
+                className={`fixed inset-y-0 right-0 z-50 w-full ${width} flex flex-col bg-white dark:bg-[#0a1020] border-l border-slate-200 dark:border-slate-800/80 shadow-2xl transform transition-transform duration-400 ease-in-out ${
+                    isVisible ? 'translate-x-0' : 'translate-x-full'
+                } ${className}`}>
+                {children}
             </aside>
-        </>
+        </div>
     );
 };
+
+SliderDrawer.Header = SliderDrawerHeader;
+SliderDrawer.Body = SliderDrawerBody;
+SliderDrawer.Footer = SliderDrawerFooter;
+
+export default SliderDrawer;

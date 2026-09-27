@@ -13,12 +13,12 @@
   --color-text-muted: #64748b;
 
   /* Color Palette - Accent / Brand */
-  --color-primary: #6366f1;
-  --color-primary-hover: #4f46e5;
-  --color-primary-light: rgba(99, 102, 241, 0.15);
+  --color-primary: #10b981;
+  --color-primary-hover: #059669;
+  --color-primary-light: rgba(16, 185, 129, 0.15);
 
-  --color-accent: #06b6d4;
-  --color-accent-hover: #0891b2;
+  --color-accent: #14b8a6;
+  --color-accent-hover: #0d9488;
 
   /* Color Palette - Status / Judgments */
   --color-success: #10b981;
@@ -38,7 +38,7 @@
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -2px rgba(0, 0, 0, 0.2);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -4px rgba(0, 0, 0, 0.3);
-  --shadow-glow: 0 0 20px rgba(99, 102, 241, 0.25);
+  --shadow-glow: 0 0 20px rgba(16, 185, 129, 0.25);
 
   /* Radii */
   --radius-sm: 6px;
