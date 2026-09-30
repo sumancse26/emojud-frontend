@@ -19,25 +19,18 @@ export const UserShopPermissionPresenter: React.FC<UserShopPermissionPresenterPr
     return (
         <section className="space-y-6">
             <PageHeader>
-                <PageHeader.Header>
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                        <div>
-                            <h1 className="text-xl lg:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-                                User Shop & Counter Permissions
-                            </h1>
-                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                                Control which operators can bill, view stock, or switch active branch outlets.
-                            </p>
-                        </div>
-
+                <PageHeader.Header
+                    title="User Shop & Counter Permissions"
+                    description="Control which operators can bill, view stock, or switch active branch outlets."
+                    actions={
                         <button
                             onClick={onSave}
-                            className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-md shadow-emerald-600/20 transition cursor-pointer self-start sm:self-auto">
+                            className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-md shadow-emerald-600/20 transition cursor-pointer">
                             <Save className="w-4 h-4" />
                             <span>{isSaved ? 'Changes Saved!' : 'Save Access Rules'}</span>
                         </button>
-                    </div>
-                </PageHeader.Header>
+                    }
+                />
             </PageHeader>
 
             {/* Permission Matrix Table */}

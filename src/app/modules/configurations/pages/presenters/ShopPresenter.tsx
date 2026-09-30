@@ -10,7 +10,11 @@ import {
     Filter,
     Save,
     Edit3,
-    ShoppingCart
+    ShoppingCart,
+    Users,
+    Monitor,
+    Activity,
+    ArrowRight
 } from 'lucide-react';
 import { SliderDrawer, FormField, inputClasses, selectClasses } from '@/shared';
 import PageHeader from '@/shared/components/PageHeader/PageHeader';
@@ -54,63 +58,56 @@ export const ShopPresenter: React.FC<ShopPresenterProps> = (props) => {
     return (
         <section className="space-y-6">
             <PageHeader>
-                <PageHeader.Header>
-                    {/* Page Header */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                        <div>
-                            <h1 className="text-xl lg:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-                                Shop & Outlet Configurations
-                            </h1>
-                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                                Configure physical store branches, POS counter terminals, and outlet managers.
-                            </p>
-                        </div>
-
+                <PageHeader.Header
+                    title="Shop & Outlet Configurations"
+                    description="Configure physical store branches, POS counter terminals, and outlet managers."
+                    actions={
                         <button
                             onClick={onOpenCreate}
-                            className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-md shadow-emerald-600/20 transition cursor-pointer self-start sm:self-auto">
+                            className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-xs hover:shadow-emerald-600/20 transition cursor-pointer">
                             <Plus className="w-4 h-4" />
                             <span>Add New Shop Outlet</span>
                         </button>
-                    </div>
-                </PageHeader.Header>
+                    }
+                />
                 <PageHeader.Body>
-                    {/* Quick Metrics Bar */}
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                        <div className="bg-white dark:bg-[#080d1a] p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800/60 shadow-xs">
-                            <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-                                Total Outlets
-                            </p>
-                            <p className="text-2xl font-black text-slate-900 dark:text-white mt-1">{shops.length}</p>
-                        </div>
-                        <div className="bg-white dark:bg-[#080d1a] p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800/60 shadow-xs">
-                            <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-                                Active POS Counters
-                            </p>
-                            <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1">
-                                {totalCounters}
-                            </p>
-                        </div>
-                        <div className="bg-white dark:bg-[#080d1a] p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800/60 shadow-xs">
-                            <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-                                Total Floor Staff
-                            </p>
-                            <p className="text-2xl font-black text-blue-600 dark:text-blue-400 mt-1">{totalStaff}</p>
-                        </div>
-                        <div className="bg-white dark:bg-[#080d1a] p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800/60 shadow-xs">
-                            <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-                                Operational Status
-                            </p>
-                            <div className="flex items-center gap-1.5 mt-1 text-emerald-600 font-bold text-sm">
-                                <CheckCircle2 className="w-4 h-4" />
-                                <span>100% Online</span>
-                            </div>
-                        </div>
-                    </div>
+                    <PageHeader.MetricGrid cols={4}>
+                        <PageHeader.MetricCard
+                            label="Total Outlets"
+                            value={shops.length}
+                            icon={<Store className="w-4 h-4" />}
+                            accentColor="slate"
+                            subtext="Physical active branches"
+                        />
+                        <PageHeader.MetricCard
+                            label="Active POS Counters"
+                            value={totalCounters}
+                            icon={<Monitor className="w-4 h-4" />}
+                            accentColor="emerald"
+                            valueColor="text-emerald-600 dark:text-emerald-400"
+                            subtext="Live checkout points"
+                        />
+                        <PageHeader.MetricCard
+                            label="Total Floor Staff"
+                            value={totalStaff}
+                            icon={<Users className="w-4 h-4" />}
+                            accentColor="blue"
+                            valueColor="text-blue-600 dark:text-blue-400"
+                            subtext="Assigned crew members"
+                        />
+                        <PageHeader.MetricCard
+                            label="Operational Status"
+                            value="100% Online"
+                            icon={<Activity className="w-4 h-4" />}
+                            accentColor="emerald"
+                            valueColor="text-emerald-600 dark:text-emerald-400"
+                            trend={{ value: "All Active", isPositive: true }}
+                            subtext="All systems nominal"
+                        />
+                    </PageHeader.MetricGrid>
                 </PageHeader.Body>
                 <PageHeader.Bottom>
-                    {/* Filters and Search */}
-                    <div className="bg-white dark:bg-[#080d1a] p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800/60 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3">
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
                         <div className="relative w-full sm:w-80">
                             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                             <input
@@ -118,10 +115,10 @@ export const ShopPresenter: React.FC<ShopPresenterProps> = (props) => {
                                 placeholder="Search outlet by name, code, or city..."
                                 value={searchQuery}
                                 onChange={(e) => onSearchChange(e.target.value)}
-                                className="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                                className="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-900/50 border border-slate-200/60 dark:border-slate-700/50 rounded-xl text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 transition"
                             />
                         </div>
-                        <button className="flex items-center gap-2 px-3 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-semibold rounded-xl transition cursor-pointer">
+                        <button className="flex items-center gap-2 px-3 py-2 bg-slate-100 dark:bg-slate-800/60 hover:bg-slate-200 dark:hover:bg-slate-700/60 text-slate-600 dark:text-slate-300 text-xs font-semibold rounded-xl transition cursor-pointer">
                             <Filter className="w-3.5 h-3.5" />
                             <span>Filter Outlets</span>
                         </button>
@@ -130,31 +127,31 @@ export const ShopPresenter: React.FC<ShopPresenterProps> = (props) => {
             </PageHeader>
 
             {/* Outlets Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {filteredShops.map((shop) => (
                     <div
                         key={shop.id}
-                        className="bg-white dark:bg-[#080d1a] border border-slate-200/80 dark:border-slate-800/60 rounded-2xl p-5 shadow-xs hover:border-slate-300 dark:hover:border-slate-700 transition">
+                        className="group relative bg-white dark:bg-[#0a1020] border border-slate-200/80 dark:border-slate-800/70 hover:border-slate-300 dark:hover:border-slate-700/90 rounded-2xl p-5 shadow-2xs hover:shadow-sm transition-all duration-200">
                         <div className="flex items-start justify-between gap-3">
                             <div className="flex items-center gap-3">
-                                <div className="w-11 h-11 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold">
+                                <div className="w-11 h-11 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center justify-center font-bold shrink-0 group-hover:scale-105 transition-transform">
                                     <Store className="w-5 h-5" />
                                 </div>
                                 <div>
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-2 flex-wrap">
                                         <h3 className="font-bold text-sm text-slate-900 dark:text-white">
                                             {shop.name}
                                         </h3>
-                                        <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500">
+                                        <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 border border-slate-200/60 dark:border-slate-700/60">
                                             {shop.code}
                                         </span>
                                     </div>
-                                    <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+                                    <span className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
                                         {shop.branchType}
                                     </span>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-1.5">
+                            <div className="flex items-center gap-1.5 shrink-0">
                                 <button
                                     onClick={() => onOpenEdit(shop)}
                                     className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition">
@@ -166,7 +163,7 @@ export const ShopPresenter: React.FC<ShopPresenterProps> = (props) => {
                             </div>
                         </div>
 
-                        <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800/60 space-y-2 text-xs">
+                        <div className="mt-4 pt-3.5 border-t border-slate-100 dark:border-slate-800/60 space-y-2 text-xs">
                             <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
                                 <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                                 <span className="truncate">
@@ -188,13 +185,14 @@ export const ShopPresenter: React.FC<ShopPresenterProps> = (props) => {
 
                         <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/60 flex items-center justify-between text-xs">
                             <span className="text-slate-400 font-medium">
-                                <strong>{shop.countersCount}</strong> POS Terminals •{' '}
-                                <strong>{shop.activeStaff}</strong> Staff
+                                <strong className="text-slate-700 dark:text-slate-200">{shop.countersCount}</strong> POS Terminals •{' '}
+                                <strong className="text-slate-700 dark:text-slate-200">{shop.activeStaff}</strong> Staff
                             </span>
                             <button
                                 onClick={() => onOpenEdit(shop)}
-                                className="text-emerald-600 dark:text-emerald-400 font-bold hover:underline cursor-pointer">
-                                Manage Shop →
+                                className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-bold hover:text-emerald-500 text-xs cursor-pointer group/btn">
+                                <span>Manage Shop</span>
+                                <ArrowRight className="w-3.5 h-3.5 group-hover/btn:translate-x-0.5 transition-transform" />
                             </button>
                         </div>
                     </div>

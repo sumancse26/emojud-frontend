@@ -42,25 +42,18 @@ export const ProductCategoryPresenter: React.FC<ProductCategoryPresenterProps> =
     return (
         <section className="space-y-6">
             <PageHeader>
-                <PageHeader.Header>
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                        <div>
-                            <h1 className="text-xl lg:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-                                Product Categories & Subcategories
-                            </h1>
-                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                                Hierarchical product classification, default VAT/Tax slabs, and inventory mapping.
-                            </p>
-                        </div>
-
+                <PageHeader.Header
+                    title="Product Categories & Subcategories"
+                    description="Hierarchical product classification, default VAT/Tax slabs, and inventory mapping."
+                    actions={
                         <button
                             onClick={onOpenCreate}
-                            className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-md shadow-emerald-600/20 transition cursor-pointer self-start sm:self-auto">
+                            className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-md shadow-emerald-600/20 transition cursor-pointer">
                             <Plus className="w-4 h-4" />
                             <span>Create New Category</span>
                         </button>
-                    </div>
-                </PageHeader.Header>
+                    }
+                />
 
                 <PageHeader.Bottom>
                     <div className="relative max-w-md">
@@ -70,7 +63,7 @@ export const ProductCategoryPresenter: React.FC<ProductCategoryPresenterProps> =
                             placeholder="Search category name or code..."
                             value={searchQuery}
                             onChange={(e) => onSearchChange(e.target.value)}
-                            className="w-full pl-9 pr-4 py-2 bg-white dark:bg-[#080d1a] border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-emerald-500 font-medium"
+                            className="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-900/50 border border-slate-200/60 dark:border-slate-700/50 rounded-xl text-xs text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 font-medium transition"
                         />
                     </div>
                 </PageHeader.Bottom>

@@ -34,19 +34,12 @@ export const WarehousePresenter: React.FC<WarehousePresenterProps> = ({
     return (
         <section className="space-y-6">
             <PageHeader>
-                <PageHeader.Header>
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                        <div>
-                            <h1 className="text-xl lg:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-                                Central Warehouse & Storage Hubs
-                            </h1>
-                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                                Monitor storage bin capacity, inter-warehouse stock transfers, and zone managers.
-                            </p>
-                        </div>
-
+                <PageHeader.Header
+                    title="Central Warehouse & Storage Hubs"
+                    description="Monitor storage bin capacity, inter-warehouse stock transfers, and zone managers."
+                    actions={
                         <div className="flex items-center gap-2.5">
-                            <button className="flex items-center gap-2 px-3.5 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl transition cursor-pointer">
+                            <button className="flex items-center gap-2 px-3.5 py-2.5 bg-slate-100 dark:bg-slate-800/60 hover:bg-slate-200 dark:hover:bg-slate-700/60 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl transition cursor-pointer">
                                 <ArrowRightLeft className="w-4 h-4" />
                                 <span>Transfer Stock</span>
                             </button>
@@ -57,8 +50,8 @@ export const WarehousePresenter: React.FC<WarehousePresenterProps> = ({
                                 <span>Add Warehouse</span>
                             </button>
                         </div>
-                    </div>
-                </PageHeader.Header>
+                    }
+                />
 
                 <PageHeader.Bottom>
                     <div className="relative max-w-md">
@@ -68,11 +61,12 @@ export const WarehousePresenter: React.FC<WarehousePresenterProps> = ({
                             placeholder="Search warehouse by name, code or location..."
                             value={searchQuery}
                             onChange={(e) => onSearchChange(e.target.value)}
-                            className="w-full pl-9 pr-4 py-2 bg-white dark:bg-[#080d1a] border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-emerald-500 font-medium"
+                            className="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-900/50 border border-slate-200/60 dark:border-slate-700/50 rounded-xl text-xs text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 font-medium transition"
                         />
                     </div>
                 </PageHeader.Bottom>
             </PageHeader>
+
 
             {/* Storage Utilization Summary Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
