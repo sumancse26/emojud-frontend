@@ -1,6 +1,6 @@
 import React from 'react';
 import { Building2, Plus, Users, Edit3, Trash2, Save } from 'lucide-react';
-import { SliderDrawer, FormField, inputClasses, PageHeader } from '@/shared';
+import { SliderDrawer, FormField, inputClasses, PageHeader, Pagination } from '@/shared';
 import type { Department, DepartmentFormData } from '../DepartmentsPage';
 
 export interface DepartmentsPresenterProps {
@@ -101,6 +101,14 @@ export const DepartmentsPresenter: React.FC<DepartmentsPresenterProps> = ({
                     </div>
                 ))}
             </div>
+
+            {/* Pagination Footer */}
+            <Pagination
+                totalItems={departments.length}
+                pageSize={6}
+                itemLabel="departments"
+                className="rounded-2xl border border-slate-200/80 dark:border-slate-800/70 bg-white dark:bg-[#0a1020]"
+            />
 
             {/* Slider Drawer for Create / Edit Department */}
             <SliderDrawer

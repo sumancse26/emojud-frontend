@@ -1,6 +1,6 @@
 import React from 'react';
 import { ShieldCheck, Plus, Edit3, Trash2, Save } from 'lucide-react';
-import { SliderDrawer, FormField, inputClasses, PageHeader } from '@/shared';
+import { SliderDrawer, FormField, inputClasses, PageHeader, Pagination } from '@/shared';
 import type { SystemRole, SystemRoleFormData } from '../RolesPage';
 
 export interface RolesPresenterProps {
@@ -98,6 +98,14 @@ export const RolesPresenter: React.FC<RolesPresenterProps> = ({
                     </div>
                 ))}
             </div>
+
+            {/* Pagination Footer */}
+            <Pagination
+                totalItems={roles.length}
+                pageSize={6}
+                itemLabel="roles"
+                className="rounded-2xl border border-slate-200/80 dark:border-slate-800/70 bg-white dark:bg-[#0a1020]"
+            />
 
             {/* Slider Drawer */}
             <SliderDrawer

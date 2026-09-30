@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Plus, Search, Edit3, Trash2, Save } from 'lucide-react';
-import { SliderDrawer, FormField, inputClasses } from '@/shared';
+import { SliderDrawer, FormField, inputClasses, Pagination } from '@/shared';
 
 interface PurchaseOrder {
     id: string;
@@ -291,6 +291,13 @@ export const PurchasesPage: React.FC = () => {
                         </tbody>
                     </table>
                 </div>
+
+                {/* Pagination footer */}
+                <Pagination
+                    totalItems={filtered.length}
+                    pageSize={10}
+                    itemLabel="purchase orders"
+                />
             </div>
 
             {/* Slider Drawer */}

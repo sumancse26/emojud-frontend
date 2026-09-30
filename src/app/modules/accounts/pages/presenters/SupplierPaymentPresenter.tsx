@@ -1,6 +1,6 @@
 import React from 'react';
 import { Plus, Search, Edit3, Trash2, Save, BadgeDollarSign, FileCheck2, Clock } from 'lucide-react';
-import { SliderDrawer, FormField, inputClasses, PageHeader } from '@/shared';
+import { SliderDrawer, FormField, inputClasses, PageHeader, Pagination } from '@/shared';
 import type { SupplierPayment, SupplierPaymentFormData } from '../SupplierPaymentPage';
 
 export interface SupplierPaymentPresenterProps {
@@ -161,6 +161,13 @@ export const SupplierPaymentPresenter: React.FC<SupplierPaymentPresenterProps> =
                         </tbody>
                     </table>
                 </div>
+
+                {/* Pagination footer */}
+                <Pagination
+                    totalItems={filteredPayments.length}
+                    pageSize={10}
+                    itemLabel="payments"
+                />
             </div>
 
             {/* Slider Drawer */}

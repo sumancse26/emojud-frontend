@@ -1,6 +1,6 @@
 import React from 'react';
 import { DollarSign, Search, Edit3, Trash2, Save, Award, Users, Calendar } from 'lucide-react';
-import { SliderDrawer, FormField, inputClasses, PageHeader } from '@/shared';
+import { SliderDrawer, FormField, inputClasses, PageHeader, Pagination } from '@/shared';
 import type { CommissionRecord, CommissionProfitFormData } from '../CommissionProfitPage';
 
 export interface CommissionProfitPresenterProps {
@@ -167,6 +167,13 @@ export const CommissionProfitPresenter: React.FC<CommissionProfitPresenterProps>
                         </tbody>
                     </table>
                 </div>
+
+                {/* Pagination footer */}
+                <Pagination
+                    totalItems={filteredCommissions.length}
+                    pageSize={10}
+                    itemLabel="commission records"
+                />
             </div>
 
             {/* Slider Drawer */}

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Search, Download, Plus, Boxes, Save } from 'lucide-react';
-import { SliderDrawer, FormField, inputClasses, selectClasses } from '@/shared';
+import { SliderDrawer, FormField, inputClasses, selectClasses, Pagination } from '@/shared';
 
 interface StockSummaryItem {
     id: string;
@@ -249,6 +249,13 @@ export const StockSummaryPage: React.FC = () => {
                         </tbody>
                     </table>
                 </div>
+
+                {/* Pagination footer */}
+                <Pagination
+                    totalItems={filtered.length}
+                    pageSize={10}
+                    itemLabel="inventory lines"
+                />
             </div>
 
             {/* SliderDrawer modal for Stock Entry */}

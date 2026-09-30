@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Plus, Search, Edit3, Trash2, Save } from 'lucide-react';
-import { SliderDrawer, FormField, inputClasses } from '@/shared';
+import { SliderDrawer, FormField, inputClasses, Pagination } from '@/shared';
 
 interface Supplier {
     id: string;
@@ -272,6 +272,13 @@ export const SuppliersPage: React.FC = () => {
                         </tbody>
                     </table>
                 </div>
+
+                {/* Pagination footer */}
+                <Pagination
+                    totalItems={filtered.length}
+                    pageSize={10}
+                    itemLabel="suppliers"
+                />
             </div>
 
             {/* Slider Drawer */}

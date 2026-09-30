@@ -1,6 +1,6 @@
 import React from 'react';
 import { Plus, Tag, Edit3, Trash2, Save, X as XIcon, Search } from 'lucide-react';
-import { SliderDrawer, FormField, inputClasses, selectClasses, PageHeader } from '@/shared';
+import { SliderDrawer, FormField, inputClasses, selectClasses, PageHeader, Pagination } from '@/shared';
 import type { CategoryItem, CategoryFormData } from '../ProductCategoryPage';
 
 export interface ProductCategoryPresenterProps {
@@ -135,6 +135,14 @@ export const ProductCategoryPresenter: React.FC<ProductCategoryPresenterProps> =
                     </div>
                 ))}
             </div>
+
+            {/* Pagination Footer */}
+            <Pagination
+                totalItems={filteredCategories.length}
+                pageSize={6}
+                itemLabel="categories"
+                className="rounded-2xl border border-slate-200/80 dark:border-slate-800/70 bg-white dark:bg-[#0a1020]"
+            />
 
             {/* Slider Drawer for Create / Edit */}
             <SliderDrawer

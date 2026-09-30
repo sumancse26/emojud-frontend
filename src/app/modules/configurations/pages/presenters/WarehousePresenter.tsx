@@ -1,6 +1,6 @@
 import React from 'react';
 import { Warehouse as WarehouseIcon, Plus, MapPin, Boxes, ArrowRightLeft, Save, Edit3, Search } from 'lucide-react';
-import { SliderDrawer, FormField, inputClasses, selectClasses, PageHeader } from '@/shared';
+import { SliderDrawer, FormField, inputClasses, selectClasses, PageHeader, Pagination } from '@/shared';
 import type { WarehouseItem, WarehouseFormData } from '../WarehousePage';
 
 export interface WarehousePresenterProps {
@@ -158,6 +158,14 @@ export const WarehousePresenter: React.FC<WarehousePresenterProps> = ({
                     );
                 })}
             </div>
+
+            {/* Pagination Footer */}
+            <Pagination
+                totalItems={filteredWarehouses.length}
+                pageSize={6}
+                itemLabel="warehouses"
+                className="rounded-2xl border border-slate-200/80 dark:border-slate-800/70 bg-white dark:bg-[#0a1020]"
+            />
 
             {/* Slider Drawer for Create / Edit */}
             <SliderDrawer isOpen={drawerOpen} onClose={onCloseDrawer}>

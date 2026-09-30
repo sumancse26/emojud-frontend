@@ -1,6 +1,6 @@
 import React from 'react';
 import { Shield, Plus, Edit3, Trash2, Save, Search } from 'lucide-react';
-import { SliderDrawer, FormField, inputClasses, PageHeader } from '@/shared';
+import { SliderDrawer, FormField, inputClasses, PageHeader, Pagination } from '@/shared';
 import type { UserRoleAssignment, UserRoleFormData } from '../UserRolesPage';
 
 export interface UserRolesPresenterProps {
@@ -127,6 +127,13 @@ export const UserRolesPresenter: React.FC<UserRolesPresenterProps> = ({
                         </tbody>
                     </table>
                 </div>
+
+                {/* Pagination footer */}
+                <Pagination
+                    totalItems={filteredUserRoles.length}
+                    pageSize={10}
+                    itemLabel="user assignments"
+                />
             </div>
 
             {/* Slider Drawer */}

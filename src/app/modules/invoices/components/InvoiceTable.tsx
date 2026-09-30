@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { Printer, Eye } from 'lucide-react'
+import { Pagination } from '@/shared'
 import type { Invoice } from '../types/invoice.types'
 
 export const MOCK_INVOICES: Invoice[] = [
@@ -161,54 +162,14 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
       </div>
 
       {/* Pagination footer */}
-      <div className="p-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs text-slate-500">
-        <span>Showing Page {currentPage} of 48 Pages</span>
-        <div className="flex items-center gap-1">
-          <button
-            disabled={currentPage === 1}
-            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-            className="px-3 py-1 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50 cursor-pointer"
-          >
-            Previous
-          </button>
-          <button
-            onClick={() => setCurrentPage(1)}
-            className={`px-3 py-1 rounded-lg font-bold cursor-pointer ${
-              currentPage === 1
-                ? 'bg-emerald-600 text-white'
-                : 'border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800'
-            }`}
-          >
-            1
-          </button>
-          <button
-            onClick={() => setCurrentPage(2)}
-            className={`px-3 py-1 rounded-lg font-bold cursor-pointer ${
-              currentPage === 2
-                ? 'bg-emerald-600 text-white'
-                : 'border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800'
-            }`}
-          >
-            2
-          </button>
-          <button
-            onClick={() => setCurrentPage(3)}
-            className={`px-3 py-1 rounded-lg font-bold cursor-pointer ${
-              currentPage === 3
-                ? 'bg-emerald-600 text-white'
-                : 'border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800'
-            }`}
-          >
-            3
-          </button>
-          <button
-            onClick={() => setCurrentPage((p) => Math.min(48, p + 1))}
-            className="px-3 py-1 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"
-          >
-            Next
-          </button>
-        </div>
-      </div>
+      <Pagination
+        currentPage={currentPage}
+        onPageChange={setCurrentPage}
+        totalItems={filteredInvoices.length}
+        totalPages={48}
+        itemLabel="invoices"
+      />
     </div>
   )
 }
+

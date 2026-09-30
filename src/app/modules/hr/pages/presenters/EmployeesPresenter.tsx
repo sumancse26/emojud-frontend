@@ -1,6 +1,6 @@
 import React from 'react';
 import { UserPlus, Search, MoreVertical, Save, Users, UserCheck, Banknote, Building2 } from 'lucide-react';
-import { SliderDrawer, FormField, inputClasses, selectClasses, PageHeader } from '@/shared';
+import { SliderDrawer, FormField, inputClasses, selectClasses, PageHeader, Pagination } from '@/shared';
 import type { Employee, EmployeeFormData } from '../EmployeesPage';
 
 export interface EmployeesPresenterProps {
@@ -188,6 +188,13 @@ export const EmployeesPresenter: React.FC<EmployeesPresenterProps> = ({
                         </tbody>
                     </table>
                 </div>
+
+                {/* Pagination footer */}
+                <Pagination
+                    totalItems={filteredEmployees.length}
+                    pageSize={10}
+                    itemLabel="employees"
+                />
             </div>
 
             {/* Slider Drawer for Create / Edit */}

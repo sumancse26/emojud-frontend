@@ -1,6 +1,6 @@
 import React from 'react';
 import { Plus, Search, Edit3, Trash2, Save, HandCoins, Receipt, TrendingUp } from 'lucide-react';
-import { SliderDrawer, FormField, inputClasses, PageHeader } from '@/shared';
+import { SliderDrawer, FormField, inputClasses, PageHeader, Pagination } from '@/shared';
 import type { DueCollection, DueCollectionFormData } from '../CustomerDueCollectionPage';
 
 export interface CustomerDueCollectionPresenterProps {
@@ -157,6 +157,13 @@ export const CustomerDueCollectionPresenter: React.FC<CustomerDueCollectionPrese
                         </tbody>
                     </table>
                 </div>
+
+                {/* Pagination footer */}
+                <Pagination
+                    totalItems={filteredCollections.length}
+                    pageSize={10}
+                    itemLabel="collections"
+                />
             </div>
 
             {/* Slider Drawer */}

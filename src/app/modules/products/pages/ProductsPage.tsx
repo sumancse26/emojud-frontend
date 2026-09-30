@@ -1,6 +1,7 @@
 import React from 'react'
 import { Plus, Shirt, Watch, Edit3, Trash2, Barcode } from 'lucide-react'
 import { useApp } from '@/app/providers/AppProvider'
+import { Pagination } from '@/shared'
 
 export const ProductsPage: React.FC = () => {
   const { setIsAddProductModalOpen } = useApp()
@@ -39,7 +40,7 @@ export const ProductsPage: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/40">
-              <tr className="hover:bg-slate-50/80 dark:hover:bg-slate-800/30 transition-colors">
+              <tr className="hover:bg-slate-50/80 dark:hover:bg-slate-850/50 transition-colors">
                 <td className="px-5 py-3.5">
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
@@ -66,7 +67,7 @@ export const ProductsPage: React.FC = () => {
                   <button className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-rose-500 cursor-pointer"><Trash2 className="w-3.5 h-3.5" /></button>
                 </td>
               </tr>
-              <tr className="hover:bg-slate-50/80 dark:hover:bg-slate-800/30 transition-colors">
+              <tr className="hover:bg-slate-50/80 dark:hover:bg-slate-850/50 transition-colors">
                 <td className="px-5 py-3.5">
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
@@ -96,7 +97,15 @@ export const ProductsPage: React.FC = () => {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination footer */}
+        <Pagination
+          totalItems={2}
+          totalPages={1}
+          itemLabel="products"
+        />
       </div>
     </section>
   )
 }
+

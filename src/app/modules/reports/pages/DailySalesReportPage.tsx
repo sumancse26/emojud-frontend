@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Printer, Download, Calendar } from 'lucide-react';
+import { Pagination } from '@/shared';
 
 export const DailySalesReportPage: React.FC = () => {
     const [selectedDate, setSelectedDate] = useState('2026-09-17');
@@ -167,6 +168,13 @@ export const DailySalesReportPage: React.FC = () => {
                         </tbody>
                     </table>
                 </div>
+
+                {/* Pagination footer */}
+                <Pagination
+                    totalItems={salesData.length}
+                    pageSize={10}
+                    itemLabel="invoices"
+                />
             </div>
         </section>
     );

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Award, Plus, Edit3, Trash2, Save } from 'lucide-react';
-import { SliderDrawer, FormField, inputClasses, PageHeader } from '@/shared';
+import { SliderDrawer, FormField, inputClasses, PageHeader, Pagination } from '@/shared';
 import type { Designation, DesignationFormData } from '../DesignationPage';
 
 export interface DesignationPresenterProps {
@@ -107,6 +107,13 @@ export const DesignationPresenter: React.FC<DesignationPresenterProps> = ({
                         </tbody>
                     </table>
                 </div>
+
+                {/* Pagination footer */}
+                <Pagination
+                    totalItems={designations.length}
+                    pageSize={10}
+                    itemLabel="designations"
+                />
             </div>
 
             {/* Slider Drawer */}

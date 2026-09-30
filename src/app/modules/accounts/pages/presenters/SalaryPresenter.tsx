@@ -1,6 +1,6 @@
 import React from 'react';
 import { DollarSign, Edit3, Trash2, Save, Search, Coins, CheckCircle2, Calendar } from 'lucide-react';
-import { SliderDrawer, FormField, inputClasses, PageHeader } from '@/shared';
+import { SliderDrawer, FormField, inputClasses, PageHeader, Pagination } from '@/shared';
 import type { SalaryRecord, SalaryFormData } from '../SalaryPage';
 
 export interface SalaryPresenterProps {
@@ -162,6 +162,13 @@ export const SalaryPresenter: React.FC<SalaryPresenterProps> = ({
                         </tbody>
                     </table>
                 </div>
+
+                {/* Pagination footer */}
+                <Pagination
+                    totalItems={filteredSalaries.length}
+                    pageSize={10}
+                    itemLabel="payroll slips"
+                />
             </div>
 
             {/* Slider Drawer */}

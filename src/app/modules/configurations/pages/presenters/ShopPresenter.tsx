@@ -16,7 +16,7 @@ import {
     Activity,
     ArrowRight
 } from 'lucide-react';
-import { SliderDrawer, FormField, inputClasses, selectClasses } from '@/shared';
+import { SliderDrawer, FormField, inputClasses, selectClasses, Pagination } from '@/shared';
 import PageHeader from '@/shared/components/PageHeader/PageHeader';
 
 import type { ShopOutlet, ShopFormData } from '../ShopsPage';
@@ -198,6 +198,14 @@ export const ShopPresenter: React.FC<ShopPresenterProps> = (props) => {
                     </div>
                 ))}
             </div>
+
+            {/* Outlets Grid Pagination */}
+            <Pagination
+                totalItems={filteredShops.length}
+                pageSize={6}
+                itemLabel="outlets"
+                className="rounded-2xl border border-slate-200/80 dark:border-slate-800/70 bg-white dark:bg-[#0a1020]"
+            />
 
             {/* Slider Drawer for Create / Edit */}
             <SliderDrawer isOpen={drawerOpen} onClose={onCloseDrawer}>

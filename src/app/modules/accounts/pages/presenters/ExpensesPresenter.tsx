@@ -1,6 +1,6 @@
 import React from 'react';
 import { Plus, Search, Edit3, Trash2, Save, CheckCircle2, Receipt, Wallet, FileText, ShieldCheck } from 'lucide-react';
-import { SliderDrawer, FormField, inputClasses, PageHeader } from '@/shared';
+import { SliderDrawer, FormField, inputClasses, PageHeader, Pagination } from '@/shared';
 import type { ExpenseVoucher, ExpenseFormData } from '../ExpensesPage';
 
 export interface ExpensesPresenterProps {
@@ -176,6 +176,13 @@ export const ExpensesPresenter: React.FC<ExpensesPresenterProps> = ({
                         </tbody>
                     </table>
                 </div>
+
+                {/* Pagination footer */}
+                <Pagination
+                    totalItems={filteredExpenses.length}
+                    pageSize={10}
+                    itemLabel="vouchers"
+                />
             </div>
 
             {/* Slider Drawer */}

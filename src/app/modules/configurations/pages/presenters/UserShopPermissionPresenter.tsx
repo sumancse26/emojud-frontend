@@ -1,6 +1,6 @@
 import React from 'react';
 import { Save } from 'lucide-react';
-import { PageHeader } from '@/shared';
+import { PageHeader, Pagination } from '@/shared';
 import type { UserShopPermission } from '../UserShopPermissionPage';
 
 export interface UserShopPermissionPresenterProps {
@@ -132,6 +132,13 @@ export const UserShopPermissionPresenter: React.FC<UserShopPermissionPresenterPr
                         </tbody>
                     </table>
                 </div>
+
+                {/* Pagination footer */}
+                <Pagination
+                    totalItems={permissions.length}
+                    pageSize={10}
+                    itemLabel="permissions"
+                />
             </div>
         </section>
     );
