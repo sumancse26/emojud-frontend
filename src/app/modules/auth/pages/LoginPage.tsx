@@ -7,18 +7,31 @@ import {
     ExternalLink,
     AlertCircle
 } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router';
 import { useApp } from '@/app/providers/AppProvider';
+import { ROUTES } from '@/app/routes/paths';
+import { tokenStorage } from '@/shared/services/tokenStorage';
 import { authService } from '../services/authService';
 import { LoginForm } from '../components/LoginForm';
 import type { LoginCredentials } from '../types/auth.types';
 
 export const LoginPage: React.FC = () => {
+    const navigate = useNavigate();
+    const location = useLocation();
     const { setActiveView } = useApp();
     const [username, setUsername] = useState('suman');
     const [password, setPassword] = useState('12345678');
     const [rememberMe, setRememberMe] = useState(true);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    // If an access token already exists in cookie, redirect to dashboard
+    React.useEffect(() => {
+        if (tokenStorage.getToken()) {
+            const redirectPath = (location.state as { from?: { pathname: string } })?.from?.pathname || ROUTES.HOME.DASHBOARD;
+            navigate(redirectPath, { replace: true });
+        }
+    }, [navigate, location]);
 
     const handleFillDemo = () => {
         setUsername('suman');
@@ -32,6 +45,8 @@ export const LoginPage: React.FC = () => {
         try {
             await authService.login(credentials);
             setActiveView('view-dashboard');
+            const redirectPath = (location.state as { from?: { pathname: string } })?.from?.pathname || ROUTES.HOME.DASHBOARD;
+            navigate(redirectPath, { replace: true });
         } catch (err: unknown) {
             const message = err instanceof Error ? err.message : 'Login failed. Please check your credentials.';
             setError(message);

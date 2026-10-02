@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router';
 import { MainLayout } from '@/layouts';
 import { ROUTES } from './paths';
 import { NotFoundPage } from './NotFoundPage';
+import { ProtectedRoute } from './ProtectedRoute';
 
 // Lazy load feature pages for optimal bundle splitting and performance
 const LoginPage = lazy(() =>
@@ -146,8 +147,13 @@ export const AppRouter: React.FC = () => {
                     element={<Navigate to={ROUTES.HOME.DASHBOARD} replace />}
                 />
 
-                {/* Protected Enterprise ERP Feature Routes (Wrapped in MainLayout) */}
-                <Route element={<MainLayout />}>
+                {/* Protected Enterprise ERP Feature Routes (Wrapped in ProtectedRoute and MainLayout) */}
+                <Route
+                    element={
+                        <ProtectedRoute>
+                            <MainLayout />
+                        </ProtectedRoute>
+                    }>
                     {/* 1. Home Module */}
                     <Route path={ROUTES.HOME.DASHBOARD} element={<DashboardPage />} />
 
@@ -255,3 +261,4 @@ export const AppRouter: React.FC = () => {
 export * from './paths';
 export * from './types';
 export * from './NotFoundPage';
+export * from './ProtectedRoute';

@@ -1,9 +1,5 @@
 import type { NavMenuItem } from '@/app/routes/types';
 
-/**
- * Default Nav Menu Data matching the API response structure.
- * Can be fetched dynamically from API backend at runtime.
- */
 export const NAV_MENU_DATA: NavMenuItem[] = [
     {
         id: '1',

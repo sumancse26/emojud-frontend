@@ -15,27 +15,46 @@ const axiosInstance: AxiosInstance = axiosLib.create({
 });
 
 // ─── Request Interceptor ───────────────────────────────────────────────────────
-// Automatically attach Bearer token from cookie on every request
+// Automatically attach Bearer token from cookie on every request.
+// If no token is found, redirect to the login page.
 axiosInstance.interceptors.request.use(
     (config: InternalAxiosRequestConfig) => {
+        const isAuthRequest =
+            config.url?.includes('/api/auth/login') ||
+            config.url?.includes('/auth/login');
+
         const token = tokenStorage.getToken();
+
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
+        } else if (!isAuthRequest) {
+            // No token found for an authenticated API call -> redirect to login page
+            tokenStorage.clearAll();
+            if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
+                window.location.href = '/login';
+            }
+            return Promise.reject(new Error('No access token found. Redirecting to login page.'));
         }
+
         return config;
     },
     (error) => Promise.reject(error)
 );
 
 // ─── Response Interceptor ──────────────────────────────────────────────────────
-// Handle 401 Unauthorized: clear session and redirect to login
+// Handle 401 Unauthorized: clear session cookie and redirect to login
 axiosInstance.interceptors.response.use(
     (response: AxiosResponse) => response,
     (error) => {
-        const isLoginRequest = error.config?.url?.endsWith('login');
+        const isLoginRequest =
+            error.config?.url?.includes('/api/auth/login') ||
+            error.config?.url?.includes('/auth/login');
+
         if (error.response?.status === 401 && !isLoginRequest) {
             tokenStorage.clearAll();
-            window.location.href = '/login';
+            if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
+                window.location.href = '/login';
+            }
         }
         return Promise.reject(error);
     }

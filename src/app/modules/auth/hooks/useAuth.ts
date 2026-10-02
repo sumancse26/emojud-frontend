@@ -2,14 +2,11 @@ import { useState, useCallback } from 'react'
 import type { User, LoginCredentials } from '../types/auth.types'
 import { authService } from '../services/authService'
 
+import { tokenStorage } from '@/shared/services/tokenStorage'
+
 export function useAuth() {
-  const [user, setUser] = useState<User | null>({
-    id: 'usr_default',
-    username: 'suman',
-    name: 'Suman (Admin)',
-    email: 'suman@emojud.com',
-    role: 'Super Administrator',
-    branchId: '1',
+  const [user, setUser] = useState<User | null>(() => {
+    return tokenStorage.getToken() ? tokenStorage.getUser<User>() : null
   })
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -30,12 +27,13 @@ export function useAuth() {
   }, [])
 
   const logout = useCallback(() => {
+    authService.logout()
     setUser(null)
   }, [])
 
   return {
     user,
-    isAuthenticated: !!user,
+    isAuthenticated: !!user && !!tokenStorage.getToken(),
     isLoading,
     error,
     login,

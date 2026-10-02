@@ -3,9 +3,23 @@ import { Menu, Search, Bell, Sun, Moon, LogOut, ChevronDown, User, Shield, Store
 import { useNavigate } from 'react-router';
 import { useApp } from '@/app/providers/AppProvider';
 import { ROUTES } from '@/app/routes/paths';
+import { authService } from '@/app/modules/auth/services/authService';
+import { tokenStorage } from '@/shared/services/tokenStorage';
+import type { User as UserType } from '@/app/modules/auth/types/auth.types';
 
 export const Header: React.FC = () => {
     const navigate = useNavigate();
+    const currentUser = tokenStorage.getUser<UserType>();
+    const userName = currentUser?.name || currentUser?.username || 'Suman (Admin)';
+    const userEmail = currentUser?.email || 'suman.admin@emojud.com';
+    const userRole = currentUser?.role || 'Super Administrator';
+    const userInitials = (currentUser?.name || currentUser?.username || 'AD')
+        .split(' ')
+        .map((p) => p[0])
+        .slice(0, 2)
+        .join('')
+        .toUpperCase();
+
     const {
         isDarkMode,
         toggleTheme,
@@ -35,6 +49,7 @@ export const Header: React.FC = () => {
 
     const handleSignOut = () => {
         setIsProfileMenuOpen(false);
+        authService.logout();
         navigate(ROUTES.AUTH.LOGIN);
     };
 
@@ -147,14 +162,14 @@ export const Header: React.FC = () => {
                         onClick={() => setIsProfileMenuOpen((prev) => !prev)}
                         className="flex items-center gap-2.5 p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-all cursor-pointer group">
                         <div className="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-xs shrink-0 ring-2 ring-emerald-500/30">
-                            AD
+                            {userInitials}
                         </div>
                         <div className="hidden md:block text-left">
                             <p className="text-xs font-bold text-slate-800 dark:text-slate-200 leading-tight">
-                                Suman (Admin)
+                                {userName}
                             </p>
                             <p className="text-[10px] text-slate-400 leading-tight">
-                                Super Administrator
+                                {userRole}
                             </p>
                         </div>
                         <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform ${isProfileMenuOpen ? 'rotate-180' : ''}`} />
@@ -167,20 +182,20 @@ export const Header: React.FC = () => {
                             <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800">
                                 <div className="flex items-center gap-2.5">
                                     <div className="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center font-bold text-xs shadow-sm shadow-emerald-500/30">
-                                        AD
+                                        {userInitials}
                                     </div>
                                     <div className="overflow-hidden">
                                         <p className="font-bold text-slate-900 dark:text-white truncate">
-                                            Suman Roy
+                                            {userName}
                                         </p>
                                         <p className="text-[10px] text-slate-400 truncate">
-                                            suman.admin@emojud.com
+                                            {userEmail}
                                         </p>
                                     </div>
                                 </div>
                                 <div className="mt-2.5 flex items-center gap-1.5">
                                     <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-                                        Super Admin
+                                        {userRole}
                                     </span>
                                     <span className="text-[10px] text-slate-400">
                                         • All Branches Access

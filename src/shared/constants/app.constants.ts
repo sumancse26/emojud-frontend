@@ -5,7 +5,7 @@ export const APP_CONSTANTS = {
     },
 
     STORAGE_KEYS: {
-        AUTH_TOKEN: 'emojud_access_token',
+        AUTH_TOKEN: 'access_token',
         USER_PROFILE: 'emojud_user',
         THEME: 'emojud_theme'
     },

@@ -4,68 +4,110 @@ import { APP_CONSTANTS } from '@/shared/constants/app.constants';
 // Token is kept in a cookie (Secure + SameSite=Strict) instead of localStorage
 // to reduce XSS exposure. User data (non-sensitive) remains in localStorage.
 
-const TOKEN_KEY = APP_CONSTANTS.STORAGE_KEYS.AUTH_TOKEN;
+const PRIMARY_TOKEN_KEY = APP_CONSTANTS.STORAGE_KEYS.AUTH_TOKEN;
+const FALLBACK_TOKEN_KEY = 'emojud_access_token';
 const USER_KEY = APP_CONSTANTS.STORAGE_KEYS.USER_PROFILE;
 const COOKIE_MAX_AGE_SECONDS = APP_CONSTANTS.COOKIE.TOKEN_MAX_AGE_SECONDS;
 
-
 function setCookie(name: string, value: string, maxAge: number): void {
-  const secure = location.protocol === 'https:' ? '; Secure' : ''
-  document.cookie = `${name}=${encodeURIComponent(value)}; Max-Age=${maxAge}; Path=/; SameSite=Strict${secure}`
+  if (typeof document === 'undefined') return;
+  const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
+  const secure = isHttps ? '; Secure' : '';
+  document.cookie = `${name}=${encodeURIComponent(value)}; Max-Age=${maxAge}; Path=/; SameSite=Lax${secure}`;
 }
 
 function getCookie(name: string): string | null {
-  const match = document.cookie
-    .split('; ')
-    .find((row) => row.startsWith(`${name}=`))
-  return match ? decodeURIComponent(match.split('=').slice(1).join('=')) : null
+  if (typeof document === 'undefined') return null;
+  const cookies = document.cookie ? document.cookie.split(/;\s*/) : [];
+  for (const item of cookies) {
+    const [key, ...valParts] = item.split('=');
+    if (key === name) {
+      return decodeURIComponent(valParts.join('='));
+    }
+  }
+  return null;
 }
 
 function deleteCookie(name: string): void {
-  document.cookie = `${name}=; Max-Age=0; Path=/; SameSite=Strict`
+  if (typeof document === 'undefined') return;
+  document.cookie = `${name}=; Max-Age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT; Path=/; SameSite=Lax`;
 }
 
 // ─── Token Storage ─────────────────────────────────────────────────────────────
 export const tokenStorage = {
-  /** Read Bearer token from cookie */
+  /** Read access token from cookie; validates JWT expiry if present */
   getToken(): string | null {
-    return getCookie(TOKEN_KEY)
+    const token = getCookie(PRIMARY_TOKEN_KEY) || getCookie(FALLBACK_TOKEN_KEY);
+    if (!token) return null;
+
+    // Check if token has an exp claim and is expired
+    try {
+      const parts = token.split('.');
+      if (parts.length === 3) {
+        const base64Url = parts[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(
+          atob(base64)
+            .split('')
+            .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+            .join('')
+        );
+        const payload = JSON.parse(jsonPayload);
+        if (payload?.exp && payload.exp * 1000 < Date.now()) {
+          this.clearAll();
+          return null;
+        }
+      }
+    } catch {
+      // If parsing fails, proceed with existing token string
+    }
+
+    return token;
   },
 
-  /** Persist Bearer token in a cookie */
-  setToken(token: string): void {
-    setCookie(TOKEN_KEY, token, COOKIE_MAX_AGE_SECONDS)
+  /** Persist access token in cookie with optional maxAge */
+  setToken(token: string, maxAgeSeconds: number = COOKIE_MAX_AGE_SECONDS): void {
+    setCookie(PRIMARY_TOKEN_KEY, token, maxAgeSeconds);
+    setCookie(FALLBACK_TOKEN_KEY, token, maxAgeSeconds);
   },
 
-  /** Remove only the token cookie */
+  /** Remove token cookies */
   removeToken(): void {
-    deleteCookie(TOKEN_KEY)
+    deleteCookie(PRIMARY_TOKEN_KEY);
+    deleteCookie(FALLBACK_TOKEN_KEY);
   },
 
   /** Read user object from localStorage */
   getUser<T>(): T | null {
+    if (typeof localStorage === 'undefined') return null;
     try {
-      const raw = localStorage.getItem(USER_KEY)
-      return raw ? (JSON.parse(raw) as T) : null
+      const raw = localStorage.getItem(USER_KEY);
+      return raw ? (JSON.parse(raw) as T) : null;
     } catch {
-      return null
+      return null;
     }
   },
 
   /** Persist user object in localStorage */
   setUser<T>(user: T): void {
-    localStorage.setItem(USER_KEY, JSON.stringify(user))
+    if (typeof localStorage === 'undefined') return;
+    try {
+      localStorage.setItem(USER_KEY, JSON.stringify(user));
+    } catch {
+      // Ignore quota errors
+    }
   },
 
   /** Remove user object from localStorage */
   removeUser(): void {
-    localStorage.removeItem(USER_KEY)
+    if (typeof localStorage === 'undefined') return;
+    localStorage.removeItem(USER_KEY);
   },
 
-  /** Clear both the token cookie and user data from localStorage */
+  /** Clear both the token cookies and user data */
   clearAll(): void {
-    deleteCookie(TOKEN_KEY)
-    localStorage.removeItem(USER_KEY)
+    this.removeToken();
+    this.removeUser();
   },
-}
+};
 

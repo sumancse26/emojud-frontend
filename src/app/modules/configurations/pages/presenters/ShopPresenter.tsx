@@ -5,7 +5,6 @@ import {
     MapPin,
     Phone,
     User,
-    CheckCircle2,
     Search,
     Filter,
     Save,
