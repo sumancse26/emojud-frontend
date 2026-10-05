@@ -1,42 +1,69 @@
-import { useState, useCallback } from 'react'
-import type { User, LoginCredentials } from '../types/auth.types'
-import { authService } from '../services/authService'
+import { useCallback } from 'react';
+import { useApi } from '@/shared/hooks/useApi';
+import type { User, LoginCredentials } from '../types/auth.types';
+import { authService } from '../services/authService';
+import { tokenStorage } from '@/shared/services/tokenStorage';
 
-import { tokenStorage } from '@/shared/services/tokenStorage'
-
-export function useAuth() {
-  const [user, setUser] = useState<User | null>(() => {
-    return tokenStorage.getToken() ? tokenStorage.getUser<User>() : null
-  })
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  const login = useCallback(async (credentials: LoginCredentials) => {
-    setIsLoading(true)
-    setError(null)
-    try {
-      const response = await authService.login(credentials)
-      setUser(response.user)
-      return response.user
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed')
-      throw err
-    } finally {
-      setIsLoading(false)
-    }
-  }, [])
-
-  const logout = useCallback(() => {
-    authService.logout()
-    setUser(null)
-  }, [])
-
-  return {
-    user,
-    isAuthenticated: !!user && !!tokenStorage.getToken(),
-    isLoading,
-    error,
-    login,
-    logout,
-  }
+export interface UseAuthReturn {
+    user: User | null;
+    token: string | null;
+    data: { user: User; token: string } | null;
+    isAuthenticated: boolean;
+    isLoading: boolean;
+    isSuccess: boolean;
+    isError: boolean;
+    error: string | null;
+    login: (credentials: LoginCredentials) => Promise<{ user: User; token: string }>;
+    logout: () => void;
+    clearError: () => void;
 }
+
+/**
+ * Domain-specific Auth hook built on top of the master `useApi` pattern.
+ */
+export function useAuth(): UseAuthReturn {
+    const {
+        data,
+        execute: executeLogin,
+        isLoading,
+        isSuccess,
+        isError,
+        error,
+        setError,
+        reset
+    } = useApi(authService.login, {
+        initialData: () => {
+            const token = tokenStorage.getToken();
+            const user = tokenStorage.getUser<User>();
+            return token && user ? { user, token } : null;
+        }
+    });
+
+    const user = data?.user ?? (tokenStorage.getToken() ? tokenStorage.getUser<User>() : null);
+    const token = data?.token ?? tokenStorage.getToken();
+
+    const logout = useCallback(() => {
+        authService.logout();
+        reset();
+    }, [reset]);
+
+    const clearError = useCallback(() => {
+        setError(null);
+    }, [setError]);
+
+    return {
+        user,
+        token,
+        data,
+        isAuthenticated: !!user && !!token,
+        isLoading,
+        isSuccess,
+        isError,
+        error,
+        login: executeLogin,
+        logout,
+        clearError
+    };
+}
+
+export default useAuth;

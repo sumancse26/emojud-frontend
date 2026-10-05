@@ -1,134 +1,46 @@
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router';
 import { MainLayout } from '@/layouts';
 import { ROUTES } from './paths';
 import { NotFoundPage } from './NotFoundPage';
 import { ProtectedRoute } from './ProtectedRoute';
-
-// Lazy load feature pages for optimal bundle splitting and performance
-const LoginPage = lazy(() =>
-    import('@/app/modules/auth').then((m) => ({ default: m.LoginPage }))
-);
-const DashboardPage = lazy(() =>
-    import('@/app/modules/dashboard').then((m) => ({ default: m.DashboardPage }))
-);
-
-// Configurations
-const ShopsPage = lazy(() =>
-    import('@/app/modules/configurations').then((m) => ({ default: m.ShopsPage }))
-);
-const WarehousePage = lazy(() =>
-    import('@/app/modules/configurations').then((m) => ({ default: m.WarehousePage }))
-);
-const ProductCategoryPage = lazy(() =>
-    import('@/app/modules/configurations').then((m) => ({ default: m.ProductCategoryPage }))
-);
-const UserShopPermissionPage = lazy(() =>
-    import('@/app/modules/configurations').then((m) => ({ default: m.UserShopPermissionPage }))
-);
-
-// HR
-const EmployeesPage = lazy(() =>
-    import('@/app/modules/hr').then((m) => ({ default: m.EmployeesPage }))
-);
-const DepartmentsPage = lazy(() =>
-    import('@/app/modules/hr').then((m) => ({ default: m.DepartmentsPage }))
-);
-const DesignationPage = lazy(() =>
-    import('@/app/modules/hr').then((m) => ({ default: m.DesignationPage }))
-);
-const RolesPage = lazy(() =>
-    import('@/app/modules/hr').then((m) => ({ default: m.RolesPage }))
-);
-const UserRolesPage = lazy(() =>
-    import('@/app/modules/hr').then((m) => ({ default: m.UserRolesPage }))
-);
-
-// Products & Inventory
-const ProductsPage = lazy(() =>
-    import('@/app/modules/products').then((m) => ({ default: m.ProductsPage }))
-);
-const SuppliersPage = lazy(() =>
-    import('@/app/modules/suppliers').then((m) => ({ default: m.SuppliersPage }))
-);
-const CustomersPage = lazy(() =>
-    import('@/app/modules/customers').then((m) => ({ default: m.CustomersPage }))
-);
-const InvoicesPage = lazy(() =>
-    import('@/app/modules/invoices').then((m) => ({ default: m.InvoicesPage }))
-);
-
-// Stock Management
-const PurchasesPage = lazy(() =>
-    import('@/app/modules/purchases').then((m) => ({ default: m.PurchasesPage }))
-);
-const StockSummaryPage = lazy(() =>
-    import('@/app/modules/stock').then((m) => ({ default: m.StockSummaryPage }))
-);
-
-// Accounts
-const ExpensesPage = lazy(() =>
-    import('@/app/modules/accounts').then((m) => ({ default: m.ExpensesPage }))
-);
-const SalaryPage = lazy(() =>
-    import('@/app/modules/accounts').then((m) => ({ default: m.SalaryPage }))
-);
-const SupplierPaymentPage = lazy(() =>
-    import('@/app/modules/accounts').then((m) => ({ default: m.SupplierPaymentPage }))
-);
-const CustomerDueCollectionPage = lazy(() =>
-    import('@/app/modules/accounts').then((m) => ({ default: m.CustomerDueCollectionPage }))
-);
-const CommissionProfitPage = lazy(() =>
-    import('@/app/modules/accounts').then((m) => ({ default: m.CommissionProfitPage }))
-);
-
-// Reports
-const ReportsPage = lazy(() =>
-    import('@/app/modules/reports').then((m) => ({ default: m.ReportsPage }))
-);
-const DailySalesReportPage = lazy(() =>
-    import('@/app/modules/reports').then((m) => ({ default: m.DailySalesReportPage }))
-);
-const DailyPurchaseReportPage = lazy(() =>
-    import('@/app/modules/reports').then((m) => ({ default: m.DailyPurchaseReportPage }))
-);
-const StockSummaryReportPage = lazy(() =>
-    import('@/app/modules/reports').then((m) => ({ default: m.StockSummaryReportPage }))
-);
-const CustomerDueReportPage = lazy(() =>
-    import('@/app/modules/reports').then((m) => ({ default: m.CustomerDueReportPage }))
-);
-const SupplierDueReportPage = lazy(() =>
-    import('@/app/modules/reports').then((m) => ({ default: m.SupplierDueReportPage }))
-);
-const DailyExpenseReportPage = lazy(() =>
-    import('@/app/modules/reports').then((m) => ({ default: m.DailyExpenseReportPage }))
-);
-const GrossProfitReportPage = lazy(() =>
-    import('@/app/modules/reports').then((m) => ({ default: m.GrossProfitReportPage }))
-);
-const CashFlowReportPage = lazy(() =>
-    import('@/app/modules/reports').then((m) => ({ default: m.CashFlowReportPage }))
-);
-const ProductLedgerReportPage = lazy(() =>
-    import('@/app/modules/reports').then((m) => ({ default: m.ProductLedgerReportPage }))
-);
-const CollectionReportPage = lazy(() =>
-    import('@/app/modules/reports').then((m) => ({ default: m.CollectionReportPage }))
-);
-
-// Loading Fallback
-const PageLoader: React.FC = () => (
-    <div className="flex h-[60vh] w-full items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-            <div className="h-9 w-9 animate-spin rounded-full border-3 border-emerald-500 border-t-transparent shadow-xs" />
-            <span className="text-xs font-semibold tracking-wider text-slate-400 uppercase">
-                Loading Module...
-            </span>
-        </div>
-    </div>
-);
+import {
+    PageLoader,
+    FeaturePlaceholder,
+    LoginPage,
+    DashboardPage,
+    ShopsPage,
+    WarehousePage,
+    ProductCategoryPage,
+    UserShopPermissionPage,
+    EmployeesPage,
+    DepartmentsPage,
+    DesignationPage,
+    RolesPage,
+    UserRolesPage,
+    ProductsPage,
+    SuppliersPage,
+    CustomersPage,
+    InvoicesPage,
+    PurchasesPage,
+    StockSummaryPage,
+    ExpensesPage,
+    SalaryPage,
+    SupplierPaymentPage,
+    CustomerDueCollectionPage,
+    CommissionProfitPage,
+    ReportsPage,
+    DailySalesReportPage,
+    DailyPurchaseReportPage,
+    StockSummaryReportPage,
+    CustomerDueReportPage,
+    SupplierDueReportPage,
+    DailyExpenseReportPage,
+    GrossProfitReportPage,
+    CashFlowReportPage,
+    ProductLedgerReportPage,
+    CollectionReportPage
+} from './components';
 
 export const AppRouter: React.FC = () => {
     return (
@@ -137,7 +49,7 @@ export const AppRouter: React.FC = () => {
                 {/* Public Auth Routes */}
                 <Route path={ROUTES.AUTH.LOGIN} element={<LoginPage />} />
 
-                {/* Root Redirection */}
+                {/* Root Redirections */}
                 <Route
                     path={ROUTES.ROOT}
                     element={<Navigate to={ROUTES.HOME.DASHBOARD} replace />}
@@ -147,7 +59,7 @@ export const AppRouter: React.FC = () => {
                     element={<Navigate to={ROUTES.HOME.DASHBOARD} replace />}
                 />
 
-                {/* Protected Enterprise ERP Feature Routes (Wrapped in ProtectedRoute and MainLayout) */}
+                {/* Protected Enterprise ERP Feature Routes (Nested inside ProtectedRoute + MainLayout) */}
                 <Route
                     element={
                         <ProtectedRoute>
@@ -249,6 +161,9 @@ export const AppRouter: React.FC = () => {
                         path={ROUTES.REPORTS.COLLECTION}
                         element={<CollectionReportPage />}
                     />
+
+                    {/* Feature Fallback within Layout for dynamic / submenu items */}
+                    <Route path="/feature/*" element={<FeaturePlaceholder />} />
                 </Route>
 
                 {/* Catch-all 404 Route */}
@@ -260,5 +175,7 @@ export const AppRouter: React.FC = () => {
 
 export * from './paths';
 export * from './types';
+export * from './components';
 export * from './NotFoundPage';
 export * from './ProtectedRoute';
+export default AppRouter;

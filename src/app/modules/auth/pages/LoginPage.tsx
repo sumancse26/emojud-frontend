@@ -1,29 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router';
 import { ROUTES } from '@/app/routes/paths';
-import { tokenStorage } from '@/shared/services/tokenStorage';
-import { authService } from '../services/authService';
+import { useAuth } from '../hooks/useAuth';
 import { LoginPresenter } from './presenters/LoginPresenter';
 import type { LoginCredentials } from '../types/auth.types';
 
 export const LoginPage: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
+    const { isAuthenticated, isLoading, error, login, clearError } = useAuth();
+
     const [formData, setFormData] = useState<LoginCredentials>({
         username: 'suman',
         password: '12345678',
         rememberMe: true
     });
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        if (tokenStorage.getToken()) {
+        if (isAuthenticated) {
             const redirectPath =
                 (location.state as { from?: { pathname: string } })?.from?.pathname || ROUTES.HOME.DASHBOARD;
             navigate(redirectPath, { replace: true });
         }
-    }, [navigate, location]);
+    }, [isAuthenticated, navigate, location]);
 
     const handleFillDemo = () => {
         setFormData({
@@ -31,7 +30,7 @@ export const LoginPage: React.FC = () => {
             password: '12345678',
             rememberMe: true
         });
-        setError(null);
+        clearError();
     };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -43,18 +42,13 @@ export const LoginPage: React.FC = () => {
     };
 
     const handleSubmit = async (credentials: LoginCredentials) => {
-        setError(null);
-        setIsLoading(true);
         try {
-            await authService.login(credentials);
+            await login(credentials);
             const redirectPath =
                 (location.state as { from?: { pathname: string } })?.from?.pathname || ROUTES.HOME.DASHBOARD;
             navigate(redirectPath, { replace: true });
-        } catch (err: unknown) {
-            const message = err instanceof Error ? err.message : 'Login failed. Please check your credentials.';
-            setError(message);
-        } finally {
-            setIsLoading(false);
+        } catch {
+            // Error is managed and displayed by useAuth state
         }
     };
 
