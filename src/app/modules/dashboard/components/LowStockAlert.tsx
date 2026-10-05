@@ -1,9 +1,10 @@
 import React from 'react'
 import { Plus } from 'lucide-react'
-import { useApp } from '@/app/providers/AppProvider'
+import { useNavigate } from 'react-router'
+import { ROUTES } from '@/app/routes/paths'
 
 export const LowStockAlert: React.FC = () => {
-  const { setActiveView } = useApp()
+  const navigate = useNavigate()
 
   return (
     <div className="bg-white dark:bg-[#0d1729] border border-slate-200/80 dark:border-slate-800/50 rounded-2xl p-5 shadow-sm dark:shadow-none flex flex-col justify-between">
@@ -36,7 +37,7 @@ export const LowStockAlert: React.FC = () => {
       </div>
 
       <button
-        onClick={() => setActiveView('view-purchases')}
+        onClick={() => navigate(ROUTES.STOCK_MANAGEMENT.PURCHASE)}
         className="mt-4 w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
       >
         <Plus className="w-3.5 h-3.5" />

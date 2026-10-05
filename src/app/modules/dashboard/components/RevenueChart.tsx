@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react'
 import { Chart, registerables } from 'chart.js'
-import { useApp } from '@/app/providers/AppProvider'
+import { useApp } from '@/app/providers'
 
 Chart.register(...registerables)
 

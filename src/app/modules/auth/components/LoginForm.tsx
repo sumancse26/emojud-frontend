@@ -1,73 +1,25 @@
 import React, { useState } from 'react';
-import {
-    User as UserIcon,
-    Lock,
-    Eye,
-    EyeOff,
-    ShieldCheck,
-    ArrowRight,
-    Loader2
-} from 'lucide-react';
+import { User as UserIcon, Lock, Eye, EyeOff, ShieldCheck, ArrowRight, Loader2 } from 'lucide-react';
 import type { LoginCredentials } from '../types/auth.types';
 
 export interface LoginFormProps {
+    formData: LoginCredentials;
+    onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
     onSubmit: (credentials: LoginCredentials) => Promise<void> | void;
     isLoading?: boolean;
-    username?: string;
-    password?: string;
-    rememberMe?: boolean;
-    onUsernameChange?: (value: string) => void;
-    onPasswordChange?: (value: string) => void;
-    onRememberMeChange?: (value: boolean) => void;
 }
 
 export const LoginForm: React.FC<LoginFormProps> = ({
+    formData,
+    onChange,
     onSubmit,
-    isLoading = false,
-    username: propUsername,
-    password: propPassword,
-    rememberMe: propRememberMe,
-    onUsernameChange,
-    onPasswordChange,
-    onRememberMeChange
+    isLoading = false
 }) => {
-    const [internalUsername, setInternalUsername] = useState('suman');
-    const [internalPassword, setInternalPassword] = useState('12345678');
-    const [internalRememberMe, setInternalRememberMe] = useState(true);
     const [showPassword, setShowPassword] = useState(false);
-
-    const isControlled = propUsername !== undefined;
-    const username = isControlled ? propUsername : internalUsername;
-    const password = propPassword !== undefined ? propPassword : internalPassword;
-    const rememberMe = propRememberMe !== undefined ? propRememberMe : internalRememberMe;
-
-    const handleUsernameChange = (val: string) => {
-        if (onUsernameChange) {
-            onUsernameChange(val);
-        } else {
-            setInternalUsername(val);
-        }
-    };
-
-    const handlePasswordChange = (val: string) => {
-        if (onPasswordChange) {
-            onPasswordChange(val);
-        } else {
-            setInternalPassword(val);
-        }
-    };
-
-    const handleRememberMeChange = (val: boolean) => {
-        if (onRememberMeChange) {
-            onRememberMeChange(val);
-        } else {
-            setInternalRememberMe(val);
-        }
-    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        await onSubmit({ username, password, rememberMe });
+        await onSubmit(formData);
     };
 
     return (
@@ -82,8 +34,9 @@ export const LoginForm: React.FC<LoginFormProps> = ({
                     </span>
                     <input
                         type="text"
-                        value={username}
-                        onChange={(e) => handleUsernameChange(e.target.value)}
+                        name="username"
+                        value={formData.username ?? ''}
+                        onChange={onChange}
                         placeholder="Enter username"
                         required
                         className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-medium"
@@ -109,10 +62,12 @@ export const LoginForm: React.FC<LoginFormProps> = ({
                     </span>
                     <input
                         type={showPassword ? 'text' : 'password'}
-                        value={password}
-                        onChange={(e) => handlePasswordChange(e.target.value)}
+                        name="password"
+                        value={formData.password ?? ''}
+                        onChange={onChange}
                         placeholder="••••••••"
                         required
+                        minLength={8}
                         className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-mono"
                     />
                     <button
@@ -128,8 +83,9 @@ export const LoginForm: React.FC<LoginFormProps> = ({
                 <label className="flex items-center gap-2 cursor-pointer">
                     <input
                         type="checkbox"
-                        checked={rememberMe}
-                        onChange={(e) => handleRememberMeChange(e.target.checked)}
+                        name="rememberMe"
+                        checked={Boolean(formData.rememberMe)}
+                        onChange={onChange}
                         className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500/20 cursor-pointer"
                     />
                     <span>Keep me signed in</span>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { AppProvider } from './providers/AppProvider';
+import { AppProvider } from './providers';
 import { AppRouter } from './routes';
 
 export const App: React.FC = () => {

@@ -15,10 +15,11 @@ import {
   Coins,
   Users,
 } from 'lucide-react'
-import { useApp } from '@/app/providers/AppProvider'
+import { useNavigate } from 'react-router'
+import { ROUTES } from '@/app/routes/paths'
 
 export const StatsGrid: React.FC = () => {
-  const { setActiveView } = useApp()
+  const navigate = useNavigate()
 
   return (
     <div className="space-y-5">
@@ -27,7 +28,7 @@ export const StatsGrid: React.FC = () => {
         {/* Quick Action Links */}
         <div className="flex flex-wrap gap-2">
           <button
-            onClick={() => setActiveView('view-purchases')}
+            onClick={() => navigate(ROUTES.STOCK_MANAGEMENT.PURCHASE)}
             className="flex items-center gap-2 px-3 py-1 rounded-xl border transition-all duration-200 hover:shadow-sm hover:-translate-y-0.5 bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200 text-xs font-medium cursor-pointer"
           >
             <PackagePlus className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
@@ -35,7 +36,7 @@ export const StatsGrid: React.FC = () => {
           </button>
 
           <button
-            onClick={() => setActiveView('view-invoices')}
+            onClick={() => navigate(ROUTES.INVENTORY.INVOICES)}
             className="flex items-center gap-2 px-3 py-1 rounded-xl border transition-all duration-200 hover:shadow-sm hover:-translate-y-0.5 bg-red-50 text-red-700 border-red-200 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200 text-xs font-medium cursor-pointer"
           >
             <PackageMinus className="w-4 h-4 text-rose-600 dark:text-rose-400" />
@@ -43,7 +44,7 @@ export const StatsGrid: React.FC = () => {
           </button>
 
           <button
-            onClick={() => setActiveView('view-customers')}
+            onClick={() => navigate(ROUTES.ACCOUNTS.CUSTOMER_DUE_COLLECTION)}
             className="flex items-center gap-2 px-3 py-1 rounded-xl border transition-all duration-200 hover:shadow-sm hover:-translate-y-0.5 bg-blue-50 text-blue-700 border-blue-200 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200 text-xs font-medium cursor-pointer"
           >
             <HandCoins className="w-4 h-4 text-blue-600 dark:text-blue-400" />
@@ -51,7 +52,7 @@ export const StatsGrid: React.FC = () => {
           </button>
 
           <button
-            onClick={() => setActiveView('view-purchases')}
+            onClick={() => navigate(ROUTES.ACCOUNTS.SUPPLIER_PAYMENT)}
             className="flex items-center gap-2 px-3 py-1 rounded-xl border transition-all duration-200 hover:shadow-sm hover:-translate-y-0.5 bg-violet-50 text-violet-700 border-violet-200 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200 text-xs font-medium cursor-pointer"
           >
             <Landmark className="w-4 h-4 text-violet-600 dark:text-violet-400" />
@@ -59,7 +60,7 @@ export const StatsGrid: React.FC = () => {
           </button>
 
           <button
-            onClick={() => setActiveView('view-reports')}
+            onClick={() => navigate(ROUTES.ACCOUNTS.EXPENSES)}
             className="flex items-center gap-2 px-3 py-1 rounded-xl border transition-all duration-200 hover:shadow-sm hover:-translate-y-0.5 bg-amber-50 text-amber-700 border-amber-200 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200 text-xs font-medium cursor-pointer"
           >
             <ReceiptText className="w-4 h-4 text-amber-600 dark:text-amber-400" />
@@ -67,7 +68,7 @@ export const StatsGrid: React.FC = () => {
           </button>
 
           <button
-            onClick={() => setActiveView('view-reports')}
+            onClick={() => navigate(ROUTES.ACCOUNTS.COMMISSION_PROFIT)}
             className="flex items-center gap-2 px-3 py-1 rounded-xl border transition-all duration-200 hover:shadow-sm hover:-translate-y-0.5 bg-blue-50 text-blue-700 border-blue-200 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200 text-xs font-medium cursor-pointer"
           >
             <Percent className="w-4 h-4 text-blue-600 dark:text-blue-400" />

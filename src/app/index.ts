@@ -1,4 +1,4 @@
 export * from './App';
-export * from './providers/AppProvider';
+export * from './providers';
 export * from './routes';
 export * from './modules';

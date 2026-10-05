@@ -1,15 +1,16 @@
 import React from 'react'
-import { useApp } from '@/app/providers/AppProvider'
+import { useNavigate } from 'react-router'
+import { ROUTES } from '@/app/routes/paths'
 
 export const RecentPurchasesTable: React.FC = () => {
-  const { setActiveView } = useApp()
+  const navigate = useNavigate()
 
   return (
     <div className="bg-white dark:bg-[#0d1729] border border-slate-200/80 dark:border-slate-800/50 rounded-2xl overflow-hidden shadow-sm dark:shadow-none transition-colors">
       <div className="px-5 py-4 border-b border-slate-200/60 dark:border-slate-800/50 flex items-center justify-between">
         <h3 className="font-semibold text-slate-800 dark:text-slate-100 text-sm">Recent PO Restocks</h3>
         <button
-          onClick={() => setActiveView('view-purchases')}
+          onClick={() => navigate(ROUTES.STOCK_MANAGEMENT.PURCHASE)}
           className="text-xs text-blue-500 hover:text-blue-600 dark:text-blue-400 font-medium cursor-pointer"
         >
           View All
