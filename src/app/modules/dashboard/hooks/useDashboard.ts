@@ -47,17 +47,22 @@ export function useDashboard(shopId: string | number): UseDashboardReturn {
     const isLoading = responses.some((req) => req.isLoading);
     const error = responses.find((req) => req.error)?.error ?? null;
 
-    // Combine raw responses directly
+    // Combine raw responses directly (handling both direct object and wrapped .data envelope)
     const data = useMemo<DashboardData | null>(() => {
         const hasAnyData = responses.some((req) => req.data !== null);
         if (!hasAnyData) return null;
 
+        const extractData = (res: any) => {
+            if (!res) return null;
+            return res.data !== undefined ? res.data : res;
+        };
+
         return {
-            summary: summary.data?.data ?? null,
-            recentOperations: recent.data?.data ?? null,
-            overview: overview.data?.data ?? null,
-            stockOverview: stock.data?.data ?? null,
-            monthlySummary: monthly.data?.data ?? null
+            summary: extractData(summary.data),
+            recentOperations: extractData(recent.data),
+            overview: extractData(overview.data),
+            stockOverview: extractData(stock.data),
+            monthlySummary: extractData(monthly.data)
         };
     }, [summary.data, recent.data, overview.data, stock.data, monthly.data]);
 
