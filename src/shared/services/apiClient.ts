@@ -19,9 +19,7 @@ const axiosInstance: AxiosInstance = axiosLib.create({
 // If no token is found, redirect to the login page.
 axiosInstance.interceptors.request.use(
     (config: InternalAxiosRequestConfig) => {
-        const isAuthRequest =
-            config.url?.includes('/api/auth/login') ||
-            config.url?.includes('/auth/login');
+        const isAuthRequest = config.url?.includes('/api/auth/login');
 
         const token = tokenStorage.getToken();
 
@@ -46,9 +44,7 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
     (response: AxiosResponse) => response,
     (error) => {
-        const isLoginRequest =
-            error.config?.url?.includes('/api/auth/login') ||
-            error.config?.url?.includes('/auth/login');
+        const isLoginRequest = error.config?.url?.includes('/api/auth/login');
 
         if (error.response?.status === 401 && !isLoginRequest) {
             tokenStorage.clearAll();

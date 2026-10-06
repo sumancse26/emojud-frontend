@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { useApp } from '@/app/providers';
-import { NAV_MENU_DATA } from '@/config/nav-menu.data';
+import { useSidebar } from '@/hooks/useSidebar';
 import type { NavMenuItem } from '@/app/routes/types';
 import { ROUTES } from '@/app/routes/paths';
 import { SidebarPresenter } from './presenters/SidebarPresenter';
@@ -10,7 +10,7 @@ export interface SidebarProps {
     menuData?: NavMenuItem[];
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ menuData: propsMenuData }) => {
+export const Sidebar: React.FC<SidebarProps> = () => {
     const location = useLocation();
     const navigate = useNavigate();
     const {
@@ -22,9 +22,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ menuData: propsMenuData }) => 
         setSelectedBranch
     } = useApp();
 
+    const { menuData: apiMenuData } = useSidebar();
+
     const activeMenuData = useMemo(() => {
-        return propsMenuData || NAV_MENU_DATA;
-    }, [propsMenuData]);
+        return apiMenuData;
+    }, [apiMenuData]);
 
     const [openAccordions, setOpenAccordions] = useState<Record<string, boolean>>({});
 

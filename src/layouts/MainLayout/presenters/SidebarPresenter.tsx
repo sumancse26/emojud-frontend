@@ -101,9 +101,7 @@ export const SidebarPresenter: React.FC<SidebarPresenterProps> = ({
                 {/* Top Branding & Shop selector (Fixed/Sticky at top of sidebar) */}
                 <div className="p-4 border-b border-slate-100 dark:border-slate-800/60 shrink-0">
                     <div className="flex items-center justify-between mb-4">
-                        <div
-                            onClick={onBrandClick}
-                            className="flex items-center gap-2.5 cursor-pointer">
+                        <div onClick={onBrandClick} className="flex items-center gap-2.5 cursor-pointer">
                             <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white font-extrabold text-[11px] tracking-tight shadow-lg shadow-emerald-500/30 shrink-0 font-mono">
                                 E
                             </div>
@@ -155,112 +153,111 @@ export const SidebarPresenter: React.FC<SidebarPresenterProps> = ({
 
                 {/* Dynamic Navigation Links (Independently scrollable) */}
                 <nav className="flex-1 min-h-0 overflow-y-auto px-3 py-3 space-y-1 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800">
-                    {menuData.map((item) => {
-                        const hasChildren = item.children && item.children.length > 0;
-                        const isOpen = openAccordions[item.id] ?? false;
+                    {menuData?.length > 0 &&
+                        menuData.map((item) => {
+                            const hasChildren = item.children && item.children?.length > 0;
+                            const isOpen = openAccordions[item.id] ?? false;
 
-                        if (!hasChildren) {
-                            const targetUrl = item.route_url || '#';
-                            const isRouteActive =
-                                targetUrl !== '#' &&
-                                (currentPath === targetUrl ||
-                                    (targetUrl !== '/feature/dashboard' &&
-                                        currentPath.startsWith(targetUrl)));
+                            if (!hasChildren) {
+                                const targetUrl = item.route_url || '#';
+                                const isRouteActive =
+                                    targetUrl !== '#' &&
+                                    (currentPath === targetUrl ||
+                                        (targetUrl !== '/feature/dashboard' && currentPath.startsWith(targetUrl)));
 
-                            return (
-                                <NavLink
-                                    key={item.id}
-                                    to={targetUrl}
-                                    onClick={onCloseMobileSidebar}
-                                    className={`w-full group relative flex items-center rounded-xl text-xs font-semibold transition-all duration-200 gap-3 px-3 py-2.5 cursor-pointer ${
-                                        isRouteActive
-                                            ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/25 dark:bg-emerald-500/15 dark:text-emerald-400 dark:shadow-none dark:ring-1 dark:ring-emerald-500/20'
-                                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100/80 dark:hover:bg-slate-800/60'
-                                    }`}
-                                    title={isSidebarCollapsed ? item.feature_name : undefined}>
-                                    {isRouteActive && (
-                                        <span className="absolute left-0 inset-y-2 w-0.75 rounded-r-full bg-white/60 dark:bg-emerald-400" />
-                                    )}
-                                    <NavIconRenderer item={item} isActive={isRouteActive} />
-                                    {!isSidebarCollapsed && (
-                                        <span className="leading-tight text-left truncate flex-1">
-                                            {item.feature_name}
-                                        </span>
-                                    )}
-                                    {isRouteActive && !isSidebarCollapsed && (
-                                        <span className="w-1.5 h-1.5 rounded-full bg-white/80 dark:bg-emerald-400 shrink-0" />
-                                    )}
-                                </NavLink>
-                            );
-                        }
-
-                        // Parent Item with Sub-routes
-                        const hasActiveChild = item.children?.some(
-                            (child) => child.route_url && currentPath.startsWith(child.route_url)
-                        );
-
-                        return (
-                            <div key={item.id} className="space-y-0.5">
-                                <button
-                                    type="button"
-                                    onClick={() => onToggleAccordion(item.id)}
-                                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 cursor-pointer ${
-                                        hasActiveChild && !isOpen
-                                            ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/5'
-                                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100/80 dark:hover:bg-slate-800/60'
-                                    }`}
-                                    title={isSidebarCollapsed ? item.feature_name : undefined}>
-                                    <NavIconRenderer item={item} isActive={hasActiveChild} />
-                                    {!isSidebarCollapsed && (
-                                        <>
-                                            <span className="leading-tight flex-1 text-left truncate">
+                                return (
+                                    <NavLink
+                                        key={item.id}
+                                        to={targetUrl}
+                                        onClick={onCloseMobileSidebar}
+                                        className={`w-full group relative flex items-center rounded-xl text-xs font-semibold transition-all duration-200 gap-3 px-3 py-2.5 cursor-pointer ${
+                                            isRouteActive
+                                                ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/25 dark:bg-emerald-500/15 dark:text-emerald-400 dark:shadow-none dark:ring-1 dark:ring-emerald-500/20'
+                                                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100/80 dark:hover:bg-slate-800/60'
+                                        }`}
+                                        title={isSidebarCollapsed ? item.feature_name : undefined}>
+                                        {isRouteActive && (
+                                            <span className="absolute left-0 inset-y-2 w-0.75 rounded-r-full bg-white/60 dark:bg-emerald-400" />
+                                        )}
+                                        <NavIconRenderer item={item} isActive={isRouteActive} />
+                                        {!isSidebarCollapsed && (
+                                            <span className="leading-tight text-left truncate flex-1">
                                                 {item.feature_name}
                                             </span>
-                                            <ChevronRight
-                                                className={`w-3.5 h-3.5 shrink-0 transition-transform duration-200 text-slate-400 dark:text-slate-500 ${
-                                                    isOpen ? 'rotate-90' : ''
-                                                }`}
-                                            />
-                                        </>
-                                    )}
-                                </button>
+                                        )}
+                                        {isRouteActive && !isSidebarCollapsed && (
+                                            <span className="w-1.5 h-1.5 rounded-full bg-white/80 dark:bg-emerald-400 shrink-0" />
+                                        )}
+                                    </NavLink>
+                                );
+                            }
 
-                                {/* Submenu Accordion */}
-                                {!isSidebarCollapsed && isOpen && (
-                                    <div className="ml-3 mt-0.5 mb-1 pl-3 border-l-2 border-slate-200/80 dark:border-slate-800/70 space-y-0.5 py-0.5">
-                                        {item.children?.map((child) => {
-                                            const childUrl = child.route_url || '#';
-                                            const isChildActive =
-                                                childUrl !== '#' && currentPath === childUrl;
+                            // Parent Item with Sub-routes
+                            const hasActiveChild = item.children?.some(
+                                (child) => child.route_url && currentPath.startsWith(child.route_url)
+                            );
 
-                                            return (
-                                                <NavLink
-                                                    key={child.id}
-                                                    to={childUrl}
-                                                    onClick={onCloseMobileSidebar}
-                                                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all duration-150 cursor-pointer ${
-                                                        isChildActive
-                                                            ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/25 dark:bg-emerald-500/15 dark:text-emerald-400 dark:shadow-none dark:ring-1 dark:ring-emerald-500/20'
-                                                            : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100/80 dark:hover:bg-slate-800/60'
-                                                    }`}>
-                                                    <span
-                                                        className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                            return (
+                                <div key={item.id} className="space-y-0.5">
+                                    <button
+                                        type="button"
+                                        onClick={() => onToggleAccordion(item.id)}
+                                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 cursor-pointer ${
+                                            hasActiveChild && !isOpen
+                                                ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/5'
+                                                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100/80 dark:hover:bg-slate-800/60'
+                                        }`}
+                                        title={isSidebarCollapsed ? item.feature_name : undefined}>
+                                        <NavIconRenderer item={item} isActive={hasActiveChild} />
+                                        {!isSidebarCollapsed && (
+                                            <>
+                                                <span className="leading-tight flex-1 text-left truncate">
+                                                    {item.feature_name}
+                                                </span>
+                                                <ChevronRight
+                                                    className={`w-3.5 h-3.5 shrink-0 transition-transform duration-200 text-slate-400 dark:text-slate-500 ${
+                                                        isOpen ? 'rotate-90' : ''
+                                                    }`}
+                                                />
+                                            </>
+                                        )}
+                                    </button>
+
+                                    {/* Submenu Accordion */}
+                                    {!isSidebarCollapsed && isOpen && (
+                                        <div className="ml-3 mt-0.5 mb-1 pl-3 border-l-2 border-slate-200/80 dark:border-slate-800/70 space-y-0.5 py-0.5">
+                                            {item.children?.map((child) => {
+                                                const childUrl = child.route_url || '#';
+                                                const isChildActive = childUrl !== '#' && currentPath === childUrl;
+
+                                                return (
+                                                    <NavLink
+                                                        key={child.id}
+                                                        to={childUrl}
+                                                        onClick={onCloseMobileSidebar}
+                                                        className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all duration-150 cursor-pointer ${
                                                             isChildActive
-                                                                ? 'bg-white dark:bg-emerald-400'
-                                                                : 'bg-slate-300 dark:bg-slate-600'
-                                                        }`}
-                                                    />
-                                                    <span className="truncate leading-tight">
-                                                        {child.feature_name}
-                                                    </span>
-                                                </NavLink>
-                                            );
-                                        })}
-                                    </div>
-                                )}
-                            </div>
-                        );
-                    })}
+                                                                ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/25 dark:bg-emerald-500/15 dark:text-emerald-400 dark:shadow-none dark:ring-1 dark:ring-emerald-500/20'
+                                                                : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100/80 dark:hover:bg-slate-800/60'
+                                                        }`}>
+                                                        <span
+                                                            className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                                                                isChildActive
+                                                                    ? 'bg-white dark:bg-emerald-400'
+                                                                    : 'bg-slate-300 dark:bg-slate-600'
+                                                            }`}
+                                                        />
+                                                        <span className="truncate leading-tight">
+                                                            {child.feature_name}
+                                                        </span>
+                                                    </NavLink>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
                 </nav>
             </aside>
         </>
