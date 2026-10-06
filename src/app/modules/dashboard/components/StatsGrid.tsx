@@ -1,208 +1,203 @@
-import React from 'react'
+import React, { useState } from 'react';
 import {
-  PackagePlus,
-  PackageMinus,
-  HandCoins,
-  Landmark,
-  ReceiptText,
-  Percent,
-  Calendar,
-  ShoppingBag,
-  ShoppingCart,
-  CreditCard,
-  TrendingUp,
-  Package,
-  Coins,
-  Users,
-} from 'lucide-react'
-import { useNavigate } from 'react-router'
-import { ROUTES } from '@/app/routes/paths'
+    ShoppingBag,
+    ShoppingCart,
+    CreditCard,
+    TrendingUp,
+    Package,
+    Coins,
+    Users
+} from 'lucide-react';
+import type { SummaryData, MonthlyTotalsData } from '../types/dashboard.types';
 
-export const StatsGrid: React.FC = () => {
-  const navigate = useNavigate()
-
-  return (
-    <div className="space-y-5">
-      {/* Top Row: Quick Action Links Ribbon & Current Month Range */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
-        {/* Quick Action Links */}
-        <div className="flex flex-wrap gap-2">
-          <button
-            onClick={() => navigate(ROUTES.STOCK_MANAGEMENT.PURCHASE)}
-            className="flex items-center gap-2 px-3 py-1 rounded-xl border transition-all duration-200 hover:shadow-sm hover:-translate-y-0.5 bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200 text-xs font-medium cursor-pointer"
-          >
-            <PackagePlus className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-            <span>Stock In</span>
-          </button>
-
-          <button
-            onClick={() => navigate(ROUTES.INVENTORY.INVOICES)}
-            className="flex items-center gap-2 px-3 py-1 rounded-xl border transition-all duration-200 hover:shadow-sm hover:-translate-y-0.5 bg-red-50 text-red-700 border-red-200 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200 text-xs font-medium cursor-pointer"
-          >
-            <PackageMinus className="w-4 h-4 text-rose-600 dark:text-rose-400" />
-            <span>Stock Out</span>
-          </button>
-
-          <button
-            onClick={() => navigate(ROUTES.ACCOUNTS.CUSTOMER_DUE_COLLECTION)}
-            className="flex items-center gap-2 px-3 py-1 rounded-xl border transition-all duration-200 hover:shadow-sm hover:-translate-y-0.5 bg-blue-50 text-blue-700 border-blue-200 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200 text-xs font-medium cursor-pointer"
-          >
-            <HandCoins className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-            <span>Due Collection</span>
-          </button>
-
-          <button
-            onClick={() => navigate(ROUTES.ACCOUNTS.SUPPLIER_PAYMENT)}
-            className="flex items-center gap-2 px-3 py-1 rounded-xl border transition-all duration-200 hover:shadow-sm hover:-translate-y-0.5 bg-violet-50 text-violet-700 border-violet-200 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200 text-xs font-medium cursor-pointer"
-          >
-            <Landmark className="w-4 h-4 text-violet-600 dark:text-violet-400" />
-            <span>Supplier Payment</span>
-          </button>
-
-          <button
-            onClick={() => navigate(ROUTES.ACCOUNTS.EXPENSES)}
-            className="flex items-center gap-2 px-3 py-1 rounded-xl border transition-all duration-200 hover:shadow-sm hover:-translate-y-0.5 bg-amber-50 text-amber-700 border-amber-200 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200 text-xs font-medium cursor-pointer"
-          >
-            <ReceiptText className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-            <span>Daily Expense</span>
-          </button>
-
-          <button
-            onClick={() => navigate(ROUTES.ACCOUNTS.COMMISSION_PROFIT)}
-            className="flex items-center gap-2 px-3 py-1 rounded-xl border transition-all duration-200 hover:shadow-sm hover:-translate-y-0.5 bg-blue-50 text-blue-700 border-blue-200 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200 text-xs font-medium cursor-pointer"
-          >
-            <Percent className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-            <span>Commission Profit</span>
-          </button>
-        </div>
-
-        {/* Date Range Pill */}
-        <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 bg-white dark:bg-[#0d1729] border border-slate-200/80 dark:border-slate-700/50 rounded-lg px-3 py-1.5 shadow-sm self-start lg:self-auto">
-          <Calendar className="w-3.5 h-3.5 text-slate-400" />
-          <span className="font-medium">Sep 1, 2026 – Sep 30, 2026</span>
-        </div>
-      </div>
-
-      {/* 7 Dashboard Stats Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
-        {/* 1. Total Sales */}
-        <div className="bg-white dark:bg-[#0d1729] border border-slate-200/80 dark:border-slate-800/50 rounded-2xl p-4 shadow-sm dark:shadow-none transition-colors">
-          <div className="flex items-start justify-between mb-2">
-            <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider leading-tight pr-1">
-              Total Sales
-            </p>
-            <span className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 bg-emerald-100 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400">
-              <ShoppingBag className="w-4 h-4" />
-            </span>
-          </div>
-          <p className="text-xl font-bold text-slate-800 dark:text-slate-100 leading-tight font-mono">৳ 1,482,950</p>
-          <div className="flex items-center gap-1 mt-1.5">
-            <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">↑ 12.4%</span>
-            <span className="text-[11px] text-slate-400 dark:text-slate-500">vs last month</span>
-          </div>
-        </div>
-
-        {/* 2. Total Purchase */}
-        <div className="bg-white dark:bg-[#0d1729] border border-slate-200/80 dark:border-slate-800/50 rounded-2xl p-4 shadow-sm dark:shadow-none transition-colors">
-          <div className="flex items-start justify-between mb-2">
-            <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider leading-tight pr-1">
-              Total Purchase
-            </p>
-            <span className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 bg-blue-100 text-blue-600 dark:bg-blue-500/15 dark:text-blue-400">
-              <ShoppingCart className="w-4 h-4" />
-            </span>
-          </div>
-          <p className="text-xl font-bold text-slate-800 dark:text-slate-100 leading-tight font-mono">৳ 894,300</p>
-          <div className="flex items-center gap-1 mt-1.5">
-            <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">↑ 8.1%</span>
-            <span className="text-[11px] text-slate-400 dark:text-slate-500">vs last month</span>
-          </div>
-        </div>
-
-        {/* 3. Total Expense */}
-        <div className="bg-white dark:bg-[#0d1729] border border-slate-200/80 dark:border-slate-800/50 rounded-2xl p-4 shadow-sm dark:shadow-none transition-colors">
-          <div className="flex items-start justify-between mb-2">
-            <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider leading-tight pr-1">
-              Total Expense
-            </p>
-            <span className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 bg-rose-100 text-rose-600 dark:bg-rose-500/15 dark:text-rose-400">
-              <CreditCard className="w-4 h-4" />
-            </span>
-          </div>
-          <p className="text-xl font-bold text-slate-800 dark:text-slate-100 leading-tight font-mono">৳ 173,900</p>
-          <div className="flex items-center gap-1 mt-1.5">
-            <span className="text-[11px] font-semibold text-rose-600 dark:text-rose-400">↓ 3.2%</span>
-            <span className="text-[11px] text-slate-400 dark:text-slate-500">vs last month</span>
-          </div>
-        </div>
-
-        {/* 4. Net Profit */}
-        <div className="bg-white dark:bg-[#0d1729] border border-slate-200/80 dark:border-slate-800/50 rounded-2xl p-4 shadow-sm dark:shadow-none transition-colors">
-          <div className="flex items-start justify-between mb-2">
-            <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider leading-tight pr-1">
-              Net Profit
-            </p>
-            <span className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 bg-amber-100 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400">
-              <TrendingUp className="w-4 h-4" />
-            </span>
-          </div>
-          <p className="text-xl font-bold text-slate-800 dark:text-slate-100 leading-tight font-mono">৳ 388,650</p>
-          <div className="flex items-center gap-1 mt-1.5">
-            <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">Positive</span>
-            <span className="text-[11px] text-slate-400 dark:text-slate-500">profit trend</span>
-          </div>
-        </div>
-
-        {/* 5. Stock Value */}
-        <div className="bg-white dark:bg-[#0d1729] border border-slate-200/80 dark:border-slate-800/50 rounded-2xl p-4 shadow-sm dark:shadow-none transition-colors">
-          <div className="flex items-start justify-between mb-2">
-            <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider leading-tight pr-1">
-              Stock Value
-            </p>
-            <span className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 bg-violet-100 text-violet-600 dark:bg-violet-500/15 dark:text-violet-400">
-              <Package className="w-4 h-4" />
-            </span>
-          </div>
-          <p className="text-xl font-bold text-slate-800 dark:text-slate-100 leading-tight font-mono">৳ 3,850,000</p>
-          <div className="flex items-center gap-1 mt-1.5">
-            <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">↑ 6.3%</span>
-            <span className="text-[11px] text-slate-400 dark:text-slate-500">month change</span>
-          </div>
-        </div>
-
-        {/* 6. Due Collection */}
-        <div className="bg-white dark:bg-[#0d1729] border border-slate-200/80 dark:border-slate-800/50 rounded-2xl p-4 shadow-sm dark:shadow-none transition-colors">
-          <div className="flex items-start justify-between mb-2">
-            <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider leading-tight pr-1">
-              Due Collection
-            </p>
-            <span className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 bg-cyan-100 text-cyan-600 dark:bg-cyan-500/15 dark:text-cyan-400">
-              <Coins className="w-4 h-4" />
-            </span>
-          </div>
-          <p className="text-xl font-bold text-slate-800 dark:text-slate-100 leading-tight font-mono">৳ 142,500</p>
-          <div className="flex items-center gap-1 mt-1.5">
-            <span className="text-[11px] font-semibold text-rose-600 dark:text-rose-400">↓ 2.4%</span>
-            <span className="text-[11px] text-slate-400 dark:text-slate-500">month change</span>
-          </div>
-        </div>
-
-        {/* 7. Active Employees */}
-        <div className="bg-white dark:bg-[#0d1729] border border-slate-200/80 dark:border-slate-800/50 rounded-2xl p-4 shadow-sm dark:shadow-none transition-colors">
-          <div className="flex items-start justify-between mb-2">
-            <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider leading-tight pr-1">
-              Active Employees
-            </p>
-            <span className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 bg-emerald-100 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400">
-              <Users className="w-4 h-4" />
-            </span>
-          </div>
-          <p className="text-xl font-bold text-slate-800 dark:text-slate-100 leading-tight font-mono">24</p>
-          <div className="flex items-center gap-1 mt-1.5">
-            <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold">● 100% Present</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
+interface StatsCardProps {
+    label: string;
+    amount: number;
+    isCurrency?: boolean;
+    icon: React.ComponentType<{ className?: string }>;
+    iconBgClass: string;
+    iconColorClass: string;
+    trendText?: string;
+    trendLabel?: string;
+    trendPositive?: boolean;
 }
+
+const StatsCard: React.FC<StatsCardProps> = ({
+    label,
+    amount,
+    isCurrency = true,
+    icon: Icon,
+    iconBgClass,
+    iconColorClass,
+    trendText,
+    trendLabel,
+    trendPositive
+}) => (
+    <div className="bg-white dark:bg-[#0d1729] border border-slate-200/80 dark:border-slate-800/50 rounded-2xl p-4 shadow-sm dark:shadow-none transition-colors">
+        <div className="flex items-start justify-between mb-2">
+            <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider leading-tight pr-1">
+                {label}
+            </p>
+            <span
+                className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${iconBgClass} ${iconColorClass}`}
+            >
+                <Icon className="w-4 h-4" />
+            </span>
+        </div>
+        <p className="text-xl font-bold text-slate-800 dark:text-slate-100 leading-tight font-mono">
+            {isCurrency ? `৳ ${amount?.toLocaleString()}` : amount}
+        </p>
+        {(trendText || trendLabel) && (
+            <div className="flex items-center gap-1 mt-1.5">
+                {trendText && (
+                    <span
+                        className={`text-[11px] font-semibold ${
+                            trendPositive === undefined
+                                ? 'text-slate-500 dark:text-slate-400'
+                                : trendPositive
+                                ? 'text-emerald-600 dark:text-emerald-400'
+                                : 'text-rose-600 dark:text-rose-400'
+                        }`}
+                    >
+                        {trendText}
+                    </span>
+                )}
+                {trendLabel && (
+                    <span className="text-[11px] text-slate-400 dark:text-slate-500">
+                        {trendLabel}
+                    </span>
+                )}
+            </div>
+        )}
+    </div>
+);
+
+export interface StatsGridProps {
+    summary?: SummaryData | null;
+    monthlyTotals?: MonthlyTotalsData | null;
+}
+
+export const StatsGrid: React.FC<StatsGridProps> = ({ summary, monthlyTotals }) => {
+    const [period, setPeriod] = useState<'monthly' | 'daily'>('monthly');
+
+    const activeSummary = period === 'monthly'
+        ? (summary?.monthly_summary ?? {
+              sales: monthlyTotals?.total_sales ?? 0,
+              purchase: monthlyTotals?.total_purchase ?? 0,
+              expense: monthlyTotals?.total_expense ?? 0,
+              profit: monthlyTotals?.net_profit ?? 0
+          })
+        : (summary?.daily_summary ?? {
+              sales: 0,
+              purchase: 0,
+              expense: 0,
+              profit: 0
+          });
+
+    const stockValue = Number(summary?.stock_value ?? monthlyTotals?.stock_value ?? 0);
+    const dueCollection = Number(summary?.due_collection ?? monthlyTotals?.due_collection ?? 0);
+    const activeEmployees = Number(summary?.active_employee ?? monthlyTotals?.active_employee ?? 0);
+
+    const cards: StatsCardProps[] = [
+        {
+            label: `${period === 'monthly' ? 'Monthly' : 'Today'} Sales`,
+            amount: Number(activeSummary.sales ?? 0),
+            icon: ShoppingBag,
+            iconBgClass: 'bg-emerald-100 dark:bg-emerald-500/15',
+            iconColorClass: 'text-emerald-600 dark:text-emerald-400',
+            trendText: period === 'monthly' ? 'This month' : 'Today',
+            trendPositive: true
+        },
+        {
+            label: `${period === 'monthly' ? 'Monthly' : 'Today'} Purchase`,
+            amount: Number(activeSummary.purchase ?? 0),
+            icon: ShoppingCart,
+            iconBgClass: 'bg-blue-100 dark:bg-blue-500/15',
+            iconColorClass: 'text-blue-600 dark:text-blue-400',
+            trendText: period === 'monthly' ? 'This month' : 'Today',
+            trendPositive: true
+        },
+        {
+            label: `${period === 'monthly' ? 'Monthly' : 'Today'} Expense`,
+            amount: Number(activeSummary.expense ?? 0),
+            icon: CreditCard,
+            iconBgClass: 'bg-rose-100 dark:bg-rose-500/15',
+            iconColorClass: 'text-rose-600 dark:text-rose-400',
+            trendText: period === 'monthly' ? 'This month' : 'Today',
+            trendPositive: false
+        },
+        {
+            label: 'Net Profit',
+            amount: Number(activeSummary.profit ?? 0),
+            icon: TrendingUp,
+            iconBgClass: 'bg-amber-100 dark:bg-amber-500/15',
+            iconColorClass: 'text-amber-600 dark:text-amber-400',
+            trendText: Number(activeSummary.profit ?? 0) >= 0 ? 'Positive' : 'Negative',
+            trendLabel: 'profit margin',
+            trendPositive: Number(activeSummary.profit ?? 0) >= 0
+        },
+        {
+            label: 'Stock Value',
+            amount: stockValue,
+            icon: Package,
+            iconBgClass: 'bg-violet-100 dark:bg-violet-500/15',
+            iconColorClass: 'text-violet-600 dark:text-violet-400',
+            trendText: 'Warehouse total',
+            trendPositive: true
+        },
+        {
+            label: 'Due Collection',
+            amount: dueCollection,
+            icon: Coins,
+            iconBgClass: 'bg-cyan-100 dark:bg-cyan-500/15',
+            iconColorClass: 'text-cyan-600 dark:text-cyan-400',
+            trendText: 'Pending collection',
+            trendPositive: true
+        },
+        {
+            label: 'Active Employees',
+            amount: activeEmployees,
+            isCurrency: false,
+            icon: Users,
+            iconBgClass: 'bg-emerald-100 dark:bg-emerald-500/15',
+            iconColorClass: 'text-emerald-600 dark:text-emerald-400',
+            trendText: 'Active',
+            trendPositive: true
+        }
+    ];
+
+    return (
+        <div className="space-y-3">
+            <div className="flex items-center justify-end">
+                <div className="inline-flex rounded-lg border border-slate-200 dark:border-slate-800 p-0.5 bg-slate-50 dark:bg-slate-900 text-xs">
+                    <button
+                        onClick={() => setPeriod('monthly')}
+                        className={`px-3 py-1 rounded-md font-medium transition-all ${
+                            period === 'monthly'
+                                ? 'bg-white dark:bg-[#0d1729] text-emerald-600 dark:text-emerald-400 shadow-sm'
+                                : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                        }`}
+                    >
+                        Monthly
+                    </button>
+                    <button
+                        onClick={() => setPeriod('daily')}
+                        className={`px-3 py-1 rounded-md font-medium transition-all ${
+                            period === 'daily'
+                                ? 'bg-white dark:bg-[#0d1729] text-emerald-600 dark:text-emerald-400 shadow-sm'
+                                : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                        }`}
+                    >
+                        Today
+                    </button>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
+                {cards.map((card) => (
+                    <StatsCard key={card.label} {...card} />
+                ))}
+            </div>
+        </div>
+    );
+};

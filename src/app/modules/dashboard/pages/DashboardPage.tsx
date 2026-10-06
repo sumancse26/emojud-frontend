@@ -1,31 +1,22 @@
-import React from 'react'
-import { StatsGrid } from '../components/StatsGrid'
-import { RevenueChart } from '../components/RevenueChart'
-import { PaymentMethodBreakdown } from '../components/PaymentMethodBreakdown'
-import { TopProducts } from '../components/TopProducts'
-import { RecentInvoicesTable } from '../components/RecentInvoicesTable'
-import { RecentPurchasesTable } from '../components/RecentPurchasesTable'
-import { LowStockAlert } from '../components/LowStockAlert'
+import React from 'react';
+import { useApp } from '@/app/providers';
+import { useDashboard } from '../hooks/useDashboard';
+import { DashboardPresenter } from './presenters/DashboardPresenter';
 
 export const DashboardPage: React.FC = () => {
-  return (
-    <section className="space-y-5">
-      {/* 1. Stats and ribbon */}
-      <StatsGrid />
+    const { selectedBranch } = useApp();
+    const { data, isLoading, error, refetch } = useDashboard(selectedBranch);
 
-      {/* 2. Charts and Top Selling */}
-      <div className="grid gap-5 xl:grid-cols-[1fr_260px_240px]">
-        <RevenueChart />
-        <PaymentMethodBreakdown />
-        <TopProducts />
-      </div>
+    console.log('datadata', data);
 
-      {/* 3. Recent Invoices, POs & Alerts */}
-      <div className="grid gap-5 lg:grid-cols-3">
-        <RecentInvoicesTable />
-        <RecentPurchasesTable />
-        <LowStockAlert />
-      </div>
-    </section>
-  )
-}
+    return (
+        <DashboardPresenter
+            data={data}
+            isLoading={isLoading}
+            error={error}
+            onRetry={() => {
+                void refetch();
+            }}
+        />
+    );
+};
