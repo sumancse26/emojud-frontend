@@ -7,8 +7,6 @@ export const DashboardPage: React.FC = () => {
     const { selectedBranch } = useApp();
     const { data, isLoading, error, refetch } = useDashboard(selectedBranch);
 
-    console.log('datadata', data);
-
     return (
         <DashboardPresenter
             data={data}

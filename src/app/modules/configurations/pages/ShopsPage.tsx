@@ -1,195 +1,131 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
+import { useShop } from '../hooks/useShop';
 import { ShopPresenter } from './presenters/ShopPresenter';
+import { tokenStorage } from '@/shared/services/tokenStorage';
+import type { User } from '@/app/modules/auth/types/auth.types';
+import type { ShopItem, CreateUpdateShopPayload } from '../types/shop.types';
 
-export interface ShopOutlet {
-    id: string;
-    code: string;
-    name: string;
-    branchType: 'Flagship Outlet' | 'Branch Store' | 'Distribution Hub';
-    city: string;
-    address: string;
-    phone: string;
-    manager: string;
-    countersCount: number;
-    activeStaff: number;
-    status: 'Active' | 'Under Maintenance';
-}
-
-export interface ShopFormData {
-    code: string;
-    name: string;
-    branchType: 'Flagship Outlet' | 'Branch Store' | 'Distribution Hub';
-    city: string;
-    address: string;
-    phone: string;
-    manager: string;
-    countersCount: string;
-    activeStaff: string;
-    status: 'Active' | 'Under Maintenance';
-}
-
-const INITIAL_SHOPS: ShopOutlet[] = [
-    {
-        id: '1',
-        code: 'OUTLET-001',
-        name: 'Dhanmondi Flagship Outlet',
-        branchType: 'Flagship Outlet',
-        city: 'Dhaka',
-        address: 'House 42, Road 27, Dhanmondi',
-        phone: '+880 1711-234567',
-        manager: 'Tanvir Hossain',
-        countersCount: 4,
-        activeStaff: 12,
-        status: 'Active'
-    },
-    {
-        id: '2',
-        code: 'OUTLET-002',
-        name: 'Gulshan Premium Outlet',
-        branchType: 'Branch Store',
-        city: 'Dhaka',
-        address: 'Plot 12, Avenue 3, Gulshan-1',
-        phone: '+880 1819-876543',
-        manager: 'Nusrat Jahan',
-        countersCount: 3,
-        activeStaff: 8,
-        status: 'Active'
-    },
-    {
-        id: '3',
-        code: 'OUTLET-003',
-        name: 'Uttara Mega Store',
-        branchType: 'Branch Store',
-        city: 'Dhaka',
-        address: 'Sector 7, Rabindra Sarani, Uttara',
-        phone: '+880 1912-334455',
-        manager: 'Arif Ahmed',
-        countersCount: 3,
-        activeStaff: 9,
-        status: 'Active'
-    },
-    {
-        id: '4',
-        code: 'OUTLET-004',
-        name: 'Chittagong GEC Outlet',
-        branchType: 'Branch Store',
-        city: 'Chittagong',
-        address: 'CDA Avenue, GEC Circle',
-        phone: '+880 1611-998877',
-        manager: 'Mahmudul Hasan',
-        countersCount: 2,
-        activeStaff: 6,
-        status: 'Active'
-    }
-];
-
-const emptyShopForm: ShopFormData = {
-    code: '',
-    name: '',
-    branchType: 'Branch Store',
-    city: '',
+const getDefaultShopFormData = (companyId: number = 1): CreateUpdateShopPayload => ({
+    company_id: companyId,
+    display_code: '',
+    short_code: '',
+    shop_name: '',
     address: '',
+    address_2: '',
     phone: '',
-    manager: '',
-    countersCount: '',
-    activeStaff: '',
-    status: 'Active'
-};
+    image: null,
+    slogan: '',
+    status: 1
+});
 
 export const ShopsPage: React.FC = () => {
-    const [shops, setShops] = useState<ShopOutlet[]>(INITIAL_SHOPS);
+    const user = tokenStorage.getUser<User>();
+    const userCompanyId = Number(user?.branchId ?? 1);
+
+    const {
+        shops,
+        isLoading,
+        isError,
+        error,
+        createOrUpdateShop,
+        isSaving,
+        saveError,
+        refetch
+    } = useShop();
+
     const [searchQuery, setSearchQuery] = useState('');
     const [drawerOpen, setDrawerOpen] = useState(false);
-    const [editingId, setEditingId] = useState<string | null>(null);
-    const [formData, setFormData] = useState<ShopFormData>(emptyShopForm);
-
-    const filteredShops = shops.filter(
-        (shop) =>
-            shop.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            shop.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            shop.city.toLowerCase().includes(searchQuery.toLowerCase())
+    const [editingShop, setEditingShop] = useState<ShopItem | null>(null);
+    const [formData, setFormData] = useState<CreateUpdateShopPayload>(() =>
+        getDefaultShopFormData(userCompanyId)
     );
 
+    const filteredShops = useMemo(() => {
+        if (!searchQuery.trim()) return shops;
+        const q = searchQuery.toLowerCase();
+        return shops.filter(
+            (shop) =>
+                shop.shop_name?.toLowerCase().includes(q) ||
+                shop.display_code?.toLowerCase().includes(q) ||
+                shop.short_code?.toLowerCase().includes(q) ||
+                shop.phone?.toLowerCase().includes(q) ||
+                shop.address?.toLowerCase().includes(q) ||
+                shop.address_2?.toLowerCase().includes(q) ||
+                shop.slogan?.toLowerCase().includes(q)
+        );
+    }, [shops, searchQuery]);
+
     const openCreate = () => {
-        setEditingId(null);
-        setFormData(emptyShopForm);
+        setEditingShop(null);
+        setFormData(getDefaultShopFormData(userCompanyId));
         setDrawerOpen(true);
     };
 
-    const openEdit = (shop: ShopOutlet) => {
-        setEditingId(shop.id);
+    const openEdit = (shop: ShopItem) => {
+        setEditingShop(shop);
         setFormData({
-            code: shop.code,
-            name: shop.name,
-            branchType: shop.branchType,
-            city: shop.city,
-            address: shop.address,
-            phone: shop.phone,
-            manager: shop.manager,
-            countersCount: String(shop.countersCount),
-            activeStaff: String(shop.activeStaff),
-            status: shop.status
+            id: shop.id,
+            company_id: Number(shop.company_id ?? userCompanyId),
+            display_code: shop.display_code ?? '',
+            short_code: shop.short_code ?? '',
+            shop_name: shop.shop_name ?? '',
+            address: shop.address ?? '',
+            address_2: shop.address_2 ?? '',
+            phone: shop.phone ?? '',
+            image: shop.image ?? null,
+            slogan: shop.slogan ?? '',
+            status: shop.status !== undefined ? Number(shop.status) : 1
         });
         setDrawerOpen(true);
     };
 
-    const handleFormFieldChange = <K extends keyof ShopFormData>(field: K, value: ShopFormData[K]) => {
+    const handleFormFieldChange = <K extends keyof CreateUpdateShopPayload>(
+        field: K,
+        value: CreateUpdateShopPayload[K]
+    ) => {
         setFormData((prev) => ({
             ...prev,
             [field]: value
         }));
     };
 
-    const handleSubmit = (e?: React.FormEvent) => {
+    const handleSubmit = async (e?: React.FormEvent) => {
         if (e) e.preventDefault();
+        if (!formData.shop_name?.trim()) return;
 
-        if (!formData.name || !formData.code) return;
-        if (editingId) {
-            setShops((prev) =>
-                prev.map((s) =>
-                    s.id === editingId
-                        ? {
-                              ...s,
-                              ...formData,
-                              countersCount: parseInt(formData.countersCount) || 0,
-                              activeStaff: parseInt(formData.activeStaff) || 0
-                          }
-                        : s
-                )
-            );
-        } else {
-            setShops((prev) => [
-                ...prev,
-                {
-                    id: String(Date.now()),
-                    ...formData,
-                    countersCount: parseInt(formData.countersCount) || 0,
-                    activeStaff: parseInt(formData.activeStaff) || 0
-                }
-            ]);
+        try {
+            await createOrUpdateShop({
+                ...formData,
+                company_id: Number(formData.company_id || userCompanyId),
+                status: Number(formData.status ?? 1)
+            });
+            setDrawerOpen(false);
+            setEditingShop(null);
+        } catch (err) {
+            console.error('Failed to create/update shop:', err);
         }
-        setDrawerOpen(false);
     };
-
-    const totalStaff = shops.reduce((sum, s) => sum + s.activeStaff, 0);
-    const totalCounters = shops.reduce((sum, s) => sum + s.countersCount, 0);
 
     return (
         <ShopPresenter
             shops={shops}
             filteredShops={filteredShops}
-            totalStaff={totalStaff}
-            totalCounters={totalCounters}
+            isLoading={isLoading}
+            isError={isError}
+            error={error}
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
             onOpenCreate={openCreate}
             onOpenEdit={openEdit}
             drawerOpen={drawerOpen}
             onCloseDrawer={() => setDrawerOpen(false)}
-            editingId={editingId}
+            editingId={editingShop ? String(editingShop.id) : null}
             formData={formData}
             onFormFieldChange={handleFormFieldChange}
             onSubmit={handleSubmit}
+            isSaving={isSaving}
+            saveError={saveError}
+            onRefetch={() => refetch()}
         />
     );
 };
