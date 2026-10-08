@@ -22,7 +22,7 @@ export const Sidebar: React.FC<SidebarProps> = () => {
         setSelectedBranch
     } = useApp();
 
-    const { menuData: apiMenuData } = useSidebar();
+    const { menuData: apiMenuData, refetch: refetchSidebar } = useSidebar();
 
     const activeMenuData = useMemo(() => {
         return apiMenuData;
@@ -59,7 +59,10 @@ export const Sidebar: React.FC<SidebarProps> = () => {
     };
 
     const handleSelectBranch = (branchId: string) => {
+        if (branchId === selectedBranch) return;
         setSelectedBranch(branchId);
+        refetchSidebar();
+        navigate(ROUTES.HOME.DASHBOARD);
     };
 
     const handleBrandClick = () => {

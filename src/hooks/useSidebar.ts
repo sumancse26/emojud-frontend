@@ -10,6 +10,7 @@ export interface UseSidebarReturn {
     isLoading: boolean;
     isError: boolean;
     error: string | null;
+    refetch: () => Promise<NavMenuResponse>;
 }
 
 /**
@@ -30,7 +31,7 @@ export function useSidebar(): UseSidebarReturn {
 
     const hasAuth = !!userId && !!roleId;
 
-    const { data, isLoading, isError, error } = useApi(
+    const { data, isLoading, isError, error, execute } = useApi(
         sidebarService.getNavMenu,
         {
             immediate: hasAuth,
@@ -42,12 +43,16 @@ export function useSidebar(): UseSidebarReturn {
         return data?.data ?? [];
     }, [data]);
 
+    const refetch = () => execute(params);
+
     return {
         menuData,
         isLoading,
         isError,
-        error
+        error,
+        refetch
     };
 }
 
 export default useSidebar;
+

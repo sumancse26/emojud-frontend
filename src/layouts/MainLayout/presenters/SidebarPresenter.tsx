@@ -14,6 +14,7 @@ import {
     BarChart3
 } from 'lucide-react';
 import type { NavMenuItem } from '@/app/routes/types';
+import { ShopDropdown } from '@/shared/components/ShopDropdown';
 
 // Fallback icon selector if SVG string is not provided or fails to render
 const getFallbackIcon = (moduleName: string) => {
@@ -129,25 +130,14 @@ export const SidebarPresenter: React.FC<SidebarPresenterProps> = ({
 
                     {/* Current Branch Selector Dropdown */}
                     {!isSidebarCollapsed && (
-                        <div className="relative">
-                            <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1">
-                                Active Store Branch
-                            </label>
-                            <div className="relative">
-                                <select
-                                    value={selectedBranch}
-                                    onChange={(e) => onSelectBranch(e.target.value)}
-                                    className="w-full bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 text-xs text-slate-800 dark:text-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-1 focus:ring-emerald-500 font-medium cursor-pointer appearance-none">
-                                    <option value="1">📍 Dhanmondi Flagship Outlet</option>
-                                    <option value="2">📍 Gulshan Branch Outlet</option>
-                                    <option value="3">📍 Central Warehouse (Savar)</option>
-                                    <option value="4">📍 Chittagong Distribution Hub</option>
-                                </select>
-                                <span className="absolute inset-y-0 right-0 pr-2.5 flex items-center pointer-events-none text-slate-400">
-                                    <ChevronDown className="w-3.5 h-3.5" />
-                                </span>
-                            </div>
-                        </div>
+                        <ShopDropdown
+                            value={selectedBranch}
+                            onChange={(branchId) => onSelectBranch(branchId)}
+                            variant="sidebar"
+                            showLabel={true}
+                            label="Active Store Branch"
+                            autoSelectFirst={true}
+                        />
                     )}
                 </div>
 
