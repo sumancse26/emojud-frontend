@@ -4,5 +4,8 @@ export * from './pages/ProductCategoryPage';
 export * from './pages/UserShopPermissionPage';
 export * from './pages/presenters';
 export * from './types/shop.types';
+export * from './types/warehouse.types';
 export * from './services/shopService';
+export * from './services/warehouseService';
 export * from './hooks/useShop';
+export * from './hooks/useWarehouse';

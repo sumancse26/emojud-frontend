@@ -1,10 +1,11 @@
 import React from 'react';
 import { Save } from 'lucide-react';
-import { PageHeader, Pagination } from '@/shared';
+import { PageHeader, Pagination, Skeleton } from '@/shared';
 import type { UserShopPermission } from '../UserShopPermissionPage';
 
 export interface UserShopPermissionPresenterProps {
     permissions: UserShopPermission[];
+    isLoading?: boolean;
     isSaved: boolean;
     onToggleOutlet: (userId: string, outletKey: keyof UserShopPermission['outletPermissions']) => void;
     onSave: () => void;
@@ -12,6 +13,7 @@ export interface UserShopPermissionPresenterProps {
 
 export const UserShopPermissionPresenter: React.FC<UserShopPermissionPresenterProps> = ({
     permissions,
+    isLoading = false,
     isSaved,
     onToggleOutlet,
     onSave
@@ -33,9 +35,15 @@ export const UserShopPermissionPresenter: React.FC<UserShopPermissionPresenterPr
                 />
             </PageHeader>
 
+            {/* Loading Skeletons */}
+            {isLoading && (
+                <Skeleton.Table rows={5} columns={7} hasHeader={true} />
+            )}
+
             {/* Permission Matrix Table */}
-            <div className="bg-white dark:bg-[#080d1a] border border-slate-200/80 dark:border-slate-800/60 rounded-2xl shadow-xs overflow-hidden">
-                <div className="overflow-x-auto">
+            {!isLoading && (
+                <div className="bg-white dark:bg-[#080d1a] border border-slate-200/80 dark:border-slate-800/60 rounded-2xl shadow-xs overflow-hidden">
+                    <div className="overflow-x-auto">
                     <table className="w-full text-left text-xs">
                         <thead className="bg-slate-50/80 dark:bg-slate-900/40 text-slate-400 font-semibold uppercase tracking-wider border-b border-slate-100 dark:border-slate-800/80 text-[11px]">
                             <tr>
@@ -140,6 +148,7 @@ export const UserShopPermissionPresenter: React.FC<UserShopPermissionPresenterPr
                     itemLabel="permissions"
                 />
             </div>
+            )}
         </section>
     );
 };

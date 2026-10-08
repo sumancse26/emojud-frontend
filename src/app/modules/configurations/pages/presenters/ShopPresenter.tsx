@@ -13,7 +13,7 @@ import {
     RefreshCw,
     Sparkles
 } from 'lucide-react';
-import { SliderDrawer, FormField, inputClasses, selectClasses, Pagination } from '@/shared';
+import { SliderDrawer, FormField, inputClasses, selectClasses, Pagination, Skeleton } from '@/shared';
 import PageHeader from '@/shared/components/PageHeader/PageHeader';
 import type { ShopItem, CreateUpdateShopPayload } from '../../types/shop.types';
 
@@ -122,25 +122,14 @@ export const ShopPresenter: React.FC<ShopPresenterProps> = (props) => {
 
             {/* Loading Skeletons */}
             {isLoading && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {[1, 2, 3, 4].map((i) => (
-                        <div
-                            key={i}
-                            className="bg-white dark:bg-[#0a1020] border border-slate-200/80 dark:border-slate-800/70 rounded-2xl p-5 shadow-2xs animate-pulse space-y-4">
-                            <div className="flex items-center gap-3">
-                                <div className="w-11 h-11 rounded-xl bg-slate-200 dark:bg-slate-800" />
-                                <div className="space-y-2 flex-1">
-                                    <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded-md w-1/2" />
-                                    <div className="h-3 bg-slate-200 dark:bg-slate-800 rounded-md w-1/4" />
-                                </div>
-                            </div>
-                            <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800/60">
-                                <div className="h-3 bg-slate-200 dark:bg-slate-800 rounded-md w-3/4" />
-                                <div className="h-3 bg-slate-200 dark:bg-slate-800 rounded-md w-1/2" />
-                            </div>
-                        </div>
-                    ))}
-                </div>
+                <Skeleton.Card
+                    count={4}
+                    gridCols="grid-cols-1 md:grid-cols-2"
+                    hasIcon={true}
+                    hasBadge={true}
+                    lines={2}
+                    hasFooter={true}
+                />
             )}
 
             {/* Empty State */}

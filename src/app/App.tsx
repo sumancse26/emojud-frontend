@@ -1,11 +1,14 @@
 import React from 'react';
 import { AppProvider } from './providers';
 import { AppRouter } from './routes';
+import { ToastProvider } from '@/shared/components/Toast';
 
 export const App: React.FC = () => {
     return (
         <AppProvider>
-            <AppRouter />
+            <ToastProvider>
+                <AppRouter />
+            </ToastProvider>
         </AppProvider>
     );
 };

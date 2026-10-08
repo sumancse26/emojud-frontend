@@ -1,11 +1,28 @@
 import React from 'react';
-import { Warehouse as WarehouseIcon, Plus, MapPin, Boxes, ArrowRightLeft, Save, Edit3, Search } from 'lucide-react';
-import { SliderDrawer, FormField, inputClasses, selectClasses, PageHeader, Pagination } from '@/shared';
-import type { WarehouseItem, WarehouseFormData } from '../WarehousePage';
+import {
+    Warehouse as WarehouseIcon,
+    Plus,
+    MapPin,
+    Phone,
+    Store,
+    Save,
+    Edit3,
+    Search,
+    Loader2,
+    AlertCircle,
+    RefreshCw
+} from 'lucide-react';
+import { SliderDrawer, FormField, inputClasses, selectClasses, PageHeader, Pagination, Skeleton } from '@/shared';
+import type { WarehouseItem, CreateUpdateWarehousePayload } from '../../types/warehouse.types';
+import type { ShopItem } from '../../types/shop.types';
 
 export interface WarehousePresenterProps {
     warehouses: WarehouseItem[];
     filteredWarehouses: WarehouseItem[];
+    shops: ShopItem[];
+    isLoading: boolean;
+    isError: boolean;
+    error: string | null;
     searchQuery: string;
     onSearchChange: (query: string) => void;
     onOpenCreate: () => void;
@@ -13,13 +30,23 @@ export interface WarehousePresenterProps {
     drawerOpen: boolean;
     onCloseDrawer: () => void;
     editingId: string | null;
-    formData: WarehouseFormData;
-    onFormFieldChange: <K extends keyof WarehouseFormData>(field: K, value: WarehouseFormData[K]) => void;
+    formData: CreateUpdateWarehousePayload;
+    onFormFieldChange: <K extends keyof CreateUpdateWarehousePayload>(
+        field: K,
+        value: CreateUpdateWarehousePayload[K]
+    ) => void;
     onSubmit: (e?: React.FormEvent) => void;
+    isSaving: boolean;
+    saveError: string | null;
+    onRefetch: () => void;
 }
 
 export const WarehousePresenter: React.FC<WarehousePresenterProps> = ({
     filteredWarehouses,
+    shops,
+    isLoading,
+    isError,
+    error,
     searchQuery,
     onSearchChange,
     onOpenCreate,
@@ -29,19 +56,25 @@ export const WarehousePresenter: React.FC<WarehousePresenterProps> = ({
     editingId,
     formData,
     onFormFieldChange,
-    onSubmit
+    onSubmit,
+    isSaving,
+    saveError,
+    onRefetch
 }) => {
     return (
         <section className="space-y-6">
             <PageHeader>
                 <PageHeader.Header
-                    title="Central Warehouse & Storage Hubs"
-                    description="Monitor storage bin capacity, inter-warehouse stock transfers, and zone managers."
+                    title="Warehouse & Storage Hubs"
+                    description="Configure central warehouses, regional storage locations, and linked branch outlets."
                     actions={
-                        <div className="flex items-center gap-2.5">
-                            <button className="flex items-center gap-2 px-3.5 py-2.5 bg-slate-100 dark:bg-slate-800/60 hover:bg-slate-200 dark:hover:bg-slate-700/60 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl transition cursor-pointer">
-                                <ArrowRightLeft className="w-4 h-4" />
-                                <span>Transfer Stock</span>
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={onRefetch}
+                                disabled={isLoading}
+                                title="Refresh warehouses"
+                                className="p-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-xl transition cursor-pointer disabled:opacity-50">
+                                <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
                             </button>
                             <button
                                 onClick={onOpenCreate}
@@ -54,124 +87,159 @@ export const WarehousePresenter: React.FC<WarehousePresenterProps> = ({
                 />
 
                 <PageHeader.Bottom>
-                    <div className="relative max-w-md">
-                        <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                        <input
-                            type="text"
-                            placeholder="Search warehouse by name, code or location..."
-                            value={searchQuery}
-                            onChange={(e) => onSearchChange(e.target.value)}
-                            className="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-900/50 border border-slate-200/60 dark:border-slate-700/50 rounded-xl text-xs text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 font-medium transition"
-                        />
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+                        <div className="relative w-full sm:w-80">
+                            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                            <input
+                                type="text"
+                                placeholder="Search warehouse by name, address, or shop..."
+                                value={searchQuery}
+                                onChange={(e) => onSearchChange(e.target.value)}
+                                className="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-900/50 border border-slate-200/60 dark:border-slate-700/50 rounded-xl text-xs text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 font-medium transition"
+                            />
+                        </div>
+                        <div className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                            Total Warehouses: <strong className="text-slate-900 dark:text-white font-bold">{filteredWarehouses.length}</strong>
+                        </div>
                     </div>
                 </PageHeader.Bottom>
             </PageHeader>
 
+            {/* Error Notification */}
+            {isError && (
+                <div className="flex items-center justify-between p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-600 dark:text-red-400 text-xs">
+                    <div className="flex items-center gap-2.5">
+                        <AlertCircle className="w-4 h-4 shrink-0" />
+                        <span>{error || 'Failed to load warehouses. Please try again.'}</span>
+                    </div>
+                    <button
+                        onClick={onRefetch}
+                        className="px-3 py-1 bg-red-600 text-white rounded-lg font-medium hover:bg-red-500 transition cursor-pointer">
+                        Retry
+                    </button>
+                </div>
+            )}
 
-            {/* Storage Utilization Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                {filteredWarehouses.map((wh) => {
-                    const usagePercent = Math.round((wh.capacityUsed / wh.capacityTotal) * 100);
+            {/* Loading Skeletons */}
+            {isLoading && (
+                <Skeleton.Card
+                    count={3}
+                    gridCols="grid-cols-1 md:grid-cols-3"
+                    hasIcon={true}
+                    hasBadge={true}
+                    lines={2}
+                    hasFooter={true}
+                />
+            )}
 
-                    return (
+            {/* Empty State */}
+            {!isLoading && !isError && filteredWarehouses.length === 0 && (
+                <div className="flex flex-col items-center justify-center p-12 bg-white dark:bg-[#0a1020] border border-slate-200/80 dark:border-slate-800/70 rounded-2xl text-center space-y-3">
+                    <div className="w-12 h-12 rounded-2xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                        <WarehouseIcon className="w-6 h-6" />
+                    </div>
+                    <h3 className="font-bold text-sm text-slate-900 dark:text-white">
+                        {searchQuery ? 'No matching warehouses found' : 'No warehouses configured yet'}
+                    </h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm">
+                        {searchQuery
+                            ? `No results matched "${searchQuery}". Try a different search term.`
+                            : 'Set up your central or regional warehouses to track inventory and stock transfers.'}
+                    </p>
+                    {!searchQuery && (
+                        <button
+                            onClick={onOpenCreate}
+                            className="mt-2 flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-xs transition cursor-pointer">
+                            <Plus className="w-4 h-4" />
+                            <span>Add Warehouse</span>
+                        </button>
+                    )}
+                </div>
+            )}
+
+            {/* Storage Summary Cards */}
+            {!isLoading && filteredWarehouses.length > 0 && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                    {filteredWarehouses.map((wh) => (
                         <div
                             key={wh.id}
-                            className="bg-white dark:bg-[#080d1a] border border-slate-200/80 dark:border-slate-800/60 rounded-2xl p-5 shadow-xs space-y-4 hover:border-slate-300 dark:hover:border-slate-700 transition">
-                            <div className="flex items-start justify-between">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold">
-                                        <WarehouseIcon className="w-5 h-5" />
+                            className="bg-white dark:bg-[#080d1a] border border-slate-200/80 dark:border-slate-800/60 rounded-2xl p-5 shadow-xs space-y-4 hover:border-slate-300 dark:hover:border-slate-700 transition flex flex-col justify-between">
+                            <div>
+                                <div className="flex items-start justify-between gap-3">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold shrink-0">
+                                            <WarehouseIcon className="w-5 h-5" />
+                                        </div>
+                                        <div>
+                                            <h3 className="font-bold text-sm text-slate-900 dark:text-white leading-tight">
+                                                {wh.warehouse_name}
+                                            </h3>
+                                            {wh.shop && (
+                                                <span className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400 flex items-center gap-1 mt-0.5">
+                                                    <Store className="w-3 h-3" />
+                                                    <span>{wh.shop.shop_name}</span>
+                                                    {wh.shop.short_code && (
+                                                        <span className="text-[10px] font-mono font-bold px-1 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500">
+                                                            {wh.shop.short_code}
+                                                        </span>
+                                                    )}
+                                                </span>
+                                            )}
+                                        </div>
                                     </div>
-                                    <div>
-                                        <h3 className="font-bold text-sm text-slate-900 dark:text-white leading-tight">
-                                            {wh.name}
-                                        </h3>
-                                        <span className="text-[10px] font-mono text-slate-400">{wh.code}</span>
+                                    <div className="flex items-center gap-1.5 shrink-0">
+                                        <button
+                                            onClick={() => onOpenEdit(wh)}
+                                            className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition">
+                                            <Edit3 className="w-3.5 h-3.5" />
+                                        </button>
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-1.5">
-                                    <button
-                                        onClick={() => onOpenEdit(wh)}
-                                        className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition">
-                                        <Edit3 className="w-3.5 h-3.5" />
-                                    </button>
-                                    <span
-                                        className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                                            wh.status === 'Optimal'
-                                                ? 'bg-emerald-500/10 text-emerald-600'
-                                                : 'bg-amber-500/10 text-amber-600'
-                                        }`}>
-                                        {wh.status}
-                                    </span>
+
+                                <div className="mt-4 pt-3.5 border-t border-slate-100 dark:border-slate-800/60 space-y-2 text-xs">
+                                    {wh.address && (
+                                        <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+                                            <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                            <span className="truncate">{wh.address}</span>
+                                        </div>
+                                    )}
+                                    {wh.shop?.phone && (
+                                        <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+                                            <Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                            <span className="font-mono">{wh.shop.phone}</span>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
-                            <div className="space-y-1.5 text-xs text-slate-500 dark:text-slate-400">
-                                <div className="flex items-center gap-2">
-                                    <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                                    <span className="truncate">{wh.location}</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <Boxes className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                                    <span>
-                                        <strong>{wh.totalSKUs.toLocaleString()}</strong> Active SKUs •{' '}
-                                        <strong>{wh.zonesCount}</strong> Storage Zones
-                                    </span>
-                                </div>
-                            </div>
-
-                            {/* Capacity Progress Bar */}
-                            <div className="space-y-1.5 pt-2">
-                                <div className="flex justify-between text-xs">
-                                    <span className="text-slate-400 font-semibold">Capacity Usage</span>
-                                    <span className="font-mono font-bold text-slate-900 dark:text-white">
-                                        {wh.capacityUsed.toLocaleString()} / {wh.capacityTotal.toLocaleString()} units (
-                                        {usagePercent}%)
-                                    </span>
-                                </div>
-                                <div className="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                                    <div
-                                        className={`h-full rounded-full ${
-                                            usagePercent > 80
-                                                ? 'bg-amber-500'
-                                                : usagePercent > 90
-                                                  ? 'bg-rose-500'
-                                                  : 'bg-emerald-500'
-                                        }`}
-                                        style={{ width: `${usagePercent}%` }}
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="pt-3 border-t border-slate-100 dark:border-slate-800/60 flex items-center justify-between text-xs">
-                                <span className="text-slate-400">
-                                    Manager:{' '}
-                                    <strong className="text-slate-700 dark:text-slate-200">{wh.manager}</strong>
-                                </span>
+                            <div className="pt-3 border-t border-slate-100 dark:border-slate-800/60 flex items-center justify-end text-xs">
                                 <button
                                     onClick={() => onOpenEdit(wh)}
-                                    className="text-blue-600 dark:text-blue-400 font-bold hover:underline cursor-pointer">
-                                    Zone Map →
+                                    className="inline-flex items-center gap-1 text-blue-600 dark:text-blue-400 font-bold hover:underline cursor-pointer">
+                                    <Edit3 className="w-3.5 h-3.5" />
+                                    <span>Edit Details</span>
                                 </button>
                             </div>
                         </div>
-                    );
-                })}
-            </div>
+                    ))}
+                </div>
+            )}
 
             {/* Pagination Footer */}
-            <Pagination
-                totalItems={filteredWarehouses.length}
-                pageSize={6}
-                itemLabel="warehouses"
-                className="rounded-2xl border border-slate-200/80 dark:border-slate-800/70 bg-white dark:bg-[#0a1020]"
-            />
+            {!isLoading && filteredWarehouses.length > 0 && (
+                <Pagination
+                    totalItems={filteredWarehouses.length}
+                    pageSize={6}
+                    itemLabel="warehouses"
+                    className="rounded-2xl border border-slate-200/80 dark:border-slate-800/70 bg-white dark:bg-[#0a1020]"
+                />
+            )}
 
             {/* Slider Drawer for Create / Edit */}
             <SliderDrawer isOpen={drawerOpen} onClose={onCloseDrawer}>
-                <SliderDrawer.Header>
+                <SliderDrawer.Header onClose={onCloseDrawer}>
                     <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-xl bg-emerald-500 text-slate-950 flex items-center justify-center font-bold">
+                        <div className="w-8 h-8 rounded-xl bg-blue-500 text-white flex items-center justify-center font-bold">
                             <WarehouseIcon className="w-4 h-4" />
                         </div>
                         <div>
@@ -180,134 +248,83 @@ export const WarehousePresenter: React.FC<WarehousePresenterProps> = ({
                             </h2>
                             <p className="text-[10px] text-slate-400">
                                 {editingId
-                                    ? `Editing: ${formData.name || 'Untitled'}`
-                                    : 'Enter the details to create a new Warehouse'}
+                                    ? `Editing: ${formData.warehouse_name || 'Untitled'}`
+                                    : 'Configure warehouse details and link with a shop outlet'}
                             </p>
                         </div>
                     </div>
                 </SliderDrawer.Header>
                 <SliderDrawer.Body>
-                    <form className="space-y-5" onSubmit={onSubmit}>
-                        <div>
-                            <h3 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-4 flex items-center gap-2">
-                                <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                                Warehouse Details
-                            </h3>
-                            <div className="space-y-4">
-                                <div className="grid grid-cols-2 gap-3">
-                                    <FormField label="Warehouse Code" required>
-                                        <input
-                                            type="text"
-                                            className={inputClasses}
-                                            placeholder="e.g. WH-SAVAR-01"
-                                            value={formData.code}
-                                            onChange={(e) =>
-                                                onFormFieldChange('code', e.target.value.toUpperCase())
-                                            }
-                                        />
-                                    </FormField>
-                                    <FormField label="Type" required>
-                                        <select
-                                            className={selectClasses}
-                                            value={formData.type}
-                                            onChange={(e) =>
-                                                onFormFieldChange('type', e.target.value as WarehouseItem['type'])
-                                            }>
-                                            <option>Central Distribution</option>
-                                            <option>Regional Hub</option>
-                                            <option>Transit Hub</option>
-                                        </select>
-                                    </FormField>
-                                </div>
-
-                                <FormField label="Warehouse Name" required>
-                                    <input
-                                        type="text"
-                                        className={inputClasses}
-                                        placeholder="e.g. Central Mega Warehouse (Savar)"
-                                        value={formData.name}
-                                        onChange={(e) => onFormFieldChange('name', e.target.value)}
-                                    />
-                                </FormField>
-
-                                <FormField label="Location / Address">
-                                    <input
-                                        type="text"
-                                        className={inputClasses}
-                                        placeholder="e.g. Hemayetpur Industrial Zone, Savar"
-                                        value={formData.location}
-                                        onChange={(e) => onFormFieldChange('location', e.target.value)}
-                                    />
-                                </FormField>
-
-                                <div className="grid grid-cols-2 gap-3">
-                                    <FormField label="Status">
-                                        <select
-                                            className={selectClasses}
-                                            value={formData.status}
-                                            onChange={(e) =>
-                                                onFormFieldChange('status', e.target.value as WarehouseItem['status'])
-                                            }>
-                                            <option>Optimal</option>
-                                            <option>Near Capacity</option>
-                                            <option>Maintenance</option>
-                                        </select>
-                                    </FormField>
-                                    <FormField label="Manager Name">
-                                        <input
-                                            type="text"
-                                            className={inputClasses}
-                                            placeholder="e.g. Engr. Kamrul Islam"
-                                            value={formData.manager}
-                                            onChange={(e) => onFormFieldChange('manager', e.target.value)}
-                                        />
-                                    </FormField>
-                                </div>
+                    <form id="warehouse-form" onSubmit={onSubmit} className="space-y-5">
+                        {saveError && (
+                            <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-600 dark:text-red-400 text-xs flex items-center gap-2">
+                                <AlertCircle className="w-4 h-4 shrink-0" />
+                                <span>{saveError}</span>
                             </div>
-                        </div>
+                        )}
 
-                        <div>
-                            <h3 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-4 flex items-center gap-2">
-                                <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                                Capacity & Zones
-                            </h3>
-                            <div className="grid grid-cols-2 gap-3">
-                                <FormField label="Total Capacity (units)">
-                                    <input
-                                        type="number"
-                                        className={inputClasses}
-                                        placeholder="e.g. 100000"
-                                        value={formData.capacityTotal}
-                                        onChange={(e) => onFormFieldChange('capacityTotal', e.target.value)}
-                                    />
-                                </FormField>
-                                <FormField label="Storage Zones">
-                                    <input
-                                        type="number"
-                                        className={inputClasses}
-                                        placeholder="e.g. 16"
-                                        value={formData.zonesCount}
-                                        onChange={(e) => onFormFieldChange('zonesCount', e.target.value)}
-                                    />
-                                </FormField>
-                            </div>
-                        </div>
+                        <FormField label="Warehouse Name" required>
+                            <input
+                                type="text"
+                                required
+                                className={inputClasses}
+                                placeholder="e.g. Main Warehouse"
+                                value={formData.warehouse_name || ''}
+                                onChange={(e) => onFormFieldChange('warehouse_name', e.target.value)}
+                            />
+                        </FormField>
+
+                        <FormField label="Linked Shop Outlet" required>
+                            <select
+                                required
+                                className={selectClasses}
+                                value={formData.shop_id !== undefined && formData.shop_id !== null ? String(formData.shop_id) : ''}
+                                onChange={(e) => onFormFieldChange('shop_id', Number(e.target.value) || e.target.value)}>
+                                <option value="" disabled>Select a shop outlet</option>
+                                {shops.map((shop) => (
+                                    <option key={shop.id} value={shop.id}>
+                                        {shop.shop_name} ({shop.short_code || shop.display_code || `#${shop.id}`})
+                                    </option>
+                                ))}
+                            </select>
+                        </FormField>
+
+                        <FormField label="Address / Location">
+                            <input
+                                type="text"
+                                className={inputClasses}
+                                placeholder="e.g. House 12, Road 5, Dhaka"
+                                value={formData.address || ''}
+                                onChange={(e) => onFormFieldChange('address', e.target.value)}
+                            />
+                        </FormField>
                     </form>
                 </SliderDrawer.Body>
                 <SliderDrawer.Footer>
-                    <div className="flex items-center gap-3">
+                    <div className="pt-4 flex items-center justify-end gap-2.5 border-t border-slate-100 dark:border-slate-800">
                         <button
                             type="button"
                             onClick={onCloseDrawer}
-                            className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 font-semibold text-xs text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer">
+                            disabled={isSaving}
+                            className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition cursor-pointer disabled:opacity-50">
                             Cancel
                         </button>
                         <button
-                            type="button"
-                            onClick={() => onSubmit()}
-                            className="flex-[2] py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-xs shadow-md shadow-emerald-600/20 flex items-center justify-center gap-1.5 transition cursor-pointer">
-                            <Save className="w-3.5 h-3.5" />
-                            <span>{editingId ? 'Update Warehouse' : 'Create Warehouse'}</span>
+                            type="submit"
+                            form="warehouse-form"
+                            disabled={isSaving || !formData.warehouse_name || !formData.shop_id}
+                            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-bold shadow-md shadow-emerald-600/20 transition cursor-pointer">
+                            {isSaving ? (
+                                <>
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                    <span>Saving...</span>
+                                </>
+                            ) : (
+                                <>
+                                    <Save className="w-4 h-4" />
+                                    <span>{editingId ? 'Update Warehouse' : 'Create Warehouse'}</span>
+                                </>
+                            )}
                         </button>
                     </div>
                 </SliderDrawer.Footer>

@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useShop } from '../hooks/useShop';
 import { ShopPresenter } from './presenters/ShopPresenter';
 import { tokenStorage } from '@/shared/services/tokenStorage';
+import { useToast } from '@/shared/components/Toast';
 import type { User } from '@/app/modules/auth/types/auth.types';
 import type { ShopItem, CreateUpdateShopPayload } from '../types/shop.types';
 
@@ -89,9 +90,16 @@ export const ShopsPage: React.FC = () => {
         }));
     };
 
+    const toast = useToast();
+
     const handleSubmit = async (e?: React.FormEvent) => {
         if (e) e.preventDefault();
-        if (!formData.shop_name?.trim()) return;
+        if (!formData.shop_name?.trim()) {
+            toast.warning('Shop name is required.');
+            return;
+        }
+
+        const isUpdating = Boolean(editingShop);
 
         try {
             await createOrUpdateShop({
@@ -99,9 +107,16 @@ export const ShopsPage: React.FC = () => {
                 company_id: Number(formData.company_id || userCompanyId),
                 status: Number(formData.status ?? 1)
             });
+            toast.success(
+                isUpdating
+                    ? `Shop "${formData.shop_name}" updated successfully!`
+                    : `Shop "${formData.shop_name}" created successfully!`
+            );
             setDrawerOpen(false);
             setEditingShop(null);
-        } catch (err) {
+        } catch (err: unknown) {
+            const errorMsg = err instanceof Error ? err.message : 'Failed to save shop. Please try again.';
+            toast.error(errorMsg);
             console.error('Failed to create/update shop:', err);
         }
     };

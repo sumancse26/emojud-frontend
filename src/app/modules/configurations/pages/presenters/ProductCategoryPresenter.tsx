@@ -1,11 +1,12 @@
 import React from 'react';
 import { Plus, Tag, Edit3, Trash2, Save, X as XIcon, Search } from 'lucide-react';
-import { SliderDrawer, FormField, inputClasses, selectClasses, PageHeader, Pagination } from '@/shared';
+import { SliderDrawer, FormField, inputClasses, selectClasses, PageHeader, Pagination, Skeleton } from '@/shared';
 import type { CategoryItem, CategoryFormData } from '../ProductCategoryPage';
 
 export interface ProductCategoryPresenterProps {
     categories: CategoryItem[];
     filteredCategories: CategoryItem[];
+    isLoading?: boolean;
     searchQuery: string;
     onSearchChange: (query: string) => void;
     onOpenCreate: () => void;
@@ -24,6 +25,7 @@ export interface ProductCategoryPresenterProps {
 
 export const ProductCategoryPresenter: React.FC<ProductCategoryPresenterProps> = ({
     filteredCategories,
+    isLoading = false,
     searchQuery,
     onSearchChange,
     onOpenCreate,
@@ -69,9 +71,22 @@ export const ProductCategoryPresenter: React.FC<ProductCategoryPresenterProps> =
                 </PageHeader.Bottom>
             </PageHeader>
 
+            {/* Loading Skeletons */}
+            {isLoading && (
+                <Skeleton.Card
+                    count={4}
+                    gridCols="grid-cols-1 md:grid-cols-2"
+                    hasIcon={true}
+                    hasBadge={true}
+                    lines={2}
+                    hasFooter={true}
+                />
+            )}
+
             {/* Category Cards Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                {filteredCategories.map((cat) => (
+            {!isLoading && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    {filteredCategories.map((cat) => (
                     <div
                         key={cat.id}
                         className="bg-white dark:bg-[#080d1a] border border-slate-200/80 dark:border-slate-800/60 rounded-2xl p-5 shadow-xs space-y-4 hover:border-slate-300 dark:hover:border-slate-700 transition">
@@ -134,7 +149,8 @@ export const ProductCategoryPresenter: React.FC<ProductCategoryPresenterProps> =
                         </div>
                     </div>
                 ))}
-            </div>
+                </div>
+            )}
 
             {/* Pagination Footer */}
             <Pagination
