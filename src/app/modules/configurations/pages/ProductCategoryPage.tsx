@@ -1,205 +1,151 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
+import { useCategory } from '../hooks/useCategory';
 import { ProductCategoryPresenter } from './presenters/ProductCategoryPresenter';
+import { tokenStorage } from '@/shared/services/tokenStorage';
+import { useToast } from '@/shared/components/Toast';
+import type { User } from '@/app/modules/auth/types/auth.types';
+import type { ProductCategoryItem, CreateUpdateCategoryPayload } from '../types/category.types';
 
-export interface CategoryItem {
-    id: string;
-    code: string;
-    name: string;
-    subcategories: string[];
-    vatRate: number;
-    productCount: number;
-    color: string;
-    status: 'Active' | 'Inactive';
-}
-
-export const COLOR_OPTIONS = [
-    { label: 'Blue → Indigo', value: 'from-blue-500 to-indigo-600' },
-    { label: 'Emerald → Teal', value: 'from-emerald-500 to-teal-600' },
-    { label: 'Violet → Purple', value: 'from-violet-500 to-purple-600' },
-    { label: 'Amber → Orange', value: 'from-amber-500 to-orange-600' },
-    { label: 'Rose → Pink', value: 'from-rose-500 to-pink-600' },
-    { label: 'Cyan → Sky', value: 'from-cyan-500 to-sky-600' }
-];
-
-const INITIAL_CATEGORIES: CategoryItem[] = [
-    {
-        id: '1',
-        code: 'CAT-APP',
-        name: 'Apparel & Menswear',
-        subcategories: ['Formal Shirts', 'Casual Polo', 'Denim Jeans', 'Blazers & Suits', 'Silk Ties'],
-        vatRate: 7.5,
-        productCount: 420,
-        color: 'from-blue-500 to-indigo-600',
-        status: 'Active'
-    },
-    {
-        id: '2',
-        code: 'CAT-FTW',
-        name: 'Footwear & Leather',
-        subcategories: ['Leather Loafers', 'Oxford Shoes', 'Sneakers', 'Wallets & Belts'],
-        vatRate: 7.5,
-        productCount: 280,
-        color: 'from-emerald-500 to-teal-600',
-        status: 'Active'
-    },
-    {
-        id: '3',
-        code: 'CAT-ACC',
-        name: 'Fashion Accessories',
-        subcategories: ['Sunglasses', 'Watches', 'Cufflinks', 'Leather Bags'],
-        vatRate: 15.0,
-        productCount: 150,
-        color: 'from-violet-500 to-purple-600',
-        status: 'Active'
-    },
-    {
-        id: '4',
-        code: 'CAT-PERF',
-        name: 'Perfumes & Grooming',
-        subcategories: ['Eau De Parfum', 'Beard Oils', 'Hair Care', 'Body Mists'],
-        vatRate: 15.0,
-        productCount: 95,
-        color: 'from-amber-500 to-orange-600',
-        status: 'Active'
-    }
-];
-
-export interface CategoryFormData {
-    code: string;
-    name: string;
-    vatRate: string;
-    color: string;
-    status: 'Active' | 'Inactive';
-    subcategories: string[];
-    newSubcategory: string;
-}
-
-const emptyForm: CategoryFormData = {
-    code: '',
-    name: '',
-    vatRate: '',
-    color: COLOR_OPTIONS[0].value,
-    status: 'Active',
-    subcategories: [],
-    newSubcategory: ''
-};
+const getDefaultCategoryFormData = (
+    companyId: number = 1,
+    userId: number = 1,
+    parentId: string | number | null = null
+): CreateUpdateCategoryPayload => ({
+    id: null,
+    parent_category_id: parentId,
+    category_name: '',
+    company_id: companyId,
+    created_by: userId
+});
 
 export const ProductCategoryPage: React.FC = () => {
-    const [categories, setCategories] = useState<CategoryItem[]>(INITIAL_CATEGORIES);
+    const user = tokenStorage.getUser<User>();
+    const userCompanyId = Number(user?.branchId ?? 1);
+    const userId = Number(user?.id ?? 1);
+
+    const {
+        categories,
+        isLoading,
+        isError,
+        error,
+        createOrUpdateCategory,
+        isSaving,
+        saveError,
+        refetch
+    } = useCategory();
+
+    const toast = useToast();
+
     const [searchQuery, setSearchQuery] = useState('');
     const [drawerOpen, setDrawerOpen] = useState(false);
-    const [editingId, setEditingId] = useState<string | null>(null);
-    const [formData, setFormData] = useState<CategoryFormData>(emptyForm);
-
-    const filteredCategories = categories.filter(
-        (cat) =>
-            cat.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            cat.code.toLowerCase().includes(searchQuery.toLowerCase())
+    const [editingCategory, setEditingCategory] = useState<ProductCategoryItem | null>(null);
+    const [parentCategoryForSub, setParentCategoryForSub] = useState<ProductCategoryItem | null>(null);
+    const [formData, setFormData] = useState<CreateUpdateCategoryPayload>(() =>
+        getDefaultCategoryFormData(userCompanyId, userId)
     );
 
+    const filteredCategories = useMemo(() => {
+        if (!searchQuery.trim()) return categories;
+        const q = searchQuery.toLowerCase();
+        return categories.filter(
+            (cat) =>
+                cat.category_name?.toLowerCase().includes(q) ||
+                cat.subcategories?.some((sub) => sub.category_name?.toLowerCase().includes(q))
+        );
+    }, [categories, searchQuery]);
+
     const openCreate = () => {
-        setEditingId(null);
-        setFormData(emptyForm);
+        setEditingCategory(null);
+        setParentCategoryForSub(null);
+        setFormData(getDefaultCategoryFormData(userCompanyId, userId, null));
         setDrawerOpen(true);
     };
 
-    const openEdit = (cat: CategoryItem) => {
-        setEditingId(cat.id);
+    const openCreateSubcategory = (parentCat: ProductCategoryItem) => {
+        setEditingCategory(null);
+        setParentCategoryForSub(parentCat);
+        setFormData(getDefaultCategoryFormData(userCompanyId, userId, parentCat.id));
+        setDrawerOpen(true);
+    };
+
+    const openEdit = (cat: ProductCategoryItem, parent?: ProductCategoryItem) => {
+        setEditingCategory(cat);
+        setParentCategoryForSub(parent ?? null);
         setFormData({
-            code: cat.code,
-            name: cat.name,
-            vatRate: String(cat.vatRate),
-            color: cat.color,
-            status: cat.status,
-            subcategories: [...cat.subcategories],
-            newSubcategory: ''
+            id: cat.id,
+            parent_category_id: cat.parent_category_id ?? (parent ? parent.id : null),
+            category_name: cat.category_name ?? '',
+            company_id: Number(cat.company_id ?? userCompanyId),
+            created_by: Number(cat.created_by ?? userId)
         });
         setDrawerOpen(true);
     };
 
-    const handleFormFieldChange = <K extends keyof CategoryFormData>(field: K, value: CategoryFormData[K]) => {
+    const handleFormFieldChange = <K extends keyof CreateUpdateCategoryPayload>(
+        field: K,
+        value: CreateUpdateCategoryPayload[K]
+    ) => {
         setFormData((prev) => ({
             ...prev,
             [field]: value
         }));
     };
 
-    const handleAddSubcategory = () => {
-        const trimmed = formData.newSubcategory.trim();
-        if (trimmed && !formData.subcategories.includes(trimmed)) {
-            setFormData((prev) => ({
-                ...prev,
-                subcategories: [...prev.subcategories, trimmed],
-                newSubcategory: ''
-            }));
-        }
-    };
-
-    const handleRemoveSubcategory = (idx: number) => {
-        setFormData((prev) => ({
-            ...prev,
-            subcategories: prev.subcategories.filter((_, i) => i !== idx)
-        }));
-    };
-
-    const handleSubmit = (e?: React.FormEvent) => {
+    const handleSubmit = async (e?: React.FormEvent) => {
         if (e) e.preventDefault();
-        if (!formData.name || !formData.code) return;
-
-        if (editingId) {
-            setCategories((prev) =>
-                prev.map((c) =>
-                    c.id === editingId
-                        ? {
-                              ...c,
-                              code: formData.code,
-                              name: formData.name,
-                              vatRate: parseFloat(formData.vatRate) || 0,
-                              color: formData.color,
-                              status: formData.status,
-                              subcategories: formData.subcategories
-                          }
-                        : c
-                )
-            );
-        } else {
-            const newCat: CategoryItem = {
-                id: String(Date.now()),
-                code: formData.code,
-                name: formData.name,
-                vatRate: parseFloat(formData.vatRate) || 0,
-                productCount: 0,
-                color: formData.color,
-                status: formData.status,
-                subcategories: formData.subcategories
-            };
-            setCategories((prev) => [...prev, newCat]);
+        if (!formData.category_name?.trim()) {
+            toast.warning('Category name is required.');
+            return;
         }
-        setDrawerOpen(false);
-    };
 
-    const handleDelete = (id: string) => {
-        setCategories((prev) => prev.filter((c) => c.id !== id));
+        const isUpdating = Boolean(editingCategory);
+        const isSubcategory = Boolean(formData.parent_category_id || parentCategoryForSub);
+
+        try {
+            await createOrUpdateCategory({
+                ...formData,
+                parent_category_id: formData.parent_category_id ? Number(formData.parent_category_id) : null,
+                company_id: Number(formData.company_id || userCompanyId),
+                created_by: Number(formData.created_by || userId)
+            });
+
+            toast.success(
+                isUpdating
+                    ? `${isSubcategory ? 'Subcategory' : 'Category'} "${formData.category_name}" updated successfully!`
+                    : `${isSubcategory ? 'Subcategory' : 'Category'} "${formData.category_name}" created successfully!`
+            );
+            setDrawerOpen(false);
+            setEditingCategory(null);
+            setParentCategoryForSub(null);
+        } catch (err: unknown) {
+            const errorMsg = err instanceof Error ? err.message : 'Failed to save category. Please try again.';
+            toast.error(errorMsg);
+            console.error('Failed to create/update category:', err);
+        }
     };
 
     return (
         <ProductCategoryPresenter
             categories={categories}
             filteredCategories={filteredCategories}
+            isLoading={isLoading}
+            isError={isError}
+            error={error}
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
             onOpenCreate={openCreate}
+            onOpenCreateSubcategory={openCreateSubcategory}
             onOpenEdit={openEdit}
-            onDelete={handleDelete}
             drawerOpen={drawerOpen}
             onCloseDrawer={() => setDrawerOpen(false)}
-            editingId={editingId}
+            editingId={editingCategory ? String(editingCategory.id) : null}
+            parentCategoryForSub={parentCategoryForSub}
             formData={formData}
             onFormFieldChange={handleFormFieldChange}
-            onAddSubcategory={handleAddSubcategory}
-            onRemoveSubcategory={handleRemoveSubcategory}
             onSubmit={handleSubmit}
-            colorOptions={COLOR_OPTIONS}
+            isSaving={isSaving}
+            saveError={saveError}
+            onRefetch={() => refetch()}
         />
     );
 };
