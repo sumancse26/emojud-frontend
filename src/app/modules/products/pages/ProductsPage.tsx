@@ -1,144 +1,329 @@
-import React, { useState } from 'react';
-import { Plus, Shirt, Watch, Edit3, Trash2, Barcode } from 'lucide-react';
-import { Pagination } from '@/shared';
-import { AddProductModal } from '../components/AddProductModal';
+import React, { useState, useMemo, useEffect } from 'react';
+import { useApp } from '@/app/providers';
+import { useToast } from '@/shared/components/Toast';
+import { useProduct } from '../hooks/useProduct';
+import { useCategory } from '@/app/modules/configurations/hooks/useCategory';
+import { ProductsPresenter } from './presenters/ProductsPresenter';
+import type { DropdownOption } from '@/shared';
+import type { ProductItem, CreateUpdateProductPayload } from '../types/product.types';
+
+const defaultFormState: CreateUpdateProductPayload = {
+    product_name: '',
+    product_code: '',
+    specifications: '',
+    barcode: '',
+    category_id: '',
+    sub_category_id: '',
+    brand_id: '',
+    unit_id: '',
+    purchase_rate: '',
+    retail_rate: '',
+    sales_rate: '',
+    min_stock_qty: 10,
+    image: '',
+    is_batch_wise: 0,
+    is_expire_wise: 0,
+    status: 1
+};
 
 export const ProductsPage: React.FC = () => {
-    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const { selectedBranch } = useApp();
+    const toast = useToast();
+
+    // ─── Query Params ─────────────────────────────────────────────────
+    const productParams = useMemo(
+        () => ({ shop_id: selectedBranch }),
+        [selectedBranch]
+    );
+
+    // ─── Products Hook ────────────────────────────────────────────────
+    const {
+        products,
+        shopWiseProducts,
+        isLoading,
+        isError,
+        error,
+        refetch,
+        refetchShopWise,
+        createOrUpdateProduct,
+        isSaving,
+        saveError
+    } = useProduct({
+        immediate: true,
+        initialParams: productParams
+    });
+
+    // ─── Category Hook ────────────────────────────────────────────────
+    const {
+        categories,
+        isLoading: isLoadingCategories,
+        fetchSubCategories
+    } = useCategory({ immediate: true, loadSubcategories: false });
+
+    // ─── Local UI States ──────────────────────────────────────────────
+    const [searchQuery, setSearchQuery] = useState('');
+    const [activeTab, setActiveTab] = useState<'all' | 'shopWise'>('all');
+    const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+    const [editingProduct, setEditingProduct] = useState<ProductItem | null>(null);
+    const [formState, setFormState] = useState<CreateUpdateProductPayload>(defaultFormState);
+    const [subCategoriesList, setSubCategoriesList] = useState<{ id: string | number; category_name: string }[]>([]);
+
+    // ─── Fetch Subcategories on Category Change ───────────────────────
+    useEffect(() => {
+        if (!formState.category_id) {
+            setSubCategoriesList([]);
+            return;
+        }
+
+        let isMounted = true;
+        fetchSubCategories(formState.category_id)
+            .then((subs) => {
+                if (isMounted) {
+                    setSubCategoriesList(subs || []);
+                }
+            })
+            .catch(() => {
+                if (isMounted) {
+                    setSubCategoriesList([]);
+                }
+            });
+
+        return () => {
+            isMounted = false;
+        };
+    }, [formState.category_id, fetchSubCategories]);
+
+    // ─── Dropdown Options ─────────────────────────────────────────────
+    const categoryOptions = useMemo<DropdownOption[]>(() => {
+        return categories.map((c) => ({
+            value: String(c.id),
+            label: c.category_name,
+            subLabel: c.display_code
+        }));
+    }, [categories]);
+
+    const subCategoryOptions = useMemo<DropdownOption[]>(() => {
+        return subCategoriesList.map((s) => ({
+            value: String(s.id),
+            label: s.category_name
+        }));
+    }, [subCategoriesList]);
+
+    // Collect Brands & Units dynamically from products with fallbacks
+    const brandOptions = useMemo<DropdownOption[]>(() => {
+        const map = new Map<string, string>();
+        products.forEach((p) => {
+            if (p.brand?.id && p.brand?.lookup_value) {
+                map.set(String(p.brand.id), p.brand.lookup_value);
+            }
+        });
+        if (map.size === 0) {
+            // default standard brand choices if none in product list yet
+            return [
+                { value: '1', label: 'General / No Brand' },
+                { value: '12', label: 'Vivo' },
+                { value: '13', label: 'Samsung' },
+                { value: '14', label: 'Infinix' },
+                { value: '15', label: 'Apple' }
+            ];
+        }
+        return Array.from(map.entries()).map(([value, label]) => ({ value, label }));
+    }, [products]);
+
+    const unitOptions = useMemo<DropdownOption[]>(() => {
+        const map = new Map<string, string>();
+        products.forEach((p) => {
+            if (p.units?.id && p.units?.lookup_value) {
+                map.set(String(p.units.id), p.units.lookup_value);
+            }
+        });
+        if (map.size === 0) {
+            return [
+                { value: '17', label: 'PCS (Pieces)' },
+                { value: '18', label: 'BOX (Boxes)' },
+                { value: '19', label: 'KG (Kilograms)' },
+                { value: '20', label: 'PACK (Packs)' }
+            ];
+        }
+        return Array.from(map.entries()).map(([value, label]) => ({ value, label }));
+    }, [products]);
+
+    // ─── Filtering based on tab and search query ──────────────────────
+    const filteredProducts = useMemo(() => {
+        let baseList: ProductItem[] = [];
+
+        if (activeTab === 'shopWise') {
+            // Map shop-wise product items into ProductItem structure
+            baseList = shopWiseProducts.map((sp) => ({
+                id: sp.id,
+                product_code: sp.product_code,
+                product_name: sp.product_name,
+                purchase_rate: sp.purchase_rate,
+                retail_rate: sp.retail_rate,
+                sales_rate: sp.sales_rate,
+                avail_stock: sp.avail_stock
+            }));
+        } else {
+            baseList = products;
+        }
+
+        if (!searchQuery.trim()) return baseList;
+        const q = searchQuery.toLowerCase();
+
+        return baseList.filter((item) => {
+            return (
+                item.product_name?.toLowerCase().includes(q) ||
+                item.product_code?.toLowerCase().includes(q) ||
+                (item.barcode && String(item.barcode).toLowerCase().includes(q)) ||
+                (item.category?.category_name && item.category.category_name.toLowerCase().includes(q)) ||
+                (item.brand?.lookup_value && item.brand.lookup_value.toLowerCase().includes(q))
+            );
+        });
+    }, [products, shopWiseProducts, activeTab, searchQuery]);
+
+    // ─── Handlers ─────────────────────────────────────────────────────
+    const handleOpenCreate = () => {
+        setEditingProduct(null);
+        setFormState({
+            ...defaultFormState,
+            product_code: `PRD-${Date.now().toString().slice(-5)}`
+        });
+        setIsDrawerOpen(true);
+    };
+
+    const handleOpenEdit = (item: ProductItem) => {
+        setEditingProduct(item);
+        setFormState({
+            id: Number(item.id),
+            product_name: item.product_name,
+            product_code: item.product_code,
+            specifications: item.specifications ?? '',
+            barcode: item.barcode ?? '',
+            category_id: item.category?.id ? Number(item.category.id) : '',
+            sub_category_id: (item as Record<string, unknown>).sub_category_id
+                ? Number((item as Record<string, unknown>).sub_category_id)
+                : '',
+            brand_id: item.brand?.id ? Number(item.brand.id) : '',
+            unit_id: item.units?.id ? Number(item.units.id) : '',
+            purchase_rate: item.purchase_rate ?? '',
+            retail_rate: item.retail_rate ?? '',
+            sales_rate: item.sales_rate ?? '',
+            min_stock_qty: item.min_stock_qty ?? 10,
+            image: (item as Record<string, unknown>).image ? Number((item as Record<string, unknown>).image) : '',
+            is_batch_wise: Number(item.is_batch_wise ?? 0),
+            is_expire_wise: Number(item.is_expire_wise ?? 0),
+            status: item.status !== undefined ? Number(item.status) : 1
+        });
+        setIsDrawerOpen(true);
+    };
+
+    const handleFormFieldChange = <K extends keyof CreateUpdateProductPayload>(
+        field: K,
+        value: CreateUpdateProductPayload[K]
+    ) => {
+        setFormState((prev) => ({
+            ...prev,
+            [field]: value
+        }));
+    };
+
+    const handleSave = async (e?: React.FormEvent) => {
+        if (e) e.preventDefault();
+
+        if (!formState.product_name?.trim()) {
+            toast.warning('Product name is required.');
+            return;
+        }
+        if (!formState.product_code?.trim()) {
+            toast.warning('Product code / SKU is required.');
+            return;
+        }
+        if (formState.purchase_rate === '' || isNaN(Number(formState.purchase_rate))) {
+            toast.warning('Valid purchase rate is required.');
+            return;
+        }
+        if (formState.retail_rate === '' || isNaN(Number(formState.retail_rate))) {
+            toast.warning('Valid retail rate is required.');
+            return;
+        }
+        if (formState.sales_rate === '' || isNaN(Number(formState.sales_rate))) {
+            toast.warning('Valid sales rate is required.');
+            return;
+        }
+
+        const isUpdating = Boolean(editingProduct);
+
+        const payload: CreateUpdateProductPayload = {
+            ...(isUpdating && editingProduct ? { id: Number(editingProduct.id) } : {}),
+            product_name: formState.product_name.trim(),
+            product_code: formState.product_code.trim(),
+            specifications: formState.specifications?.trim() || undefined,
+            barcode: formState.barcode?.trim() || undefined,
+            category_id: formState.category_id ? Number(formState.category_id) : undefined,
+            sub_category_id: formState.sub_category_id ? Number(formState.sub_category_id) : undefined,
+            brand_id: formState.brand_id ? Number(formState.brand_id) : undefined,
+            unit_id: formState.unit_id ? Number(formState.unit_id) : undefined,
+            purchase_rate: Number(formState.purchase_rate),
+            retail_rate: Number(formState.retail_rate),
+            sales_rate: Number(formState.sales_rate),
+            min_stock_qty: formState.min_stock_qty !== '' ? Number(formState.min_stock_qty) : 0,
+            image: formState.image ? Number(formState.image) : undefined,
+            is_batch_wise: Number(formState.is_batch_wise || 0),
+            is_expire_wise: Number(formState.is_expire_wise || 0),
+            status: Number(formState.status ?? 1),
+            shop_id: Number(selectedBranch)
+        };
+
+        try {
+            await createOrUpdateProduct(payload);
+            toast.success(
+                isUpdating
+                    ? `Product "${formState.product_name}" updated successfully!`
+                    : `Product "${formState.product_name}" registered successfully!`
+            );
+            setIsDrawerOpen(false);
+            setEditingProduct(null);
+            setFormState(defaultFormState);
+        } catch (err: unknown) {
+            const errorMsg =
+                err instanceof Error ? err.message : 'Failed to save product. Please try again.';
+            toast.error(errorMsg);
+        }
+    };
+
+    const handleRefetch = () => {
+        void Promise.allSettled([refetch(), refetchShopWise()]);
+    };
 
     return (
-        <section className="space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div>
-                    <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">Product Inventory & Stock</h2>
-                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-                        Manage barcode SKUs, wholesale purchase cost, retail prices, and safety stock levels
-                    </p>
-                </div>
-                <div className="flex items-center gap-2">
-                    <button className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0d1729] text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors flex items-center gap-1.5 cursor-pointer">
-                        <Barcode className="w-3.5 h-3.5" />
-                        <span>Print Barcode Labels</span>
-                    </button>
-                    <button
-                        onClick={() => setIsAddModalOpen(true)}
-                        className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold rounded-xl transition-all shadow-sm flex items-center gap-2 cursor-pointer">
-                        <Plus className="w-4 h-4" />
-                        <span>Add New Product</span>
-                    </button>
-                </div>
-            </div>
-
-            <div className="bg-white dark:bg-[#0d1729] border border-slate-200/80 dark:border-slate-800/50 rounded-2xl shadow-sm overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left text-xs">
-                        <thead className="bg-slate-50/80 dark:bg-slate-900/40 text-slate-400 font-semibold uppercase tracking-wider border-b border-slate-100 dark:border-slate-800/80 text-[11px]">
-                            <tr>
-                                <th className="px-5 py-3">Product Name & SKU</th>
-                                <th className="px-5 py-3">Category</th>
-                                <th className="px-5 py-3 text-right">Unit Cost Price</th>
-                                <th className="px-5 py-3 text-right">Retail Selling Price</th>
-                                <th className="px-5 py-3 text-center">Available Stock</th>
-                                <th className="px-5 py-3 text-center">Stock Health</th>
-                                <th className="px-5 py-3 text-right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800/40">
-                            <tr className="hover:bg-slate-50/80 dark:hover:bg-slate-850/50 transition-colors">
-                                <td className="px-5 py-3.5">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                                            <Shirt className="w-4 h-4 text-emerald-500" />
-                                        </div>
-                                        <div>
-                                            <p className="font-bold text-slate-900 dark:text-white">
-                                                Premium Cotton Polo Shirt (XL)
-                                            </p>
-                                            <p className="font-mono text-[10px] text-slate-400">SKU: POLO-CTN-XL-01</p>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td className="px-5 py-3.5 text-slate-600 dark:text-slate-300">Men's Apparel</td>
-                                <td className="px-5 py-3.5 font-mono text-right text-slate-500">৳ 520.00</td>
-                                <td className="px-5 py-3.5 font-mono font-bold text-right text-emerald-600 dark:text-emerald-400">
-                                    ৳ 850.00
-                                </td>
-                                <td className="px-5 py-3.5 text-center">
-                                    <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
-                                        142 units
-                                    </span>
-                                    <span className="block text-[10px] text-slate-400">Safety Threshold: 20 units</span>
-                                </td>
-                                <td className="px-5 py-3.5 text-center">
-                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-                                        Healthy Stock
-                                    </span>
-                                </td>
-                                <td className="px-5 py-3.5 text-right space-x-1">
-                                    <button className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-emerald-500 cursor-pointer">
-                                        <Edit3 className="w-3.5 h-3.5" />
-                                    </button>
-                                    <button className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-rose-500 cursor-pointer">
-                                        <Trash2 className="w-3.5 h-3.5" />
-                                    </button>
-                                </td>
-                            </tr>
-                            <tr className="hover:bg-slate-50/80 dark:hover:bg-slate-850/50 transition-colors">
-                                <td className="px-5 py-3.5">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                                            <Watch className="w-4 h-4 text-rose-500" />
-                                        </div>
-                                        <div>
-                                            <p className="font-bold text-slate-900 dark:text-white">
-                                                Formal Silk Tie - Navy Blue
-                                            </p>
-                                            <p className="font-mono text-[10px] text-slate-400">SKU: TIE-SLK-02</p>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td className="px-5 py-3.5 text-slate-600 dark:text-slate-300">Accessories</td>
-                                <td className="px-5 py-3.5 font-mono text-right text-slate-500">৳ 250.00</td>
-                                <td className="px-5 py-3.5 font-mono font-bold text-right text-emerald-600 dark:text-emerald-400">
-                                    ৳ 450.00
-                                </td>
-                                <td className="px-5 py-3.5 text-center">
-                                    <span className="font-mono font-bold text-rose-500">2 units</span>
-                                    <span className="block text-[10px] text-rose-400 font-bold">
-                                        Under Safety Level
-                                    </span>
-                                </td>
-                                <td className="px-5 py-3.5 text-center">
-                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-600 dark:text-rose-400">
-                                        Critically Low
-                                    </span>
-                                </td>
-                                <td className="px-5 py-3.5 text-right space-x-1">
-                                    <button className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-emerald-500 cursor-pointer">
-                                        <Edit3 className="w-3.5 h-3.5" />
-                                    </button>
-                                    <button className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-rose-500 cursor-pointer">
-                                        <Trash2 className="w-3.5 h-3.5" />
-                                    </button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                {/* Pagination footer */}
-                <Pagination
-                    totalItems={2}
-                    totalPages={1}
-                    itemLabel="products"
-                />
-            </div>
-
-            {/* Controlled local product drawer */}
-            <AddProductModal
-                isOpen={isAddModalOpen}
-                onClose={() => setIsAddModalOpen(false)}
-            />
-        </section>
+        <ProductsPresenter
+            products={products}
+            filteredProducts={filteredProducts}
+            isLoading={isLoading}
+            isError={isError}
+            error={error}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            isDrawerOpen={isDrawerOpen}
+            onCloseDrawer={() => setIsDrawerOpen(false)}
+            editingProduct={editingProduct}
+            formState={formState}
+            onFormFieldChange={handleFormFieldChange}
+            onOpenCreate={handleOpenCreate}
+            onOpenEdit={handleOpenEdit}
+            onSave={handleSave}
+            isSaving={isSaving}
+            saveError={saveError}
+            onRefetch={handleRefetch}
+            categoryOptions={categoryOptions}
+            subCategoryOptions={subCategoryOptions}
+            brandOptions={brandOptions}
+            unitOptions={unitOptions}
+            isLoadingCategories={isLoadingCategories}
+        />
     );
 };
+
+export default ProductsPage;

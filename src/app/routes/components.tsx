@@ -50,13 +50,13 @@ export const ProductsPage = lazy(() =>
     import('../modules/products/pages/ProductsPage').then((m) => ({ default: m.ProductsPage }))
 );
 export const SuppliersPage = lazy(() =>
-    import('../modules/suppliers/pages/SuppliersPage').then((m) => ({ default: m.SuppliersPage }))
+    import('../modules/inventory/suppliers/pages/SuppliersPage').then((m) => ({ default: m.SuppliersPage }))
 );
 export const CustomersPage = lazy(() =>
-    import('../modules/customers/pages/CustomersPage').then((m) => ({ default: m.CustomersPage }))
+    import('../modules/inventory/customers/pages/CustomersPage').then((m) => ({ default: m.CustomersPage }))
 );
 export const InvoicesPage = lazy(() =>
-    import('../modules/invoices/pages/InvoicesPage').then((m) => ({ default: m.InvoicesPage }))
+    import('../modules/inventory/invoices/pages/InvoicesPage').then((m) => ({ default: m.InvoicesPage }))
 );
 
 // 6. Stock Management Module

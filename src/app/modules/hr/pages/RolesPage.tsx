@@ -1,148 +1,65 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
+import { useToast } from '@/shared/components/Toast';
+import { tokenStorage } from '@/shared';
+import type { User } from '@/app/modules/auth/types/auth.types';
+import { useRole } from '../hooks/useRole';
 import { RolesPresenter } from './presenters/RolesPresenter';
+import type { RoleItem, CreateRolePayload } from '../types/role.types';
 
-export interface SystemRole {
-    id: string;
-    name: string;
-    code: string;
-    usersCount: number;
-    permissionsCount: number;
-    description: string;
-    color: string;
-    moduleAccess: {
-        pos: boolean;
-        inventory: boolean;
-        hr: boolean;
-        accounts: boolean;
-        reports: boolean;
-        configurations: boolean;
-    };
-}
-
-export interface SystemRoleFormData {
-    name: string;
-    code: string;
-    description: string;
-    color: string;
-    moduleAccess: {
-        pos: boolean;
-        inventory: boolean;
-        hr: boolean;
-        accounts: boolean;
-        reports: boolean;
-        configurations: boolean;
-    };
-}
-
-const INITIAL_ROLES: SystemRole[] = [
-    {
-        id: '1',
-        name: 'Super Administrator',
-        code: 'ROLE_SUPER_ADMIN',
-        usersCount: 2,
-        permissionsCount: 48,
-        description:
-            'Unrestricted root access to all system configurations, financials, user permissions and audit logs.',
-        color: 'from-rose-500 to-red-600',
-        moduleAccess: { pos: true, inventory: true, hr: true, accounts: true, reports: true, configurations: true }
-    },
-    {
-        id: '2',
-        name: 'Branch Store Manager',
-        code: 'ROLE_BRANCH_MGR',
-        usersCount: 4,
-        permissionsCount: 32,
-        description: 'Outlet POS supervision, discount authorizations, daily sales closing, and cashier audits.',
-        color: 'from-blue-500 to-indigo-600',
-        moduleAccess: { pos: true, inventory: true, hr: true, accounts: true, reports: true, configurations: false }
-    },
-    {
-        id: '3',
-        name: 'POS Cashier / Sales Rep',
-        code: 'ROLE_CASHIER',
-        usersCount: 16,
-        permissionsCount: 14,
-        description: 'Invoice generation, barcode scanning, customer due collections, and return requests.',
-        color: 'from-emerald-500 to-teal-600',
-        moduleAccess: { pos: true, inventory: false, hr: false, accounts: false, reports: false, configurations: false }
-    },
-    {
-        id: '4',
-        name: 'Warehouse & Inventory Officer',
-        code: 'ROLE_INVENTORY_OFFICER',
-        usersCount: 6,
-        permissionsCount: 22,
-        description:
-            'Goods received notes (GRN), purchase order fulfillment, stock audits, and inter-branch transfers.',
-        color: 'from-amber-500 to-orange-600',
-        moduleAccess: { pos: false, inventory: true, hr: false, accounts: false, reports: true, configurations: false }
-    },
-    {
-        id: '5',
-        name: 'Chief Financial Accountant',
-        code: 'ROLE_ACCOUNTANT',
-        usersCount: 3,
-        permissionsCount: 28,
-        description: 'Expense vouchers, supplier payments, cash flow ledgers, and profit & loss analytics.',
-        color: 'from-purple-500 to-violet-600',
-        moduleAccess: { pos: false, inventory: false, hr: true, accounts: true, reports: true, configurations: false }
-    }
-];
+const defaultFormState: CreateRolePayload = {
+    id: 0,
+    role_name: '',
+    status: 1
+};
 
 export const RolesPage: React.FC = () => {
-    const [roles, setRoles] = useState<SystemRole[]>(INITIAL_ROLES);
-    const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-    const [editingRole, setEditingRole] = useState<SystemRole | null>(null);
+    const toast = useToast();
 
-    const [formState, setFormState] = useState<SystemRoleFormData>({
-        name: '',
-        code: '',
-        description: '',
-        color: 'from-emerald-500 to-teal-600',
-        moduleAccess: {
-            pos: true,
-            inventory: false,
-            hr: false,
-            accounts: false,
-            reports: false,
-            configurations: false
-        }
-    });
+    const {
+        roles,
+        isLoading,
+        isError,
+        error,
+        refetch,
+        createOrUpdateRole,
+        isSaving,
+        saveError
+    } = useRole({ immediate: true });
+
+    const [searchQuery, setSearchQuery] = useState('');
+    const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+    const [editingRole, setEditingRole] = useState<RoleItem | null>(null);
+    const [formState, setFormState] = useState<CreateRolePayload>(defaultFormState);
+
+    const filteredRoles = useMemo(() => {
+        if (!searchQuery.trim()) return roles;
+        const q = searchQuery.toLowerCase();
+        return roles.filter(
+            (role) =>
+                role.role_name?.toLowerCase().includes(q) ||
+                role.short_code?.toLowerCase().includes(q)
+        );
+    }, [roles, searchQuery]);
 
     const handleOpenCreate = () => {
         setEditingRole(null);
-        setFormState({
-            name: '',
-            code: `ROLE_CUSTOM_${Math.floor(100 + Math.random() * 900)}`,
-            description: '',
-            color: 'from-emerald-500 to-teal-600',
-            moduleAccess: {
-                pos: true,
-                inventory: false,
-                hr: false,
-                accounts: false,
-                reports: false,
-                configurations: false
-            }
-        });
+        setFormState(defaultFormState);
         setIsDrawerOpen(true);
     };
 
-    const handleOpenEdit = (role: SystemRole) => {
+    const handleOpenEdit = (role: RoleItem) => {
         setEditingRole(role);
         setFormState({
-            name: role.name,
-            code: role.code,
-            description: role.description,
-            color: role.color,
-            moduleAccess: role.moduleAccess
+            id: Number(role.id),
+            role_name: role.role_name,
+            status: role.status !== undefined ? Number(role.status) : 1
         });
         setIsDrawerOpen(true);
     };
 
-    const handleFormFieldChange = <K extends keyof SystemRoleFormData>(
+    const handleFormFieldChange = <K extends keyof CreateRolePayload>(
         field: K,
-        value: SystemRoleFormData[K]
+        value: CreateRolePayload[K]
     ) => {
         setFormState((prev) => ({
             ...prev,
@@ -150,58 +67,60 @@ export const RolesPage: React.FC = () => {
         }));
     };
 
-    const handleModuleAccessToggle = (moduleKey: keyof SystemRoleFormData['moduleAccess']) => {
-        setFormState((prev) => ({
-            ...prev,
-            moduleAccess: {
-                ...prev.moduleAccess,
-                [moduleKey]: !prev.moduleAccess[moduleKey]
-            }
-        }));
-    };
-
-    const handleSave = (e: React.FormEvent) => {
-        e.preventDefault();
-        const countActivePermissions = Object.values(formState.moduleAccess).filter(Boolean).length * 6;
-        if (editingRole) {
-            setRoles((prev) =>
-                prev.map((r) =>
-                    r.id === editingRole.id
-                        ? { ...r, ...formState, permissionsCount: countActivePermissions }
-                        : r
-                )
-            );
-        } else {
-            const newRole: SystemRole = {
-                id: Date.now().toString(),
-                ...formState,
-                usersCount: 0,
-                permissionsCount: countActivePermissions
-            };
-            setRoles((prev) => [newRole, ...prev]);
+    const handleSave = async (e?: React.FormEvent) => {
+        if (e) e.preventDefault();
+        if (!formState.role_name.trim()) {
+            toast.warning('Role name is required.');
+            return;
         }
-        setIsDrawerOpen(false);
-    };
 
-    const handleDelete = (id: string) => {
-        if (confirm('Are you sure you want to delete this custom security role?')) {
-            setRoles((prev) => prev.filter((r) => r.id !== id));
+        const isUpdating = Boolean(editingRole);
+        const user = tokenStorage.getUser<User>();
+
+        try {
+            await createOrUpdateRole({
+                id: isUpdating && editingRole ? Number(editingRole.id) : 0,
+                role_name: formState.role_name.trim(),
+                status: Number(formState.status ?? 1),
+                company_id: user?.branchId ? Number(user.branchId) : 1,
+                user_id: user?.id ? Number(user.id) : 1
+            });
+
+            toast.success(
+                isUpdating
+                    ? `Role "${formState.role_name}" updated successfully!`
+                    : `Role "${formState.role_name}" created successfully!`
+            );
+            setIsDrawerOpen(false);
+            setEditingRole(null);
+            setFormState(defaultFormState);
+        } catch (err: unknown) {
+            const errorMsg =
+                err instanceof Error ? err.message : 'Failed to save role. Please try again.';
+            toast.error(errorMsg);
         }
     };
 
     return (
         <RolesPresenter
             roles={roles}
+            filteredRoles={filteredRoles}
+            isLoading={isLoading}
+            isError={isError}
+            error={error}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
             isDrawerOpen={isDrawerOpen}
             onCloseDrawer={() => setIsDrawerOpen(false)}
             editingRole={editingRole}
             formState={formState}
             onFormFieldChange={handleFormFieldChange}
-            onModuleAccessToggle={handleModuleAccessToggle}
             onOpenCreate={handleOpenCreate}
             onOpenEdit={handleOpenEdit}
             onSave={handleSave}
-            onDelete={handleDelete}
+            isSaving={isSaving}
+            saveError={saveError}
+            onRefetch={() => void refetch()}
         />
     );
 };
