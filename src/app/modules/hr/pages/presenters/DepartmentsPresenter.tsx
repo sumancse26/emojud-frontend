@@ -1,23 +1,37 @@
 import React from 'react';
-import { Building2, Plus, Users, Edit3, Trash2, Save } from 'lucide-react';
-import { SliderDrawer, FormField, inputClasses, PageHeader, Pagination } from '@/shared';
-import type { Department, DepartmentFormData } from '../DepartmentsPage';
+import { Building2, Plus, Edit3, Save, RefreshCw, AlertCircle, Loader2, Search } from 'lucide-react';
+import { SliderDrawer, FormField, inputClasses, PageHeader, Pagination, Skeleton, Dropdown } from '@/shared';
+import type { DepartmentItem, CreateDepartmentPayload } from '../../types/department.types';
 
 export interface DepartmentsPresenterProps {
-    departments: Department[];
+    departments: DepartmentItem[];
+    filteredDepartments: DepartmentItem[];
+    isLoading: boolean;
+    isError: boolean;
+    error: string | null;
+    searchQuery: string;
+    onSearchChange: (query: string) => void;
     isDrawerOpen: boolean;
     onCloseDrawer: () => void;
-    editingDept: Department | null;
-    formState: DepartmentFormData;
-    onFormFieldChange: <K extends keyof DepartmentFormData>(field: K, value: DepartmentFormData[K]) => void;
+    editingDept: DepartmentItem | null;
+    formState: CreateDepartmentPayload;
+    onFormFieldChange: <K extends keyof CreateDepartmentPayload>(field: K, value: CreateDepartmentPayload[K]) => void;
     onOpenCreate: () => void;
-    onOpenEdit: (dept: Department) => void;
-    onSave: (e: React.FormEvent) => void;
-    onDelete: (id: string) => void;
+    onOpenEdit: (dept: DepartmentItem) => void;
+    onSave: (e?: React.FormEvent) => void;
+    isSaving: boolean;
+    saveError: string | null;
+    onRefetch: () => void;
 }
 
 export const DepartmentsPresenter: React.FC<DepartmentsPresenterProps> = ({
-    departments,
+    departments: _departments,
+    filteredDepartments,
+    isLoading,
+    isError,
+    error,
+    searchQuery,
+    onSearchChange,
     isDrawerOpen,
     onCloseDrawer,
     editingDept,
@@ -26,193 +40,242 @@ export const DepartmentsPresenter: React.FC<DepartmentsPresenterProps> = ({
     onOpenCreate,
     onOpenEdit,
     onSave,
-    onDelete
+    isSaving,
+    saveError,
+    onRefetch
 }) => {
     return (
         <section className="space-y-6">
             <PageHeader>
                 <PageHeader.Header
                     title="Company Departments"
-                    description="Organizational structure, department heads, and cost-center payroll allocations."
+                    description="Organizational structure, department display codes, and operational divisions."
                     actions={
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={onRefetch}
+                                disabled={isLoading}
+                                title="Refresh departments"
+                                className="p-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-xl transition cursor-pointer disabled:opacity-50">
+                                <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+                            </button>
+                            <button
+                                onClick={onOpenCreate}
+                                className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-xs hover:shadow-emerald-600/20 transition cursor-pointer">
+                                <Plus className="w-4 h-4" />
+                                <span>Create Department</span>
+                            </button>
+                        </div>
+                    }
+                />
+
+                <PageHeader.Bottom>
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+                        <div className="relative w-full sm:w-80">
+                            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                            <input
+                                type="text"
+                                placeholder="Search department by name or code..."
+                                value={searchQuery}
+                                onChange={(e) => onSearchChange(e.target.value)}
+                                className="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-900/50 border border-slate-200/60 dark:border-slate-700/50 rounded-xl text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 transition"
+                            />
+                        </div>
+
+                        <div className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                            Total Departments:{' '}
+                            <strong className="text-slate-900 dark:text-white font-bold">
+                                {filteredDepartments.length}
+                            </strong>
+                        </div>
+                    </div>
+                </PageHeader.Bottom>
+            </PageHeader>
+
+            {/* Error Notification */}
+            {isError && (
+                <div className="flex items-center justify-between p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-600 dark:text-red-400 text-xs">
+                    <div className="flex items-center gap-2.5">
+                        <AlertCircle className="w-4 h-4 shrink-0" />
+                        <span>{error || 'Failed to load departments. Please try again.'}</span>
+                    </div>
+                    <button
+                        onClick={onRefetch}
+                        className="px-3 py-1 bg-red-600 text-white rounded-lg font-medium hover:bg-red-500 transition cursor-pointer">
+                        Retry
+                    </button>
+                </div>
+            )}
+
+            {/* Loading Skeleton */}
+            {isLoading && (
+                <Skeleton.Card
+                    count={4}
+                    gridCols="grid-cols-1 md:grid-cols-2"
+                    hasIcon={true}
+                    hasBadge={true}
+                    lines={1}
+                    hasFooter={false}
+                />
+            )}
+
+            {/* Empty State */}
+            {!isLoading && !isError && filteredDepartments.length === 0 && (
+                <div className="flex flex-col items-center justify-center p-12 bg-white dark:bg-[#0a1020] border border-slate-200/80 dark:border-slate-800/70 rounded-2xl text-center space-y-3">
+                    <div className="w-12 h-12 rounded-2xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center">
+                        <Building2 className="w-6 h-6" />
+                    </div>
+                    <h3 className="font-bold text-sm text-slate-900 dark:text-white">
+                        {searchQuery ? 'No matching departments found' : 'No departments configured yet'}
+                    </h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm">
+                        {searchQuery
+                            ? `No results matched "${searchQuery}". Try a different keyword.`
+                            : 'Create organizational departments to categorize staff roles and branch allocations.'}
+                    </p>
+                    {!searchQuery && (
                         <button
                             onClick={onOpenCreate}
-                            className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-md shadow-emerald-600/20 transition cursor-pointer">
+                            className="mt-2 flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-xs transition cursor-pointer">
                             <Plus className="w-4 h-4" />
                             <span>Create Department</span>
                         </button>
-                    }
-                />
-            </PageHeader>
+                    )}
+                </div>
+            )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                {departments.map((dept) => (
-                    <div
-                        key={dept.id}
-                        className="bg-white dark:bg-[#080d1a] border border-slate-200/80 dark:border-slate-800/60 rounded-2xl p-5 shadow-xs space-y-4 hover:border-emerald-500/30 transition">
-                        <div className="flex items-start justify-between">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center font-bold">
-                                    <Building2 className="w-5 h-5" />
-                                </div>
-                                <div>
-                                    <div className="flex items-center gap-2">
-                                        <h3 className="font-bold text-sm text-slate-900 dark:text-white">
-                                            {dept.name}
-                                        </h3>
-                                        <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-500">
-                                            {dept.code}
-                                        </span>
+            {/* Department Grid */}
+            {!isLoading && !isError && filteredDepartments.length > 0 && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {filteredDepartments.map((dept) => (
+                        <div
+                            key={dept.id}
+                            className="bg-white dark:bg-[#080d1a] border border-slate-200/80 dark:border-slate-800/60 rounded-2xl p-5 shadow-xs space-y-3 hover:border-emerald-500/30 transition flex flex-col justify-between">
+                            <div className="flex items-start justify-between gap-3">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center font-bold shrink-0">
+                                        <Building2 className="w-5 h-5" />
                                     </div>
-                                    <p className="text-[11px] text-slate-400">
-                                        Head: <strong className="text-slate-700 dark:text-slate-200">{dept.headOfDept}</strong>
-                                    </p>
+                                    <div>
+                                        <div className="flex items-center gap-2">
+                                            <h3 className="font-bold text-sm text-slate-900 dark:text-white">
+                                                {dept.department_name}
+                                            </h3>
+                                            {dept.display_code && (
+                                                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
+                                                    {dept.display_code}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                            <div className="flex items-center gap-1">
-                                <button
-                                    onClick={() => onOpenEdit(dept)}
-                                    className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
-                                    title="Edit Department">
-                                    <Edit3 className="w-3.5 h-3.5" />
-                                </button>
-                                <button
-                                    onClick={() => onDelete(dept.id)}
-                                    className="p-1.5 text-slate-400 hover:text-rose-500 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-500/10 cursor-pointer"
-                                    title="Delete Department">
-                                    <Trash2 className="w-3.5 h-3.5" />
-                                </button>
+                                <div className="flex items-center gap-1">
+                                    <button
+                                        onClick={() => onOpenEdit(dept)}
+                                        className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition"
+                                        title="Edit Department">
+                                        <Edit3 className="w-3.5 h-3.5" />
+                                    </button>
+                                </div>
                             </div>
                         </div>
+                    ))}
+                </div>
+            )}
 
-                        <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                            {dept.description}
-                        </p>
+            {/* Pagination */}
+            {!isLoading && !isError && filteredDepartments.length > 0 && (
+                <Pagination
+                    totalItems={filteredDepartments.length}
+                    pageSize={6}
+                    itemLabel="departments"
+                    className="rounded-2xl border border-slate-200/80 dark:border-slate-800/70 bg-white dark:bg-[#0a1020]"
+                />
+            )}
 
-                        <div className="pt-3 border-t border-slate-100 dark:border-slate-800/60 flex items-center justify-between text-xs">
-                            <span className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
-                                <Users className="w-3.5 h-3.5 text-slate-400" />
-                                <strong>{dept.totalStaff} Staff Members</strong>
-                            </span>
-                            <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
-                                ৳ {dept.monthlyBudget.toLocaleString('en-BD')}/mo
-                            </span>
+            {/* Slider Drawer (Global Modal Format matching Shop/Employee) */}
+            <SliderDrawer isOpen={isDrawerOpen} onClose={onCloseDrawer}>
+                <SliderDrawer.Header onClose={onCloseDrawer}>
+                    <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-xl bg-emerald-500 text-slate-950 flex items-center justify-center font-bold">
+                            <Building2 className="w-4 h-4" />
+                        </div>
+                        <div>
+                            <h2 className="font-bold text-sm text-slate-900 dark:text-white">
+                                {editingDept ? 'Edit Department' : 'Create New Department'}
+                            </h2>
+                            <p className="text-[10px] text-slate-400">
+                                {editingDept
+                                    ? `Editing: ${editingDept.department_name}`
+                                    : 'Enter department details to configure organizational structure'}
+                            </p>
                         </div>
                     </div>
-                ))}
-            </div>
+                </SliderDrawer.Header>
 
-            {/* Pagination Footer */}
-            <Pagination
-                totalItems={departments.length}
-                pageSize={6}
-                itemLabel="departments"
-                className="rounded-2xl border border-slate-200/80 dark:border-slate-800/70 bg-white dark:bg-[#0a1020]"
-            />
+                <SliderDrawer.Body>
+                    <form id="department-form" onSubmit={onSave} className="space-y-4">
+                        {saveError && (
+                            <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-600 dark:text-red-400 text-xs flex items-center gap-2">
+                                <AlertCircle className="w-4 h-4 shrink-0" />
+                                <span>{saveError}</span>
+                            </div>
+                        )}
 
-            {/* Slider Drawer for Create / Edit Department */}
-            <SliderDrawer
-                isOpen={isDrawerOpen}
-                onClose={onCloseDrawer}
-                title={editingDept ? 'Edit Department' : 'Create New Department'}
-                subtitle="Configure organizational division and budget allocations"
-                width="max-w-lg">
-                <form onSubmit={onSave} className="space-y-4">
-                    <div className="grid grid-cols-2 gap-3">
-                        <FormField label="Department Code" required>
+                        <FormField label="Department Name" required>
                             <input
                                 type="text"
-                                value={formState.code}
-                                onChange={(e) => onFormFieldChange('code', e.target.value)}
+                                placeholder="e.g. Distribution, Store Operations"
+                                value={formState.department_name}
+                                onChange={(e) => onFormFieldChange('department_name', e.target.value)}
                                 className={inputClasses}
                                 required
                             />
                         </FormField>
-                        <FormField label="Status">
-                            <select
-                                value={formState.status}
-                                onChange={(e) =>
-                                    onFormFieldChange(
-                                        'status',
-                                        e.target.value as Department['status']
-                                    )
-                                }
-                                className={inputClasses}>
-                                <option value="ACTIVE">Active</option>
-                                <option value="INACTIVE">Inactive</option>
-                            </select>
-                        </FormField>
-                    </div>
 
-                    <FormField label="Department Name" required>
-                        <input
-                            type="text"
-                            placeholder="e.g. Finance & Auditing"
-                            value={formState.name}
-                            onChange={(e) => onFormFieldChange('name', e.target.value)}
-                            className={inputClasses}
-                            required
-                        />
-                    </FormField>
-
-                    <FormField label="Head of Department" required>
-                        <input
-                            type="text"
-                            placeholder="e.g. Tanvir Hossain"
-                            value={formState.headOfDept}
-                            onChange={(e) => onFormFieldChange('headOfDept', e.target.value)}
-                            className={inputClasses}
-                            required
-                        />
-                    </FormField>
-
-                    <div className="grid grid-cols-2 gap-3">
-                        <FormField label="Allocated Staff Count">
-                            <input
-                                type="number"
-                                min="0"
-                                value={formState.totalStaff}
-                                onChange={(e) => onFormFieldChange('totalStaff', Number(e.target.value))}
-                                className={inputClasses}
+                        <FormField label="Status" required>
+                            <Dropdown
+                                options={[
+                                    { value: '1', label: 'Active' },
+                                    { value: '0', label: 'Inactive' }
+                                ]}
+                                value={String(formState.status)}
+                                onChange={(val) => onFormFieldChange('status', Number(val))}
+                                placeholder="Select Status"
+                                searchable={true}
                             />
                         </FormField>
-                        <FormField label="Monthly Budget (৳)">
-                            <input
-                                type="number"
-                                min="0"
-                                step="1000"
-                                value={formState.monthlyBudget}
-                                onChange={(e) => onFormFieldChange('monthlyBudget', Number(e.target.value))}
-                                className={inputClasses}
-                            />
-                        </FormField>
-                    </div>
+                    </form>
+                </SliderDrawer.Body>
 
-                    <FormField label="Description & Roles">
-                        <textarea
-                            rows={3}
-                            placeholder="Describe primary responsibilities and operational tasks..."
-                            value={formState.description}
-                            onChange={(e) => onFormFieldChange('description', e.target.value)}
-                            className={inputClasses}
-                        />
-                    </FormField>
-
+                <SliderDrawer.Footer>
                     <div className="pt-4 flex items-center justify-end gap-2.5 border-t border-slate-100 dark:border-slate-800">
                         <button
                             type="button"
                             onClick={onCloseDrawer}
-                            className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition cursor-pointer">
+                            disabled={isSaving}
+                            className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition cursor-pointer disabled:opacity-50">
                             Cancel
                         </button>
                         <button
                             type="submit"
-                            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md shadow-emerald-600/20 transition cursor-pointer">
-                            <Save className="w-4 h-4" />
-                            <span>{editingDept ? 'Update Department' : 'Save Department'}</span>
+                            form="department-form"
+                            disabled={isSaving || !formState.department_name.trim()}
+                            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-bold shadow-md shadow-emerald-600/20 transition cursor-pointer">
+                            {isSaving ? (
+                                <>
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                    <span>Saving...</span>
+                                </>
+                            ) : (
+                                <>
+                                    <Save className="w-4 h-4" />
+                                    <span>{editingDept ? 'Update Department' : 'Save Department'}</span>
+                                </>
+                            )}
                         </button>
                     </div>
-                </form>
+                </SliderDrawer.Footer>
             </SliderDrawer>
         </section>
     );

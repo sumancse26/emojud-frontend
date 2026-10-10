@@ -1,136 +1,113 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
+import { useApp } from '@/app/providers';
+import { useToast } from '@/shared/components/Toast';
+import { tokenStorage } from '@/shared/services/tokenStorage';
+import type { User } from '@/app/modules/auth/types/auth.types';
+import type { DropdownOption } from '@/shared/components/Dropdown/Dropdown';
+import { useEmployee } from '../hooks/useEmployee';
+import { useDepartment } from '../hooks/useDepartment';
+import { useDesignation } from '../hooks/useDesignation';
 import { EmployeesPresenter } from './presenters/EmployeesPresenter';
-
-export interface Employee {
-    id: string;
-    empCode: string;
-    name: string;
-    initials: string;
-    email: string;
-    phone: string;
-    department: string;
-    designation: string;
-    branch: string;
-    salary: number;
-    joinDate: string;
-    status: 'Active' | 'On Leave' | 'Terminated';
-}
+import type { EmployeeItem, CreateEmployeePayload } from '../types/employee.types';
 
 export interface EmployeeFormData {
-    empCode: string;
-    name: string;
+    employee_code: string;
+    full_name: string;
     email: string;
     phone: string;
-    department: string;
-    designation: string;
-    branch: string;
-    salary: string;
-    joinDate: string;
-    status: Employee['status'];
+    address: string;
+    department_id: string;
+    designation_id: string;
+    gender: string;
+    blood_group: string;
+    nid: string;
+    passport_no: string;
+    basic_salary: string;
+    join_date: string;
+    username: string;
+    password: string;
 }
 
-const INITIAL_EMPLOYEES: Employee[] = [
-    {
-        id: '1',
-        empCode: 'EMP-1001',
-        name: 'Tanvir Hossain',
-        initials: 'TH',
-        email: 'tanvir@emojud.com',
-        phone: '+880 1711-234567',
-        department: 'Operations',
-        designation: 'Branch Manager',
-        branch: 'Dhanmondi Outlet',
-        salary: 65000,
-        joinDate: '15 Jan 2022',
-        status: 'Active'
-    },
-    {
-        id: '2',
-        empCode: 'EMP-1002',
-        name: 'Sadia Afreen',
-        initials: 'SA',
-        email: 'sadia.cash@emojud.com',
-        phone: '+880 1819-334455',
-        department: 'Finance & Accounts',
-        designation: 'Senior Cashier',
-        branch: 'Dhanmondi Outlet',
-        salary: 32000,
-        joinDate: '01 Mar 2023',
-        status: 'Active'
-    },
-    {
-        id: '3',
-        empCode: 'EMP-1003',
-        name: 'Nusrat Jahan',
-        initials: 'NJ',
-        email: 'nusrat@emojud.com',
-        phone: '+880 1912-778899',
-        department: 'Operations',
-        designation: 'Branch Manager',
-        branch: 'Gulshan Outlet',
-        salary: 62000,
-        joinDate: '10 Jun 2022',
-        status: 'Active'
-    },
-    {
-        id: '4',
-        empCode: 'EMP-1004',
-        name: 'Kamrul Islam',
-        initials: 'KI',
-        email: 'kamrul.wh@emojud.com',
-        phone: '+880 1611-445566',
-        department: 'Supply Chain',
-        designation: 'Warehouse Manager',
-        branch: 'Central WH (Savar)',
-        salary: 55000,
-        joinDate: '05 Aug 2021',
-        status: 'Active'
-    },
-    {
-        id: '5',
-        empCode: 'EMP-1005',
-        name: 'Mahbubur Rahman',
-        initials: 'MR',
-        email: 'mahbub@emojud.com',
-        phone: '+880 1715-990011',
-        department: 'Sales & Marketing',
-        designation: 'POS Sales Executive',
-        branch: 'Dhanmondi Outlet',
-        salary: 28000,
-        joinDate: '12 Sep 2023',
-        status: 'Active'
-    }
-];
-
 const emptyForm: EmployeeFormData = {
-    empCode: '',
-    name: '',
+    employee_code: '',
+    full_name: '',
     email: '',
     phone: '',
-    department: 'Operations',
-    designation: '',
-    branch: '',
-    salary: '',
-    joinDate: '',
-    status: 'Active'
+    address: '',
+    department_id: '',
+    designation_id: '',
+    gender: '',
+    blood_group: '',
+    nid: '',
+    passport_no: '',
+    basic_salary: '',
+    join_date: '',
+    username: '',
+    password: ''
 };
 
 export const EmployeesPage: React.FC = () => {
-    const [employees, setEmployees] = useState<Employee[]>(INITIAL_EMPLOYEES);
+    const { selectedBranch } = useApp();
+    const toast = useToast();
+
+    // ─── Memoize request params to ensure reference stability ─────────
+    const employeeParams = useMemo(
+        () => ({ shop_id: selectedBranch }),
+        [selectedBranch]
+    );
+
+    const {
+        employees,
+        isLoading,
+        isError,
+        error,
+        refetch,
+        createEmployee,
+        isSaving,
+        saveError
+    } = useEmployee({
+        immediate: true,
+        initialParams: employeeParams
+    });
+
+    // ─── Departments & Designations from API ──────────────────────────
+    const { departments, isLoading: isLoadingDepts } = useDepartment({ immediate: true });
+    const { designations, isLoading: isLoadingDesignations } = useDesignation({ immediate: true });
+
+    const departmentOptions = useMemo<DropdownOption[]>(() => {
+        return departments.map((dept) => ({
+            value: String(dept.id),
+            label: dept.department_name,
+            subLabel: dept.display_code
+        }));
+    }, [departments]);
+
+    const designationOptions = useMemo<DropdownOption[]>(() => {
+        return designations.map((desig) => ({
+            value: String(desig.id),
+            label: desig.designation_name,
+            subLabel: desig.display_code
+        }));
+    }, [designations]);
+
     const [searchQuery, setSearchQuery] = useState('');
     const [deptFilter, setDeptFilter] = useState('All');
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
     const [formData, setFormData] = useState<EmployeeFormData>(emptyForm);
 
-    const filteredEmployees = employees.filter((emp) => {
-        const matchesSearch =
-            emp.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            emp.empCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            emp.designation.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesDept = deptFilter === 'All' || emp.department === deptFilter;
-        return matchesSearch && matchesDept;
-    });
+    // ─── Client-side filtering ────────────────────────────────────────
+    const filteredEmployees = useMemo(() => {
+        return employees.filter((emp) => {
+            const matchesSearch =
+                emp.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                emp.employee_code.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                (emp.designation?.designation_name ?? '').toLowerCase().includes(searchQuery.toLowerCase());
+            const matchesDept =
+                deptFilter === 'All' || emp.department?.department_name === deptFilter;
+            return matchesSearch && matchesDept;
+        });
+    }, [employees, searchQuery, deptFilter]);
 
     const openCreate = () => {
         setEditingId(null);
@@ -138,19 +115,27 @@ export const EmployeesPage: React.FC = () => {
         setDrawerOpen(true);
     };
 
-    const openEdit = (emp: Employee) => {
+    const openEdit = (emp: EmployeeItem) => {
         setEditingId(emp.id);
         setFormData({
-            empCode: emp.empCode,
-            name: emp.name,
-            email: emp.email,
-            phone: emp.phone,
-            department: emp.department,
-            designation: emp.designation,
-            branch: emp.branch,
-            salary: String(emp.salary),
-            joinDate: emp.joinDate,
-            status: emp.status
+            employee_code: emp.employee_code,
+            full_name: emp.full_name,
+            email: emp.email ?? '',
+            phone: emp.phone ?? '',
+            address: emp.address ?? '',
+            department_id: emp.department?.id ? String(emp.department.id) : '',
+            designation_id: emp.designation?.id ? String(emp.designation.id) : '',
+            gender: emp.genderLookup?.id ? String(emp.genderLookup.id) : '',
+            blood_group: emp.bloodGroupLookup?.id ? String(emp.bloodGroupLookup.id) : '',
+            nid: emp.nid ?? '',
+            passport_no: emp.passport_no ?? '',
+            basic_salary: emp.basic_salary ?? '',
+            join_date: emp.join_date ? emp.join_date.split('T')[0] : '',
+            username:
+                (emp.username as string) ??
+                ((emp as Record<string, unknown>).user as { username?: string } | undefined)?.username ??
+                '',
+            password: ''
         });
         setDrawerOpen(true);
     };
@@ -162,43 +147,77 @@ export const EmployeesPage: React.FC = () => {
         }));
     };
 
-    const getInitials = (name: string) => {
-        return name
-            .split(' ')
-            .map((w) => w[0])
-            .join('')
-            .toUpperCase()
-            .slice(0, 2);
-    };
-
-    const handleSubmit = (e?: React.FormEvent) => {
+    const handleSubmit = async (e?: React.FormEvent) => {
         if (e) e.preventDefault();
-        if (!formData.name || !formData.empCode) return;
-        if (editingId) {
-            setEmployees((prev) =>
-                prev.map((emp) =>
-                    emp.id === editingId
-                        ? {
-                              ...emp,
-                              ...formData,
-                              initials: getInitials(formData.name),
-                              salary: parseInt(formData.salary) || 0
-                          }
-                        : emp
-                )
-            );
-        } else {
-            setEmployees((prev) => [
-                ...prev,
-                {
-                    id: String(Date.now()),
-                    ...formData,
-                    initials: getInitials(formData.name),
-                    salary: parseInt(formData.salary) || 0
-                }
-            ]);
+        if (!formData.full_name?.trim() || !formData.employee_code?.trim()) {
+            toast.warning('Full name and employee code are required.');
+            return;
         }
-        setDrawerOpen(false);
+
+        const isUpdating = Boolean(editingId);
+
+        // Username is required for both create and update
+        if (!formData.username?.trim()) {
+            toast.warning('Username is required.');
+            return;
+        }
+        if (formData.username.trim().length < 3) {
+            toast.warning('Username must be at least 3 characters.');
+            return;
+        }
+
+        // Password validation (only for new employee onboarding, never on update)
+        if (!isUpdating) {
+            if (!formData.password) {
+                toast.warning('Password is required for employee account credentials.');
+                return;
+            }
+            if (formData.password.length < 6) {
+                toast.warning('Password must be at least 6 characters.');
+                return;
+            }
+        }
+
+        const user = tokenStorage.getUser<User>();
+
+        const payload: CreateEmployeePayload = {
+            ...(editingId ? { id: Number(editingId) } : {}),
+            employee_code: formData.employee_code.trim(),
+            full_name: formData.full_name.trim(),
+            phone: formData.phone?.trim() || undefined,
+            email: formData.email?.trim() || undefined,
+            address: formData.address?.trim() || undefined,
+            join_date: formData.join_date || undefined,
+            department_id: formData.department_id ? Number(formData.department_id) : undefined,
+            designation_id: formData.designation_id ? Number(formData.designation_id) : undefined,
+            gender: formData.gender ? Number(formData.gender) : undefined,
+            blood_group: formData.blood_group ? Number(formData.blood_group) : undefined,
+            nid: formData.nid?.trim() || undefined,
+            passport_no: formData.passport_no?.trim() || undefined,
+            basic_salary: formData.basic_salary ? Number(formData.basic_salary) : undefined,
+            shop_id: Number(selectedBranch),
+            username: formData.username.trim(),
+            ...(!isUpdating ? { password: formData.password } : {}),
+            created_by: user?.id ? Number(user.id) : 1,
+            company_id: user?.branchId ? Number(user.branchId) : 1,
+            default_role_id: 1,
+            user_id: user?.id ? Number(user.id) : 1
+        };
+
+        try {
+            await createEmployee(payload);
+            toast.success(
+                isUpdating
+                    ? `Employee "${formData.full_name}" updated successfully!`
+                    : `Employee "${formData.full_name}" onboarded successfully!`
+            );
+            setDrawerOpen(false);
+            setEditingId(null);
+            setFormData(emptyForm);
+        } catch (err: unknown) {
+            const errorMsg = err instanceof Error ? err.message : 'Failed to save employee. Please try again.';
+            toast.error(errorMsg);
+        }
     };
 
     return (
@@ -217,6 +236,16 @@ export const EmployeesPage: React.FC = () => {
             onOpenCreate={openCreate}
             onOpenEdit={openEdit}
             onSubmit={handleSubmit}
+            isLoading={isLoading}
+            isError={isError}
+            error={error}
+            isSaving={isSaving}
+            saveError={saveError}
+            onRefetch={() => void refetch(employeeParams)}
+            departmentOptions={departmentOptions}
+            designationOptions={designationOptions}
+            isLoadingDepts={isLoadingDepts}
+            isLoadingDesignations={isLoadingDesignations}
         />
     );
 };

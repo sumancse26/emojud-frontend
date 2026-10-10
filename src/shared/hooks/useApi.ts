@@ -47,6 +47,27 @@ export function extractApiErrorMessage(error: unknown): string {
             const res = err.response as Record<string, unknown>;
             if (typeof res.data === 'object' && res.data !== null) {
                 const resData = res.data as Record<string, unknown>;
+                // Handle validation errors array or string (e.g. Zod validation failure)
+                if (resData.errors) {
+                    try {
+                        const parsed = typeof resData.errors === 'string' ? JSON.parse(resData.errors) : resData.errors;
+                        if (Array.isArray(parsed) && parsed.length > 0) {
+                            const details = parsed
+                                .map((item: Record<string, unknown>) => {
+                                    const path = Array.isArray(item.path) ? item.path.join('.') : '';
+                                    const msg = typeof item.message === 'string' ? item.message : 'Invalid value';
+                                    return path ? `${path}: ${msg}` : msg;
+                                })
+                                .join('; ');
+                            if (details) return details;
+                        }
+                    } catch {
+                        if (typeof resData.errors === 'string' && resData.errors.trim()) {
+                            return resData.errors;
+                        }
+                    }
+                }
+
                 if (typeof resData.message === 'string' && resData.message.trim()) {
                     return resData.message;
                 }
@@ -160,11 +181,17 @@ export function useApi<TData, TParams = void>(
         }
     }, []);
 
+    const prevParamsRef = useRef<unknown>(Symbol());
+
     useEffect(() => {
         if (immediate) {
-            execute(initialParams).catch(() => {
-                // Handled in execute catch block
-            });
+            const serialized = JSON.stringify(initialParams);
+            if (prevParamsRef.current !== serialized) {
+                prevParamsRef.current = serialized;
+                execute(initialParams).catch(() => {
+                    // Handled in execute catch block
+                });
+            }
         }
     }, [immediate, execute, initialParams]);
 

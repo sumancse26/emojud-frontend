@@ -1,107 +1,63 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
+import { useToast } from '@/shared/components/Toast';
+import { useDesignation } from '../hooks/useDesignation';
 import { DesignationPresenter } from './presenters/DesignationPresenter';
+import type { DesignationItem, CreateDesignationPayload } from '../types/designation.types';
 
-export interface Designation {
-    id: string;
-    title: string;
-    department: string;
-    grade: string;
-    totalEmployees: number;
-    baseSalaryRange: string;
-    description: string;
-}
-
-export interface DesignationFormData {
-    title: string;
-    department: string;
-    grade: string;
-    totalEmployees: number;
-    baseSalaryRange: string;
-    description: string;
-}
-
-const INITIAL_DESIGNATIONS: Designation[] = [
-    {
-        id: '1',
-        title: 'Branch Manager',
-        department: 'Store Operations',
-        grade: 'Grade A1',
-        totalEmployees: 4,
-        baseSalaryRange: '৳ 60,000 - ৳ 80,000',
-        description: 'Oversees daily retail outlet performance, customer relations, and cash reconciliation.'
-    },
-    {
-        id: '2',
-        title: 'Senior Cashier & POS Operator',
-        department: 'Finance & Accounts',
-        grade: 'Grade B2',
-        totalEmployees: 8,
-        baseSalaryRange: '৳ 30,000 - ৳ 40,000',
-        description: 'Point-of-sale checkout counter billing, drawer closure, and card payments.'
-    },
-    {
-        id: '3',
-        title: 'Warehouse Logistics Officer',
-        department: 'Supply Chain',
-        grade: 'Grade B1',
-        totalEmployees: 6,
-        baseSalaryRange: '৳ 45,000 - ৳ 60,000',
-        description: 'Inventory receiving, stock inward/outward inspection, and inter-branch dispatch.'
-    },
-    {
-        id: '4',
-        title: 'Sales Associate / Floor Executive',
-        department: 'Store Operations',
-        grade: 'Grade C1',
-        totalEmployees: 12,
-        baseSalaryRange: '৳ 22,000 - ৳ 30,000',
-        description: 'Customer greeting, shelf assortment merchandising, and order assisting.'
-    }
-];
+const defaultFormState: CreateDesignationPayload = {
+    id: 0,
+    designation_name: '',
+    status: 1
+};
 
 export const DesignationPage: React.FC = () => {
-    const [designations, setDesignations] = useState<Designation[]>(INITIAL_DESIGNATIONS);
-    const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-    const [editingItem, setEditingItem] = useState<Designation | null>(null);
+    const toast = useToast();
 
-    const [formState, setFormState] = useState<DesignationFormData>({
-        title: '',
-        department: 'Store Operations',
-        grade: 'Grade B1',
-        totalEmployees: 0,
-        baseSalaryRange: '৳ 30,000 - ৳ 45,000',
-        description: ''
-    });
+    const {
+        designations,
+        isLoading,
+        isError,
+        error,
+        refetch,
+        createOrUpdateDesignation,
+        isSaving,
+        saveError
+    } = useDesignation({ immediate: true });
+
+    const [searchQuery, setSearchQuery] = useState('');
+    const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+    const [editingItem, setEditingItem] = useState<DesignationItem | null>(null);
+    const [formState, setFormState] = useState<CreateDesignationPayload>(defaultFormState);
+
+    const filteredDesignations = useMemo(() => {
+        if (!searchQuery.trim()) return designations;
+        const q = searchQuery.toLowerCase();
+        return designations.filter(
+            (item) =>
+                item.designation_name?.toLowerCase().includes(q) ||
+                item.display_code?.toLowerCase().includes(q)
+        );
+    }, [designations, searchQuery]);
 
     const handleOpenCreate = () => {
         setEditingItem(null);
-        setFormState({
-            title: '',
-            department: 'Store Operations',
-            grade: 'Grade B1',
-            totalEmployees: 0,
-            baseSalaryRange: '৳ 30,000 - ৳ 45,000',
-            description: ''
-        });
+        setFormState(defaultFormState);
         setIsDrawerOpen(true);
     };
 
-    const handleOpenEdit = (item: Designation) => {
+    const handleOpenEdit = (item: DesignationItem) => {
         setEditingItem(item);
         setFormState({
-            title: item.title,
-            department: item.department,
-            grade: item.grade,
-            totalEmployees: item.totalEmployees,
-            baseSalaryRange: item.baseSalaryRange,
-            description: item.description || ''
+            id: Number(item.id),
+            designation_name: item.designation_name,
+            status: item.status !== undefined ? Number(item.status) : 1
         });
         setIsDrawerOpen(true);
     };
 
-    const handleFormFieldChange = <K extends keyof DesignationFormData>(
+    const handleFormFieldChange = <K extends keyof CreateDesignationPayload>(
         field: K,
-        value: DesignationFormData[K]
+        value: CreateDesignationPayload[K]
     ) => {
         setFormState((prev) => ({
             ...prev,
@@ -109,31 +65,46 @@ export const DesignationPage: React.FC = () => {
         }));
     };
 
-    const handleSave = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (editingItem) {
-            setDesignations((prev) =>
-                prev.map((d) => (d.id === editingItem.id ? { ...d, ...formState } : d))
-            );
-        } else {
-            const newItem: Designation = {
-                id: Date.now().toString(),
-                ...formState
-            };
-            setDesignations((prev) => [newItem, ...prev]);
+    const handleSave = async (e?: React.FormEvent) => {
+        if (e) e.preventDefault();
+        if (!formState.designation_name.trim()) {
+            toast.warning('Designation name is required.');
+            return;
         }
-        setIsDrawerOpen(false);
-    };
 
-    const handleDelete = (id: string) => {
-        if (confirm('Are you sure you want to delete this designation?')) {
-            setDesignations((prev) => prev.filter((d) => d.id !== id));
+        const isUpdating = Boolean(editingItem);
+
+        try {
+            await createOrUpdateDesignation({
+                id: isUpdating && editingItem ? Number(editingItem.id) : 0,
+                designation_name: formState.designation_name.trim(),
+                status: Number(formState.status ?? 1)
+            });
+
+            toast.success(
+                isUpdating
+                    ? `Designation "${formState.designation_name}" updated successfully!`
+                    : `Designation "${formState.designation_name}" created successfully!`
+            );
+            setIsDrawerOpen(false);
+            setEditingItem(null);
+            setFormState(defaultFormState);
+        } catch (err: unknown) {
+            const errorMsg =
+                err instanceof Error ? err.message : 'Failed to save designation. Please try again.';
+            toast.error(errorMsg);
         }
     };
 
     return (
         <DesignationPresenter
             designations={designations}
+            filteredDesignations={filteredDesignations}
+            isLoading={isLoading}
+            isError={isError}
+            error={error}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
             isDrawerOpen={isDrawerOpen}
             onCloseDrawer={() => setIsDrawerOpen(false)}
             editingItem={editingItem}
@@ -142,7 +113,9 @@ export const DesignationPage: React.FC = () => {
             onOpenCreate={handleOpenCreate}
             onOpenEdit={handleOpenEdit}
             onSave={handleSave}
-            onDelete={handleDelete}
+            isSaving={isSaving}
+            saveError={saveError}
+            onRefetch={() => void refetch()}
         />
     );
 };
