@@ -70,6 +70,11 @@ export function useCustomer(options: UseCustomerOptions = {}): UseCustomerReturn
         customerService.createOrUpdateCustomer(payload)
     );
 
+    const { execute: executeCustomerLookup } = useApi<CustomerDetailResponse, string>(
+        (phone) => customerService.getCustomerByPhone(phone),
+        { suspense: false }
+    );
+
     const customers = useMemo<CustomerItem[]>(() => {
         if (!rawResponse) return [];
         if (Array.isArray(rawResponse)) return rawResponse;
@@ -91,8 +96,8 @@ export function useCustomer(options: UseCustomerOptions = {}): UseCustomerReturn
     );
 
     const getCustomerByPhone = useCallback(async (phone: string): Promise<CustomerDetailResponse> => {
-        return customerService.getCustomerByPhone(phone);
-    }, []);
+        return executeCustomerLookup(phone);
+    }, [executeCustomerLookup]);
 
     return {
         customers,

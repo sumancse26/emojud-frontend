@@ -1,4 +1,5 @@
 import React, { lazy } from 'react';
+import { Skeleton } from '@/shared/components/Skeleton';
 
 // ==========================================
 // Lazy Loaded Module Page Components
@@ -121,22 +122,25 @@ export const CollectionReportPage = lazy(() =>
 
 export { FeaturePlaceholder } from './FeaturePlaceholder';
 
-// Loading Fallback Spinner
+// Shared Suspense fallback for lazy pages and initial API reads. It mirrors
+// the common ERP page shapes so the layout remains stable while data loads.
 export const PageLoader: React.FC = () => (
-    <div className="flex h-[60vh] min-h-[280px] w-full items-center justify-center p-6">
-        <div className="flex flex-col items-center gap-3.5">
-            <div className="relative flex items-center justify-center">
-                <div className="w-10 h-10 rounded-full border-[3px] border-emerald-500/20 border-t-emerald-500 animate-spin" />
-                <div className="absolute w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+    <div className="w-full space-y-6 p-2 lg:p-4" aria-busy="true" aria-label="Loading content">
+        <div className="flex items-center justify-between gap-4">
+            <div className="space-y-2">
+                <Skeleton className="h-7 w-48" />
+                <Skeleton className="h-3 w-72" />
             </div>
-            <div className="text-center">
-                <p className="text-xs font-semibold tracking-wider text-slate-700 dark:text-slate-300 uppercase">
-                    Loading Module
-                </p>
-                <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">
-                    Preparing ERP interface...
-                </p>
-            </div>
+            <Skeleton className="h-10 w-28 rounded-lg" />
         </div>
+
+        <Skeleton.Stats count={4} />
+
+        <div className="grid gap-5 lg:grid-cols-[1.4fr_1fr]">
+            <Skeleton className="h-64 w-full rounded-2xl" />
+            <Skeleton className="h-64 w-full rounded-2xl" />
+        </div>
+
+        <Skeleton.Table rows={5} columns={6} />
     </div>
 );

@@ -1,4 +1,4 @@
-import { axios } from '@/shared/services/apiClient';
+import { axios, clearGetCache } from '@/shared/services/apiClient';
 import { tokenStorage } from '@/shared/services/tokenStorage';
 import type { User, LoginCredentials } from '../types/auth.types';
 
@@ -119,5 +119,6 @@ export const authService = {
     /** Clear token cookie + user from storage (call on logout) */
     logout(): void {
         tokenStorage.clearAll();
+        clearGetCache();
     }
 };

@@ -68,7 +68,9 @@ export function useDashboard(shopId: string | number): UseDashboardReturn {
 
     // Re-fetch all endpoints
     const refetch = useCallback(async () => {
-        await Promise.all(responses.map((req) => req.execute(params)));
+        // Keep retrying/rendering independent dashboard cards even when one
+        // endpoint is unavailable.
+        await Promise.allSettled(responses.map((req) => req.execute(params)));
     }, [params, ...responses.map((r) => r.execute)]);
 
     return { data, isLoading, error, refetch };

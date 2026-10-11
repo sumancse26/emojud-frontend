@@ -4,6 +4,7 @@ import { MainLayout } from '@/layouts';
 import { ROUTES } from './paths';
 import { NotFoundPage } from './NotFoundPage';
 import { ProtectedRoute } from './ProtectedRoute';
+import { ApiErrorBoundary } from './ApiErrorBoundary';
 import {
     PageLoader,
     FeaturePlaceholder,
@@ -45,7 +46,8 @@ import {
 export const AppRouter: React.FC = () => {
     return (
         <Suspense fallback={<PageLoader />}>
-            <Routes>
+            <ApiErrorBoundary>
+                <Routes>
                 {/* Public Auth Routes */}
                 <Route path={ROUTES.AUTH.LOGIN} element={<LoginPage />} />
 
@@ -168,7 +170,8 @@ export const AppRouter: React.FC = () => {
 
                 {/* Catch-all 404 Route */}
                 <Route path="*" element={<NotFoundPage />} />
-            </Routes>
+                </Routes>
+            </ApiErrorBoundary>
         </Suspense>
     );
 };

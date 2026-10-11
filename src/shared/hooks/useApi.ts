@@ -17,6 +17,8 @@ export interface UseApiOptions<TData, TParams> {
     onSettled?: () => void;
     /** Custom error message extractor */
     transformError?: (error: unknown) => string;
+    /** Suspend the component while an immediate request is pending. */
+    suspense?: boolean;
 }
 
 export interface UseApiReturn<TData, TParams> {
@@ -30,6 +32,23 @@ export interface UseApiReturn<TData, TParams> {
     reset: () => void;
     setData: React.Dispatch<React.SetStateAction<TData | null>>;
     setError: (error: string | null) => void;
+}
+
+type SuspenseResource<TData> = {
+    key: string;
+    status: 'pending' | 'success' | 'error';
+    promise: Promise<TData>;
+    data?: TData;
+    error?: unknown;
+    errorMessage?: string;
+};
+
+// Suspended renders can be retried before their component refs are committed.
+// Keep resources outside the component so retries reuse the same request.
+const suspenseResources = new Map<string, SuspenseResource<unknown>>();
+
+function getSuspenseResourceKey<TParams>(apiFn: (params: TParams) => unknown, params: TParams): string {
+    return `${apiFn.toString()}::${JSON.stringify(params)}`;
 }
 
 /**
@@ -97,21 +116,30 @@ export function useApi<TData, TParams = void>(
         immediate = false,
         initialParams,
         initialData = null,
-        onSuccess,
-        onError,
-        onSettled,
-        transformError = extractApiErrorMessage
+        suspense = immediate
     } = options;
 
+    const suspenseKey = getSuspenseResourceKey(apiFn, initialParams as TParams);
+    const cachedSuspenseResource = suspenseResources.get(suspenseKey) as
+        | SuspenseResource<TData>
+        | undefined;
+
     const [data, setData] = useState<TData | null>(() => {
+        if (cachedSuspenseResource?.status === 'success' && cachedSuspenseResource.data !== undefined) {
+            return cachedSuspenseResource.data;
+        }
         if (typeof initialData === 'function') {
             return (initialData as () => TData | null)();
         }
         return initialData;
     });
 
-    const [status, setStatus] = useState<ApiStatus>(immediate ? 'loading' : 'idle');
-    const [error, setErrorState] = useState<string | null>(null);
+    const [status, setStatus] = useState<ApiStatus>(() => {
+        if (cachedSuspenseResource?.status === 'success') return 'success';
+        if (cachedSuspenseResource?.status === 'error') return 'error';
+        return immediate ? 'loading' : 'idle';
+    });
+    const [error, setErrorState] = useState<string | null>(cachedSuspenseResource?.errorMessage ?? null);
 
     const isMountedRef = useRef<boolean>(true);
     const apiFnRef = useRef(apiFn);
@@ -120,12 +148,72 @@ export function useApi<TData, TParams = void>(
     apiFnRef.current = apiFn;
     optionsRef.current = options;
 
+    // React 19 Suspense integration for initial data reads. The promise is
+    // created during render, so Suspense can show its fallback immediately;
+    // imperative execute() remains available for mutations and refetches.
+    let suspenseResource = cachedSuspenseResource;
+    if (suspense && immediate && !suspenseResource) {
+        const resource: SuspenseResource<TData> = {
+            key: suspenseKey,
+            status: 'pending',
+            promise: Promise.resolve(undefined as TData)
+        };
+
+        resource.promise = apiFnRef.current(initialParams as TParams).then(
+            (result) => {
+                resource.status = 'success';
+                resource.data = result;
+                if (isMountedRef.current) {
+                    setData(result);
+                    setStatus('success');
+                    optionsRef.current.onSuccess?.(result);
+                    optionsRef.current.onSettled?.();
+                }
+                return result;
+            },
+            (requestError: unknown) => {
+                resource.status = 'error';
+                resource.error = requestError;
+                const message = optionsRef.current.transformError
+                    ? optionsRef.current.transformError(requestError)
+                    : extractApiErrorMessage(requestError);
+                resource.errorMessage = message;
+                if (isMountedRef.current) {
+                    setErrorState(message);
+                    setStatus('error');
+                    optionsRef.current.onError?.(message);
+                    optionsRef.current.onSettled?.();
+                }
+                // Resolve the Suspense resource after recording the failure.
+                // This lets sibling API requests continue and lets the page
+                // render its partial data through the normal error state.
+                return undefined as TData;
+            }
+        );
+        suspenseResources.set(suspenseKey, resource as SuspenseResource<unknown>);
+        suspenseResource = resource;
+    }
+
+    if (suspense && immediate && suspenseResource) {
+        if (suspenseResource.status === 'pending') throw suspenseResource.promise;
+    }
+
     useEffect(() => {
         isMountedRef.current = true;
         return () => {
             isMountedRef.current = false;
         };
     }, []);
+
+    useEffect(() => {
+        if (!suspense || !immediate || !suspenseResource) return;
+
+        return () => {
+            if (suspenseResources.get(suspenseKey) === suspenseResource) {
+                suspenseResources.delete(suspenseKey);
+            }
+        };
+    }, [immediate, suspense, suspenseKey, suspenseResource]);
 
     const execute = useCallback(
         async (params?: TParams): Promise<TData> => {
@@ -184,7 +272,7 @@ export function useApi<TData, TParams = void>(
     const prevParamsRef = useRef<unknown>(Symbol());
 
     useEffect(() => {
-        if (immediate) {
+        if (immediate && !suspense) {
             const serialized = JSON.stringify(initialParams);
             if (prevParamsRef.current !== serialized) {
                 prevParamsRef.current = serialized;

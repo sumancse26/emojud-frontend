@@ -76,6 +76,11 @@ export function useCategory(options: UseCategoryOptions = {}): UseCategoryReturn
         categoryService.createOrUpdateCategory(payload)
     );
 
+    const { execute: executeSubCategory } = useApi<
+        CategoryListResponse,
+        string | number
+    >((categoryId) => categoryService.getSubCategories(categoryId), { suspense: false });
+
     // ─── Extract Normalized Categories List ────────────────────────────
     const rawCategories = useMemo<ProductCategoryItem[]>(() => {
         if (!rawResponse) return [];
@@ -90,7 +95,7 @@ export function useCategory(options: UseCategoryOptions = {}): UseCategoryReturn
     const fetchSubCategories = useCallback(
         async (categoryId: string | number): Promise<ProductCategoryItem[]> => {
             try {
-                const res = await categoryService.getSubCategories(categoryId);
+                const res = await executeSubCategory(categoryId);
                 const items = Array.isArray(res)
                     ? res
                     : typeof res === 'object' && 'data' in res && Array.isArray(res.data)
@@ -107,7 +112,7 @@ export function useCategory(options: UseCategoryOptions = {}): UseCategoryReturn
                 return [];
             }
         },
-        []
+        [executeSubCategory]
     );
 
     // Automatically fetch subcategories for loaded categories
