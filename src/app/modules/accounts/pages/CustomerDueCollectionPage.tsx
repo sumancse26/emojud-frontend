@@ -1,174 +1,35 @@
-import React, { useState } from 'react';
-import { CustomerDueCollectionPresenter } from './presenters/CustomerDueCollectionPresenter';
+import React, { useCallback, useMemo, useState } from 'react'
+import { Dropdown, FormField, inputClasses, PageHeader, SliderDrawer, type DropdownOption } from '@/shared'
+import { useApp } from '@/app/providers'
+import { useToast } from '@/shared/components/Toast'
+import { useCustomerDue } from '../hooks/useCustomerDue'
+import { CustomerDueCollectionPresenter } from './presenters/CustomerDueCollectionPresenter'
+import type { CreateCustomerDuePayload } from '../types/customer-due.types'
 
-export interface DueCollection {
-    id: string;
-    receiptNo: string;
-    date: string;
-    customerName: string;
-    customerPhone: string;
-    invoiceRef: string;
-    collectedAmount: number;
-    paymentMode: 'Cash' | 'bKash' | 'Card' | 'Nagad';
-    cashier: string;
-    remainingDue: number;
-    notes: string;
-}
-
-export interface DueCollectionFormData {
-    receiptNo: string;
-    date: string;
-    customerName: string;
-    customerPhone: string;
-    invoiceRef: string;
-    collectedAmount: number;
-    paymentMode: DueCollection['paymentMode'];
-    cashier: string;
-    remainingDue: number;
-    notes: string;
-}
-
-const INITIAL_COLLECTIONS: DueCollection[] = [
-    {
-        id: '1',
-        receiptNo: 'REC-2026-108',
-        date: '2026-09-17',
-        customerName: 'Farhana Yasmin',
-        customerPhone: '+880 1911-889900',
-        invoiceRef: 'INV-2026-0044',
-        collectedAmount: 4400,
-        paymentMode: 'bKash',
-        cashier: 'Sadia Afreen',
-        remainingDue: 0,
-        notes: 'Cleared total due amount'
-    },
-    {
-        id: '2',
-        receiptNo: 'REC-2026-109',
-        date: '2026-09-16',
-        customerName: 'Mahmudul Hasan',
-        customerPhone: '+880 1712-445566',
-        invoiceRef: 'INV-2026-0039',
-        collectedAmount: 2500,
-        paymentMode: 'Cash',
-        cashier: 'Sadia Afreen',
-        remainingDue: 1800,
-        notes: 'Partial settlement, remaining ৳ 1,800 due next week'
-    }
-];
+interface FormState { customerId: string; invoiceId: string; paymentMethodId: string; dueDate: string; invoiceNo: string; totalAmount: number; paidAmount: number; remarks: string }
+const emptyForm = (): FormState => ({ customerId: '', invoiceId: '', paymentMethodId: '', dueDate: new Date().toISOString().slice(0, 10), invoiceNo: '', totalAmount: 0, paidAmount: 0, remarks: '' })
 
 export const CustomerDueCollectionPage: React.FC = () => {
-    const [collections, setCollections] = useState<DueCollection[]>(INITIAL_COLLECTIONS);
-    const [searchQuery, setSearchQuery] = useState('');
-    const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-    const [editingItem, setEditingItem] = useState<DueCollection | null>(null);
-
-    const [formState, setFormState] = useState<DueCollectionFormData>({
-        receiptNo: '',
-        date: new Date().toISOString().split('T')[0],
-        customerName: 'Rahim Chowdhury',
-        customerPhone: '+880 1712-345678',
-        invoiceRef: 'INV-2026-0050',
-        collectedAmount: 1000,
-        paymentMode: 'Cash',
-        cashier: 'Suman Roy (Admin)',
-        remainingDue: 0,
-        notes: ''
-    });
-
-    const handleOpenCreate = () => {
-        setEditingItem(null);
-        setFormState({
-            receiptNo: `REC-2026-1${Math.floor(10 + Math.random() * 80)}`,
-            date: new Date().toISOString().split('T')[0],
-            customerName: 'Mahbubur Rahman',
-            customerPhone: '+880 1819-776655',
-            invoiceRef: 'INV-2026-0052',
-            collectedAmount: 5000,
-            paymentMode: 'bKash',
-            cashier: 'Suman Roy (Admin)',
-            remainingDue: 7500,
-            notes: ''
-        });
-        setIsDrawerOpen(true);
-    };
-
-    const handleOpenEdit = (item: DueCollection) => {
-        setEditingItem(item);
-        setFormState({
-            receiptNo: item.receiptNo,
-            date: item.date,
-            customerName: item.customerName,
-            customerPhone: item.customerPhone,
-            invoiceRef: item.invoiceRef,
-            collectedAmount: item.collectedAmount,
-            paymentMode: item.paymentMode,
-            cashier: item.cashier,
-            remainingDue: item.remainingDue,
-            notes: item.notes
-        });
-        setIsDrawerOpen(true);
-    };
-
-    const handleFormFieldChange = <K extends keyof DueCollectionFormData>(
-        field: K,
-        value: DueCollectionFormData[K]
-    ) => {
-        setFormState((prev) => ({
-            ...prev,
-            [field]: value
-        }));
-    };
-
-    const handleSave = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (editingItem) {
-            setCollections((prev) =>
-                prev.map((c) => (c.id === editingItem.id ? { ...c, ...formState } : c))
-            );
-        } else {
-            const newItem: DueCollection = {
-                id: Date.now().toString(),
-                ...formState
-            };
-            setCollections((prev) => [newItem, ...prev]);
-        }
-        setIsDrawerOpen(false);
-    };
-
-    const handleDelete = (id: string) => {
-        if (confirm('Are you sure you want to void this collection receipt?')) {
-            setCollections((prev) => prev.filter((c) => c.id !== id));
-        }
-    };
-
-    const totalCollected = collections.reduce((acc, c) => acc + c.collectedAmount, 0);
-
-    const filteredCollections = collections.filter(
-        (c) =>
-            c.receiptNo.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            c.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            c.customerPhone.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-
-    return (
-        <CustomerDueCollectionPresenter
-            collections={collections}
-            filteredCollections={filteredCollections}
-            totalCollected={totalCollected}
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            isDrawerOpen={isDrawerOpen}
-            onCloseDrawer={() => setIsDrawerOpen(false)}
-            editingItem={editingItem}
-            formState={formState}
-            onFormFieldChange={handleFormFieldChange}
-            onOpenCreate={handleOpenCreate}
-            onOpenEdit={handleOpenEdit}
-            onSave={handleSave}
-            onDelete={handleDelete}
-        />
-    );
-};
-
-export default CustomerDueCollectionPage;
+  const { selectedBranch } = useApp(); const toast = useToast()
+  const { due, pending, invoices, summary, paymentMethods, isLoading, isLoadingPending, isLoadingInvoices, isLoadingPaymentMethods, error, pendingError, invoicesError, paymentMethodsError, refetch, refetchInvoices, create, isCreating, createError } = useCustomerDue(selectedBranch)
+  const [isOpen, setIsOpen] = useState(false); const [form, setForm] = useState<FormState>(emptyForm)
+  const customerOptions = useMemo<DropdownOption[]>(() => { const customers = new Map<string, DropdownOption>(); [...pending, ...due.map((item) => ({ ...item.due_cust_info, previous_due: item.due_amount }))].forEach((item) => customers.set(String(item.id), { value: String(item.id), label: item.customer_name, subLabel: `${item.customer_code ?? 'Customer'} · Due ৳ ${Number(item.previous_due).toLocaleString('en-BD')}` })); return [...customers.values()] }, [pending, due])
+  const invoiceOptions = useMemo<DropdownOption[]>(() => invoices.filter((item) => !form.customerId || String(item.customer_id) === form.customerId).map((item) => ({ value: String(item.id), label: item.invoice_no, subLabel: `Due ৳ ${Number(item.due_amount).toLocaleString('en-BD')}` })), [invoices, form.customerId])
+  const methodOptions = useMemo<DropdownOption[]>(() => paymentMethods.map((item) => ({ value: item.id, label: item.lookup_value, subLabel: item.lookup_code })), [paymentMethods])
+  const setField = <K extends keyof FormState>(field: K, value: FormState[K]) => setForm((current) => ({ ...current, [field]: value }))
+  const openCreate = useCallback(() => { setForm(emptyForm()); setIsOpen(true) }, [])
+  const submit = useCallback(async (event: React.FormEvent) => { event.preventDefault(); const payload: CreateCustomerDuePayload = { id: null, shop_id: Number(selectedBranch), customer_id: Number(form.customerId), ref_type: 1, ref_id: form.invoiceId, invoice_no: form.invoiceNo, due_date: form.dueDate, total_amount: form.totalAmount, paid_amount: form.paidAmount, due_amount: Math.max(0, form.totalAmount - form.paidAmount), payment_status: form.totalAmount > 0 && form.totalAmount <= form.paidAmount ? 2 : 1, remarks: form.remarks }; try { await create(payload); setIsOpen(false); toast.success('Customer due collected successfully.') } catch (submitError) { toast.error(submitError instanceof Error ? submitError.message : 'Failed to save customer due collection.') } }, [create, form, selectedBranch, toast])
+  const selectInvoice = (value: string) => { const invoice = invoices.find((item) => String(item.id) === value); const matchingDue = due.find((item) => item.id === value); const totalAmount = Number(matchingDue?.total_amount ?? invoice?.due_amount ?? 0); setForm((current) => ({ ...current, invoiceId: value, customerId: String(invoice?.customer_id ?? current.customerId), invoiceNo: invoice?.invoice_no ?? current.invoiceNo, totalAmount, paidAmount: Number(invoice?.due_amount ?? 0) })) }
+  return <>
+    <CustomerDueCollectionPresenter due={due} pending={pending} invoices={invoices} summary={summary} isLoading={isLoading} isLoadingPending={isLoadingPending} isLoadingInvoices={isLoadingInvoices} isError={Boolean(error)} error={error} pendingError={pendingError} invoicesError={invoicesError} createError={createError} onOpenCreate={openCreate} onRefetch={() => void refetch()} onRefetchInvoices={() => void refetchInvoices()} />
+    <SliderDrawer isOpen={isOpen} onClose={() => setIsOpen(false)} width="max-w-xl"><SliderDrawer.Header onClose={() => setIsOpen(false)}><PageHeader variant="flat" withAccent={false} className="min-w-0 flex-1 py-0"><PageHeader.Header title="Collect Customer Due" description="Record a payment against an outstanding invoice" /></PageHeader></SliderDrawer.Header><SliderDrawer.Body><form id="customer-due-form" onSubmit={submit} className="space-y-4 text-xs">
+      {paymentMethodsError && <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-amber-700">Unable to load payment methods.</div>}
+      <FormField label="Customer" required><Dropdown options={customerOptions} value={form.customerId} onChange={(value) => setForm((current) => ({ ...current, customerId: value, invoiceId: '' }))} placeholder="Select customer" isLoading={isLoadingPending} required searchable={5} /></FormField>
+      <FormField label="Invoice" required><Dropdown options={invoiceOptions} value={form.invoiceId} onChange={selectInvoice} placeholder="Select invoice" isLoading={isLoadingInvoices} required searchable={5} /></FormField>
+      <div className="grid grid-cols-2 gap-3"><FormField label="Payment Date" required><input type="date" value={form.dueDate} onChange={(event) => setField('dueDate', event.target.value)} className={inputClasses} required /></FormField><FormField label="Payment Method" required><Dropdown options={methodOptions} value={form.paymentMethodId} onChange={(value) => setField('paymentMethodId', value)} placeholder="Select payment method" isLoading={isLoadingPaymentMethods} disabled={Boolean(paymentMethodsError)} required /></FormField></div>
+      <div className="grid grid-cols-2 gap-3"><FormField label="Total Amount" required><input type="number" min="0" value={form.totalAmount} onChange={(event) => setField('totalAmount', Number(event.target.value))} className={inputClasses} required /></FormField><FormField label="Paid Amount" required><input type="number" min="0" value={form.paidAmount} onChange={(event) => setField('paidAmount', Number(event.target.value))} className={inputClasses} required /></FormField></div>
+      <FormField label="Remarks"><textarea rows={3} value={form.remarks} onChange={(event) => setField('remarks', event.target.value)} className={inputClasses} placeholder="Collection remarks..." /></FormField>
+    </form></SliderDrawer.Body><SliderDrawer.Footer><div className="flex justify-end gap-2"><button type="button" onClick={() => setIsOpen(false)} className="rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-semibold dark:border-slate-700">Cancel</button><button form="customer-due-form" type="submit" disabled={isCreating || isLoadingPending || isLoadingInvoices || isLoadingPaymentMethods || Boolean(paymentMethodsError)} className="rounded-xl bg-emerald-600 px-5 py-2.5 text-xs font-bold text-white disabled:opacity-50">{isCreating ? 'Saving...' : 'Save Collection'}</button></div></SliderDrawer.Footer></SliderDrawer>
+  </>
+}
+export default CustomerDueCollectionPage

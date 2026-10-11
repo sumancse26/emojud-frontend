@@ -1,302 +1,318 @@
-import React from 'react';
-import { Plus, Search, Edit3, Trash2, Save, HandCoins, Receipt, TrendingUp } from 'lucide-react';
-import { SliderDrawer, FormField, inputClasses, PageHeader, Pagination, useTablePagination } from '@/shared';
-import type { DueCollection, DueCollectionFormData } from '../CustomerDueCollectionPage';
-
+import React, { useMemo, useState } from 'react';
+import { AlertCircle, Plus, RefreshCw, Search } from 'lucide-react';
+import { PageHeader, Pagination, Skeleton, useTablePagination } from '@/shared';
+import type { CustomerDueInvoiceItem, CustomerDueItem, CustomerDuePendingItem } from '../../types/customer-due.types';
 export interface CustomerDueCollectionPresenterProps {
-    collections: DueCollection[];
-    filteredCollections: DueCollection[];
-    totalCollected: number;
-    searchQuery: string;
-    onSearchChange: (query: string) => void;
-    isDrawerOpen: boolean;
-    onCloseDrawer: () => void;
-    editingItem: DueCollection | null;
-    formState: DueCollectionFormData;
-    onFormFieldChange: <K extends keyof DueCollectionFormData>(field: K, value: DueCollectionFormData[K]) => void;
+    due: CustomerDueItem[];
+    pending: CustomerDuePendingItem[];
+    invoices: CustomerDueInvoiceItem[];
+    summary?: { total_invoice: number; total_due: string | number };
+    isLoading: boolean;
+    isLoadingPending: boolean;
+    isLoadingInvoices: boolean;
+    isError: boolean;
+    error: string | null;
+    pendingError: string | null;
+    invoicesError: string | null;
+    createError: string | null;
     onOpenCreate: () => void;
-    onOpenEdit: (item: DueCollection) => void;
-    onSave: (e: React.FormEvent) => void;
-    onDelete: (id: string) => void;
+    onRefetch: () => void;
+    onRefetchInvoices: () => void;
 }
-
-export const CustomerDueCollectionPresenter: React.FC<CustomerDueCollectionPresenterProps> = ({
-    collections,
-    filteredCollections,
-    totalCollected,
-    searchQuery,
-    onSearchChange,
-    isDrawerOpen,
-    onCloseDrawer,
-    editingItem,
-    formState,
-    onFormFieldChange,
-    onOpenCreate,
-    onOpenEdit,
-    onSave,
-    onDelete
-}) => {
-    const { currentPage, pageSize, totalPages, paginatedItems, setCurrentPage, setPageSize } = useTablePagination(filteredCollections);
-    return (
-        <section className="space-y-6">
-            <PageHeader>
-                <PageHeader.Header
-                    title="Customer Due Collection Receipts"
-                    description="Collect outstanding customer credit dues, print money receipts, and adjust sales balances."
-                    actions={
-                        <button
-                            onClick={onOpenCreate}
-                            className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-xs hover:shadow-emerald-600/20 transition cursor-pointer">
-                            <Plus className="w-4 h-4" />
-                            <span>Collect New Due</span>
-                        </button>
-                    }
-                />
-
-                <PageHeader.Body>
-                    <PageHeader.MetricGrid cols={3}>
-                        <PageHeader.MetricCard
-                            label="Total Due Collections"
-                            value={`৳ ${totalCollected.toLocaleString('en-BD')}`}
-                            icon={<HandCoins className="w-4 h-4" />}
-                            accentColor="emerald"
-                            valueColor="text-emerald-600 dark:text-emerald-400"
-                            subtext="Total cash & bank recovery"
-                        />
-                        <PageHeader.MetricCard
-                            label="Total Receipts Issued"
-                            value={collections.length}
-                            icon={<Receipt className="w-4 h-4" />}
-                            accentColor="blue"
-                            valueColor="text-blue-600 dark:text-blue-400"
-                            subtext="Settled money vouchers"
-                        />
-                        <PageHeader.MetricCard
-                            label="Collection Success"
-                            value="98.5%"
-                            icon={<TrendingUp className="w-4 h-4" />}
-                            accentColor="purple"
-                            valueColor="text-purple-600 dark:text-purple-400"
-                            trend={{ value: "+2.4%", isPositive: true }}
-                            subtext="Monthly recovery rate"
-                        />
-                    </PageHeader.MetricGrid>
-                </PageHeader.Body>
-
-                <PageHeader.Bottom>
-                    <div className="relative max-w-md">
-                        <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                        <input
-                            type="text"
-                            placeholder="Search receipt #, customer name, or mobile..."
-                            value={searchQuery}
-                            onChange={(e) => onSearchChange(e.target.value)}
-                            className="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-900/50 border border-slate-200/60 dark:border-slate-700/50 rounded-xl text-xs text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 font-medium transition"
-                        />
+const money = (value: string | number | undefined) =>
+    `৳ ${Number(value ?? 0).toLocaleString('en-BD', { minimumFractionDigits: 2 })}`;
+const date = (value: string) => new Date(value).toLocaleDateString('en-GB');
+export const CustomerDueCollectionPresenter: React.FC<CustomerDueCollectionPresenterProps> = React.memo(
+    ({
+        due,
+        pending,
+        invoices,
+        isLoading,
+        isLoadingPending,
+        isLoadingInvoices,
+        isError,
+        error,
+        pendingError,
+        invoicesError,
+        createError,
+        onOpenCreate,
+        onRefetch,
+        onRefetchInvoices
+    }) => {
+        const [search, setSearch] = useState('');
+        const query = search.trim().toLowerCase();
+        const filtered = useMemo(
+            () =>
+                due.filter((item) =>
+                    `${item.invoice_no} ${item.due_cust_info?.customer_name ?? ''} ${item.remarks ?? ''}`
+                        .toLowerCase()
+                        .includes(query)
+                ),
+            [due, query]
+        );
+        const duePagination = useTablePagination(filtered);
+        const pendingPagination = useTablePagination(pending);
+        const invoicePagination = useTablePagination(invoices);
+        const errors = [isError ? error : null, pendingError, invoicesError, createError].filter(Boolean);
+        return (
+            <section className="space-y-6">
+                <PageHeader>
+                    <PageHeader.Header
+                        title="Customer Due Collection"
+                        description="Track customer receivables, collect invoice balances, and reconcile outstanding dues."
+                        actions={
+                            <div className="flex items-center gap-2">
+                                <button
+                                    type="button"
+                                    onClick={onRefetch}
+                                    disabled={isLoading}
+                                    title="Refresh customer dues"
+                                    className="rounded-xl bg-slate-100 p-2 text-slate-600 disabled:opacity-50 dark:bg-slate-800 dark:text-slate-300">
+                                    <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={onOpenCreate}
+                                    className="flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white">
+                                    <Plus className="h-4 w-4" />
+                                    Collect Customer Due
+                                </button>
+                            </div>
+                        }
+                    />
+                    <PageHeader.Bottom>
+                        <div className="flex flex-col items-center justify-between gap-3 sm:flex-row">
+                            <div className="relative w-full sm:w-80">
+                                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                                <input
+                                    value={search}
+                                    onChange={(event) => {
+                                        setSearch(event.target.value);
+                                        duePagination.setCurrentPage(1);
+                                    }}
+                                    placeholder="Search invoice or customer..."
+                                    className="w-full rounded-xl border border-slate-200 bg-white py-2 pl-9 pr-4 text-xs dark:border-slate-800 dark:bg-[#080d1a]"
+                                />
+                            </div>
+                            <span className="text-xs text-slate-500">
+                                Showing {filtered.length} of {due.length} records
+                            </span>
+                        </div>
+                    </PageHeader.Bottom>
+                </PageHeader>
+                {errors.length > 0 && (
+                    <div className="flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 p-4 text-xs text-rose-700 dark:border-rose-900/50 dark:bg-rose-950/20 dark:text-rose-300">
+                        <AlertCircle className="h-4 w-4" />
+                        {errors[0]}
                     </div>
-                </PageHeader.Bottom>
-            </PageHeader>
-
-            {/* Table */}
-            <div className="bg-white dark:bg-[#080d1a] border border-slate-200/80 dark:border-slate-800/60 rounded-2xl shadow-xs overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left text-xs">
-                        <thead className="bg-slate-50/80 dark:bg-slate-900/40 text-slate-400 font-semibold uppercase tracking-wider border-b border-slate-100 dark:border-slate-800/80 text-[11px]">
-                            <tr>
-                                <th className="px-5 py-3">Receipt # & Date</th>
-                                <th className="px-4 py-3">Customer Account</th>
-                                <th className="px-4 py-3">Sales Invoice</th>
-                                <th className="px-4 py-3">Mode</th>
-                                <th className="px-4 py-3 text-right">Collected (৳)</th>
-                                <th className="px-4 py-3 text-right">Remaining Due</th>
-                                <th className="px-4 py-3">Cashier</th>
-                                <th className="px-4 py-3 text-right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
-                            {paginatedItems.map((c) => (
-                                <tr key={c.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-900/40 transition">
-                                    <td className="px-5 py-3.5">
-                                        <p className="font-mono font-bold text-slate-900 dark:text-white">{c.receiptNo}</p>
-                                        <p className="text-[10px] text-slate-400">{c.date}</p>
-                                    </td>
-                                    <td className="px-4 py-3.5">
-                                        <p className="font-bold text-slate-800 dark:text-slate-200">{c.customerName}</p>
-                                        <p className="text-[10px] text-slate-400 font-mono">{c.customerPhone}</p>
-                                    </td>
-                                    <td className="px-4 py-3.5 font-mono text-slate-500">{c.invoiceRef}</td>
-                                    <td className="px-4 py-3.5">
-                                        <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-                                            {c.paymentMode}
+                )}
+                <CustomerTable
+                    title="Due Collection History"
+                    isLoading={isLoading}
+                    columns={[
+                        'Invoice',
+                        'Customer',
+                        'Due Date',
+                        'Total Amount',
+                        'Paid Amount',
+                        'Due Amount',
+                        'Status',
+                        'Remarks'
+                    ]}>
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
+                        {duePagination.paginatedItems.map((item) => {
+                            const settled = Number(item.due_amount) <= 0;
+                            return (
+                                <tr
+                                    key={item.id}
+                                    className="transition-colors hover:bg-emerald-50/40 dark:hover:bg-emerald-950/10">
+                                    <td className="px-5 py-4 font-mono font-bold text-emerald-700 dark:text-emerald-400">
+                                        {item.invoice_no}
+                                        <span className="mt-1 block text-[10px] font-normal text-slate-400">
+                                            {date(item.due_date)}
                                         </span>
                                     </td>
-                                    <td className="px-4 py-3.5 text-right font-mono font-bold text-slate-900 dark:text-white">
-                                        ৳ {c.collectedAmount.toLocaleString('en-BD')}
+                                    <td className="px-4 py-4 font-semibold">
+                                        {item.due_cust_info?.customer_name ?? '—'}
                                     </td>
-                                    <td className="px-4 py-3.5 text-right font-mono text-rose-500">
-                                        {c.remainingDue > 0 ? `৳ ${c.remainingDue.toLocaleString('en-BD')}` : 'Cleared'}
+                                    <td className="px-4 py-4 text-slate-500">{date(item.due_date)}</td>
+                                    <td className="px-4 py-4 text-right font-mono">{money(item.total_amount)}</td>
+                                    <td className="px-4 py-4 text-right font-mono font-bold text-emerald-600">
+                                        {money(item.paid_amount)}
                                     </td>
-                                    <td className="px-4 py-3.5 text-slate-500">{c.cashier}</td>
-                                    <td className="px-4 py-3.5 text-right">
-                                        <div className="flex items-center justify-end gap-1.5">
-                                            <button
-                                                onClick={() => onOpenEdit(c)}
-                                                className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
-                                                title="Edit Receipt">
-                                                <Edit3 className="w-3.5 h-3.5" />
-                                            </button>
-                                            <button
-                                                onClick={() => onDelete(c.id)}
-                                                className="p-1.5 text-slate-400 hover:text-rose-500 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-500/10 cursor-pointer"
-                                                title="Void Receipt">
-                                                <Trash2 className="w-3.5 h-3.5" />
-                                            </button>
-                                        </div>
+                                    <td
+                                        className={`px-4 py-4 text-right font-mono font-bold ${settled ? 'text-slate-400' : 'text-rose-600'}`}>
+                                        {money(item.due_amount)}
+                                    </td>
+                                    <td className="px-4 py-4 text-center">
+                                        <span
+                                            className={`inline-flex rounded-full border px-2.5 py-1 text-[10px] font-bold ${settled ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-amber-200 bg-amber-50 text-amber-700'}`}>
+                                            {settled ? 'Paid' : 'Due'}
+                                        </span>
+                                    </td>
+                                    <td
+                                        className="max-w-[180px] truncate px-4 py-4 text-slate-500"
+                                        title={item.remarks ?? ''}>
+                                        {item.remarks ?? '—'}
+                                    </td>
+                                </tr>
+                            );
+                        })}
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colSpan={8} className="p-0">
+                                <Pagination
+                                    currentPage={duePagination.currentPage}
+                                    totalPages={duePagination.totalPages}
+                                    onPageChange={duePagination.setCurrentPage}
+                                    totalItems={filtered.length}
+                                    pageSize={duePagination.pageSize}
+                                    onPageSizeChange={duePagination.setPageSize}
+                                    showPageSizeSelector
+                                    itemLabel="due records"
+                                    pageFooter={false}
+                                    className="border-0 bg-transparent shadow-none"
+                                />
+                            </td>
+                        </tr>
+                    </tfoot>
+                </CustomerTable>
+                <div className="grid gap-6 xl:grid-cols-2">
+                    <CustomerTable
+                        title="Invoice-wise Customer Due"
+                        isLoading={isLoadingInvoices}
+                        action={
+                            <button
+                                type="button"
+                                onClick={onRefetchInvoices}
+                                disabled={isLoadingInvoices}
+                                className="rounded-lg p-1.5 text-slate-500">
+                                <RefreshCw className={`h-4 w-4 ${isLoadingInvoices ? 'animate-spin' : ''}`} />
+                            </button>
+                        }
+                        columns={['Invoice', 'Customer ID', 'Due Amount']}>
+                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
+                            {invoicePagination.paginatedItems.map((item) => (
+                                <tr key={item.id}>
+                                    <td className="px-5 py-3.5 font-mono font-bold">{item.invoice_no}</td>
+                                    <td className="px-4 py-3.5">{item.customer_name}</td>
+                                    <td className="px-4 py-3.5 text-right font-mono font-bold text-amber-600">
+                                        {money(item.due_amount)}
                                     </td>
                                 </tr>
                             ))}
                         </tbody>
-                        <tfoot className="border-t border-slate-200/80 bg-slate-50/95 dark:border-slate-800/80 dark:bg-slate-900/60">
-                            <tr><td colSpan={8} className="p-0">
-                                <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} totalItems={filteredCollections.length} pageSize={pageSize} onPageSizeChange={setPageSize} showPageSizeSelector itemLabel="collections" pageFooter={false} className="border-0 bg-transparent shadow-none" />
-                            </td></tr>
+                        <tfoot>
+                            <tr>
+                                <td colSpan={3} className="p-0">
+                                    <Pagination
+                                        currentPage={invoicePagination.currentPage}
+                                        totalPages={invoicePagination.totalPages}
+                                        onPageChange={invoicePagination.setCurrentPage}
+                                        totalItems={invoices.length}
+                                        pageSize={invoicePagination.pageSize}
+                                        onPageSizeChange={invoicePagination.setPageSize}
+                                        showPageSizeSelector
+                                        itemLabel="invoice dues"
+                                        pageFooter={false}
+                                        className="border-0 bg-transparent shadow-none"
+                                    />
+                                </td>
+                            </tr>
                         </tfoot>
+                    </CustomerTable>
+                    <CustomerTable
+                        title="Pending Customer Dues"
+                        isLoading={isLoadingPending}
+                        columns={['Customer', 'Phone', 'Previous Due']}>
+                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
+                            {pendingPagination.paginatedItems.map((item) => (
+                                <tr key={item.id}>
+                                    <td className="px-5 py-3.5 font-semibold">
+                                        {item.customer_name}
+                                        <span className="mt-1 block text-[10px] text-slate-400">
+                                            {item.customer_code ?? 'Customer account'}
+                                        </span>
+                                    </td>
+                                    <td className="px-4 py-3.5">{item.phone ?? '—'}</td>
+                                    <td className="px-4 py-3.5 text-right font-mono font-bold text-amber-600">
+                                        {money(item.previous_due)}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colSpan={3} className="p-0">
+                                    <Pagination
+                                        currentPage={pendingPagination.currentPage}
+                                        totalPages={pendingPagination.totalPages}
+                                        onPageChange={pendingPagination.setCurrentPage}
+                                        totalItems={pending.length}
+                                        pageSize={pendingPagination.pageSize}
+                                        onPageSizeChange={pendingPagination.setPageSize}
+                                        showPageSizeSelector
+                                        itemLabel="pending customers"
+                                        pageFooter={false}
+                                        className="border-0 bg-transparent shadow-none"
+                                    />
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </CustomerTable>
+                </div>
+            </section>
+        );
+    }
+);
+interface CustomerTableProps {
+    title: string;
+    columns: string[];
+    isLoading: boolean;
+    action?: React.ReactNode;
+    children: React.ReactNode;
+}
+const CustomerTable: React.FC<CustomerTableProps> = ({ title, columns, isLoading, action, children }) => {
+    const widths =
+        title === 'Invoice-wise Customer Due'
+            ? ['42%', '25%', '33%']
+            : title === 'Pending Customer Dues'
+              ? ['45%', '25%', '30%']
+              : ['16%', '17%', '12%', '12%', '12%', '12%', '10%', '19%'];
+    const minWidth = columns.length === 8 ? 980 : 620;
+    return (
+        <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm dark:border-slate-800/60 dark:bg-[#080d1a]">
+            <div className="flex items-center justify-between border-b border-slate-100 px-5 py-3.5 dark:border-slate-800">
+                <h2 className="text-sm font-bold text-slate-800 dark:text-white">{title}</h2>
+                {action}
+            </div>
+            {isLoading ? (
+                <Skeleton.Table rows={4} columns={columns.length} />
+            ) : (
+                <div className="overflow-x-auto">
+                    <table style={{ minWidth }} className="w-full table-fixed text-left text-xs">
+                        <colgroup>
+                            {widths.map((width, index) => (
+                                <col key={columns[index]} style={{ width }} />
+                            ))}
+                        </colgroup>
+                        <thead className="bg-slate-50/90 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:bg-slate-900/50">
+                            <tr>
+                                {columns.map((column) => (
+                                    <th
+                                        key={column}
+                                        className={`px-4 py-3.5 ${/amount|due/i.test(column) ? 'text-right' : /status/i.test(column) ? 'text-center' : 'text-left'}`}>
+                                        {column}
+                                    </th>
+                                ))}
+                            </tr>
+                        </thead>
+                        {children}
                     </table>
                 </div>
-            </div>
-
-            {/* Slider Drawer */}
-            <SliderDrawer
-                isOpen={isDrawerOpen}
-                onClose={onCloseDrawer}
-                title={editingItem ? 'Edit Due Collection Slip' : 'Collect Customer Due'}
-                subtitle="Receive installment credit payments against active sales ledger invoices"
-                width="max-w-lg">
-                <form onSubmit={onSave} className="space-y-4">
-                    <div className="grid grid-cols-2 gap-3">
-                        <FormField label="Money Receipt #" required>
-                            <input
-                                type="text"
-                                value={formState.receiptNo}
-                                onChange={(e) => onFormFieldChange('receiptNo', e.target.value)}
-                                className={inputClasses}
-                                required
-                            />
-                        </FormField>
-                        <FormField label="Collection Date" required>
-                            <input
-                                type="date"
-                                value={formState.date}
-                                onChange={(e) => onFormFieldChange('date', e.target.value)}
-                                className={inputClasses}
-                                required
-                            />
-                        </FormField>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                        <FormField label="Customer Name" required>
-                            <input
-                                type="text"
-                                placeholder="e.g. Rahim Chowdhury"
-                                value={formState.customerName}
-                                onChange={(e) => onFormFieldChange('customerName', e.target.value)}
-                                className={inputClasses}
-                                required
-                            />
-                        </FormField>
-                        <FormField label="Contact Phone" required>
-                            <input
-                                type="text"
-                                placeholder="+880 1712-XXXXXX"
-                                value={formState.customerPhone}
-                                onChange={(e) => onFormFieldChange('customerPhone', e.target.value)}
-                                className={inputClasses}
-                                required
-                            />
-                        </FormField>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                        <FormField label="Invoice Reference #" required>
-                            <input
-                                type="text"
-                                placeholder="e.g. INV-2026-0045"
-                                value={formState.invoiceRef}
-                                onChange={(e) => onFormFieldChange('invoiceRef', e.target.value)}
-                                className={inputClasses}
-                                required
-                            />
-                        </FormField>
-                        <FormField label="Collected Amount (৳)" required>
-                            <input
-                                type="number"
-                                min="0"
-                                step="100"
-                                value={formState.collectedAmount}
-                                onChange={(e) => onFormFieldChange('collectedAmount', Number(e.target.value))}
-                                className={inputClasses}
-                                required
-                            />
-                        </FormField>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                        <FormField label="Payment Method">
-                            <select
-                                value={formState.paymentMode}
-                                onChange={(e) =>
-                                    onFormFieldChange(
-                                        'paymentMode',
-                                        e.target.value as DueCollection['paymentMode']
-                                    )
-                                }
-                                className={inputClasses}>
-                                <option value="Cash">Cash (Counter POS)</option>
-                                <option value="bKash">bKash (Merchant / Personal)</option>
-                                <option value="Card">Credit / Debit POS Card</option>
-                                <option value="Nagad">Nagad Direct</option>
-                            </select>
-                        </FormField>
-                        <FormField label="Remaining Due After Collection (৳)">
-                            <input
-                                type="number"
-                                min="0"
-                                value={formState.remainingDue}
-                                onChange={(e) => onFormFieldChange('remainingDue', Number(e.target.value))}
-                                className={inputClasses}
-                            />
-                        </FormField>
-                    </div>
-
-                    <FormField label="Collection Remarks & Money Receipt Notes">
-                        <textarea
-                            rows={2}
-                            placeholder="Next payment promise date, installment count..."
-                            value={formState.notes}
-                            onChange={(e) => onFormFieldChange('notes', e.target.value)}
-                            className={inputClasses}
-                        />
-                    </FormField>
-
-                    <div className="pt-4 flex items-center justify-end gap-2.5 border-t border-slate-100 dark:border-slate-800">
-                        <button
-                            type="button"
-                            onClick={onCloseDrawer}
-                            className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition cursor-pointer">
-                            Cancel
-                        </button>
-                        <button
-                            type="submit"
-                            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md shadow-emerald-600/20 transition cursor-pointer">
-                            <Save className="w-4 h-4" />
-                            <span>{editingItem ? 'Update Receipt' : 'Save Money Receipt'}</span>
-                        </button>
-                    </div>
-                </form>
-            </SliderDrawer>
-        </section>
+            )}
+        </div>
     );
 };
-
 export default CustomerDueCollectionPresenter;

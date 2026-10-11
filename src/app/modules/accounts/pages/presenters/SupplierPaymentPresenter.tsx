@@ -34,7 +34,6 @@ export const SupplierPaymentPresenter: React.FC<SupplierPaymentPresenterProps> =
         payments,
         duePurchases,
         pendingSuppliers,
-        summary,
         isLoading,
         isLoadingDue,
         isLoadingPending,
@@ -61,7 +60,6 @@ export const SupplierPaymentPresenter: React.FC<SupplierPaymentPresenterProps> =
         const paymentPagination = useTablePagination(filteredPayments);
         const duePagination = useTablePagination(duePurchases);
         const pendingPagination = useTablePagination(pendingSuppliers);
-        const totalPaid = payments.reduce((sum, item) => sum + Number(item.paid_amount), 0);
         const errors = [isError ? error : null, dueError, pendingError, createError].filter(Boolean);
         return (
             <section className="space-y-6">

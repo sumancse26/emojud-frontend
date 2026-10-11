@@ -10,3 +10,6 @@ export * from './types/expense.types';
 export * from './hooks/useSupplierPayment';
 export * from './services/supplierPaymentService';
 export * from './types/supplier-payment.types';
+export * from './hooks/useCustomerDue';
+export * from './services/customerDueService';
+export * from './types/customer-due.types';
