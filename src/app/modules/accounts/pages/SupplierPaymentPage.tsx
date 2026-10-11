@@ -1,177 +1,25 @@
-import React, { useState } from 'react';
-import { SupplierPaymentPresenter } from './presenters/SupplierPaymentPresenter';
+import React, { useCallback, useMemo, useState } from 'react'
+import { FormField, inputClasses, Dropdown, PageHeader, SliderDrawer, type DropdownOption } from '@/shared'
+import { useApp } from '@/app/providers'
+import { useToast } from '@/shared/components/Toast'
+import { useSupplierPayment } from '../hooks/useSupplierPayment'
+import { SupplierPaymentPresenter } from './presenters/SupplierPaymentPresenter'
+import type { CreateSupplierPaymentPayload } from '../types/supplier-payment.types'
 
-export interface SupplierPayment {
-    id: string;
-    paymentNo: string;
-    date: string;
-    supplierName: string;
-    purchaseOrderRef: string;
-    paidAmount: number;
-    paymentMethod: 'Bank Transfer' | 'Cheque' | 'Cash' | 'bKash';
-    chequeNo?: string;
-    status: 'Settled' | 'Pending Clearance';
-    notes: string;
-}
-
-export interface SupplierPaymentFormData {
-    paymentNo: string;
-    date: string;
-    supplierName: string;
-    purchaseOrderRef: string;
-    paidAmount: number;
-    paymentMethod: SupplierPayment['paymentMethod'];
-    chequeNo: string;
-    status: SupplierPayment['status'];
-    notes: string;
-}
-
-const INITIAL_PAYMENTS: SupplierPayment[] = [
-    {
-        id: '1',
-        paymentNo: 'PAY-2026-041',
-        date: '2026-09-16',
-        supplierName: 'Apex Textiles & Fabrics Ltd.',
-        purchaseOrderRef: 'PO-2026-0041',
-        paidAmount: 150000,
-        paymentMethod: 'Bank Transfer',
-        status: 'Settled',
-        notes: 'Partial settlement against batch invoice'
-    },
-    {
-        id: '2',
-        paymentNo: 'PAY-2026-042',
-        date: '2026-09-14',
-        supplierName: 'Bengal Leather Crafts Ind.',
-        purchaseOrderRef: 'PO-2026-0038',
-        paidAmount: 65000,
-        paymentMethod: 'Cheque',
-        chequeNo: 'CHQ-882910',
-        status: 'Settled',
-        notes: 'Account payee cheque cleared'
-    },
-    {
-        id: '3',
-        paymentNo: 'PAY-2026-043',
-        date: '2026-09-17',
-        supplierName: 'Royal Fragrance & Oils Ltd.',
-        purchaseOrderRef: 'PO-2026-0044',
-        paidAmount: 45000,
-        paymentMethod: 'Bank Transfer',
-        status: 'Pending Clearance',
-        notes: 'BEFTN transfer in transit'
-    }
-];
+interface FormState { paymentDate: string; supplierId: string; purchaseId: string; paymentMethodId: string; totalDue: number; paidAmount: number; remarks: string }
+const emptyForm = (): FormState => ({ paymentDate: new Date().toISOString().slice(0, 10), supplierId: '', purchaseId: '', paymentMethodId: '', totalDue: 0, paidAmount: 0, remarks: '' })
 
 export const SupplierPaymentPage: React.FC = () => {
-    const [payments, setPayments] = useState<SupplierPayment[]>(INITIAL_PAYMENTS);
-    const [searchQuery, setSearchQuery] = useState('');
-    const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-    const [editingPayment, setEditingPayment] = useState<SupplierPayment | null>(null);
+  const { selectedBranch } = useApp(); const toast = useToast()
+  const { payments, duePurchases, pendingSuppliers, summary, paymentMethods, isLoading, isLoadingDue, isLoadingPending, isLoadingPaymentMethods, error, dueError, pendingError, paymentMethodsError, refetch, refetchDue, createPayment, isCreating, createError } = useSupplierPayment(selectedBranch)
+  const [isOpen, setIsOpen] = useState(false); const [form, setForm] = useState<FormState>(emptyForm)
+  const supplierOptions = useMemo<DropdownOption[]>(() => pendingSuppliers.map((item) => ({ value: String(item.id), label: item.supplier_name, subLabel: `${item.supplier_code} · Due ৳ ${Number(item.previous_due).toLocaleString('en-BD')}` })), [pendingSuppliers])
+  const purchaseOptions = useMemo<DropdownOption[]>(() => duePurchases.filter((item) => !form.supplierId || String(item.supplier.id) === form.supplierId).map((item) => ({ value: String(item.id), label: item.purchase_no, subLabel: `${item.supplier.supplier_name} · Due ৳ ${Number(item.due_amount).toLocaleString('en-BD')}` })), [duePurchases, form.supplierId])
+  const methodOptions = useMemo<DropdownOption[]>(() => paymentMethods.map((item) => ({ value: item.id, label: item.lookup_value, subLabel: item.lookup_code })), [paymentMethods])
+  const setField = <K extends keyof FormState>(field: K, value: FormState[K]) => setForm((current) => ({ ...current, [field]: value }))
+  const openCreate = useCallback(() => { setForm(emptyForm()); setIsOpen(true) }, [])
+  const submit = useCallback(async (event: React.FormEvent) => { event.preventDefault(); const payload: CreateSupplierPaymentPayload = { id: null, shop_id: Number(selectedBranch), supplier_id: Number(form.supplierId), payment_date: form.paymentDate, ref_purchase_id: form.purchaseId, payment_method_id: Number(form.paymentMethodId), total_due: form.totalDue, paid_amount: form.paidAmount, current_due: Math.max(0, form.totalDue - form.paidAmount), remarks: form.remarks, user_id: 1 }; try { await createPayment(payload); setIsOpen(false); toast.success('Supplier payment posted successfully.') } catch (submitError) { toast.error(submitError instanceof Error ? submitError.message : 'Failed to post supplier payment.') } }, [createPayment, form, selectedBranch, toast])
+  return <><SupplierPaymentPresenter payments={payments} duePurchases={duePurchases} pendingSuppliers={pendingSuppliers} summary={summary} isLoading={isLoading} isLoadingDue={isLoadingDue} isLoadingPending={isLoadingPending} isError={Boolean(error)} error={error} dueError={dueError} pendingError={pendingError} createError={createError} onOpenCreate={openCreate} onRefetch={() => void refetch()} onRefetchDue={() => void refetchDue()} /><SliderDrawer isOpen={isOpen} onClose={() => setIsOpen(false)} width="max-w-xl"><SliderDrawer.Header onClose={() => setIsOpen(false)}><PageHeader variant="flat" withAccent={false} className="min-w-0 flex-1 py-0"><PageHeader.Header title="Record Supplier Payment" description="Settle an outstanding supplier purchase" /></PageHeader></SliderDrawer.Header><SliderDrawer.Body><form id="supplier-payment-form" onSubmit={submit} className="space-y-4 text-xs">{paymentMethodsError && <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-amber-700">Unable to load payment methods.</div>}<div className="grid grid-cols-2 gap-3"><FormField label="Payment Date" required><input type="date" value={form.paymentDate} onChange={(event) => setField('paymentDate', event.target.value)} className={inputClasses} required /></FormField><FormField label="Payment Method" required><Dropdown options={methodOptions} value={form.paymentMethodId} onChange={(value) => setField('paymentMethodId', value)} placeholder="Select payment method" isLoading={isLoadingPaymentMethods} disabled={Boolean(paymentMethodsError)} required /></FormField></div><FormField label="Supplier" required><Dropdown options={supplierOptions} value={form.supplierId} onChange={(value) => { const supplier = pendingSuppliers.find((item) => String(item.id) === value); setForm((current) => ({ ...current, supplierId: value, purchaseId: '', totalDue: Number(supplier?.previous_due ?? 0), paidAmount: Number(supplier?.previous_due ?? 0) })) }} placeholder="Select supplier" isLoading={isLoadingPending} required searchable={5} /></FormField><FormField label="Purchase" required><Dropdown options={purchaseOptions} value={form.purchaseId} onChange={(value) => { const purchase = duePurchases.find((item) => String(item.id) === value); setForm((current) => ({ ...current, purchaseId: value, supplierId: String(purchase?.supplier.id ?? current.supplierId), totalDue: Number(purchase?.due_amount ?? current.totalDue), paidAmount: Number(purchase?.due_amount ?? current.paidAmount) })) }} placeholder="Select purchase" isLoading={isLoadingDue} required searchable={5} /></FormField><div className="grid grid-cols-2 gap-3"><FormField label="Total Due" required><input type="number" min="0" value={form.totalDue} onChange={(event) => setField('totalDue', Number(event.target.value))} className={inputClasses} required /></FormField><FormField label="Paid Amount" required><input type="number" min="0" value={form.paidAmount} onChange={(event) => setField('paidAmount', Number(event.target.value))} className={inputClasses} required /></FormField></div><FormField label="Remarks"><textarea rows={3} value={form.remarks} onChange={(event) => setField('remarks', event.target.value)} className={inputClasses} placeholder="Payment remarks..." /></FormField></form></SliderDrawer.Body><SliderDrawer.Footer><div className="flex justify-end gap-2"><button type="button" onClick={() => setIsOpen(false)} className="rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-semibold dark:border-slate-700">Cancel</button><button form="supplier-payment-form" type="submit" disabled={isCreating || isLoadingDue || isLoadingPending || isLoadingPaymentMethods || Boolean(paymentMethodsError)} className="rounded-xl bg-emerald-600 px-5 py-2.5 text-xs font-bold text-white disabled:opacity-50">{isCreating ? 'Posting...' : 'Post Payment'}</button></div></SliderDrawer.Footer></SliderDrawer></>
+}
 
-    const [formState, setFormState] = useState<SupplierPaymentFormData>({
-        paymentNo: '',
-        date: new Date().toISOString().split('T')[0],
-        supplierName: 'Apex Textiles & Fabrics Ltd.',
-        purchaseOrderRef: 'PO-2026-0041',
-        paidAmount: 25000,
-        paymentMethod: 'Bank Transfer',
-        chequeNo: '',
-        status: 'Settled',
-        notes: ''
-    });
-
-    const handleOpenCreate = () => {
-        setEditingPayment(null);
-        setFormState({
-            paymentNo: `PAY-2026-0${Math.floor(45 + Math.random() * 50)}`,
-            date: new Date().toISOString().split('T')[0],
-            supplierName: 'Apex Textiles & Fabrics Ltd.',
-            purchaseOrderRef: 'PO-2026-0041',
-            paidAmount: 25000,
-            paymentMethod: 'Bank Transfer',
-            chequeNo: '',
-            status: 'Settled',
-            notes: ''
-        });
-        setIsDrawerOpen(true);
-    };
-
-    const handleOpenEdit = (p: SupplierPayment) => {
-        setEditingPayment(p);
-        setFormState({
-            paymentNo: p.paymentNo,
-            date: p.date,
-            supplierName: p.supplierName,
-            purchaseOrderRef: p.purchaseOrderRef,
-            paidAmount: p.paidAmount,
-            paymentMethod: p.paymentMethod,
-            chequeNo: p.chequeNo || '',
-            status: p.status,
-            notes: p.notes
-        });
-        setIsDrawerOpen(true);
-    };
-
-    const handleFormFieldChange = <K extends keyof SupplierPaymentFormData>(
-        field: K,
-        value: SupplierPaymentFormData[K]
-    ) => {
-        setFormState((prev) => ({
-            ...prev,
-            [field]: value
-        }));
-    };
-
-    const handleSave = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (editingPayment) {
-            setPayments((prev) =>
-                prev.map((item) => (item.id === editingPayment.id ? { ...item, ...formState } : item))
-            );
-        } else {
-            const newItem: SupplierPayment = {
-                id: Date.now().toString(),
-                ...formState
-            };
-            setPayments((prev) => [newItem, ...prev]);
-        }
-        setIsDrawerOpen(false);
-    };
-
-    const handleDelete = (id: string) => {
-        if (confirm('Are you sure you want to void this payment record?')) {
-            setPayments((prev) => prev.filter((p) => p.id !== id));
-        }
-    };
-
-    const totalPaid = payments.reduce((acc, p) => acc + p.paidAmount, 0);
-
-    const filteredPayments = payments.filter(
-        (p) =>
-            p.paymentNo.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            p.supplierName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            p.purchaseOrderRef.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-
-    return (
-        <SupplierPaymentPresenter
-            payments={payments}
-            filteredPayments={filteredPayments}
-            totalPaid={totalPaid}
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            isDrawerOpen={isDrawerOpen}
-            onCloseDrawer={() => setIsDrawerOpen(false)}
-            editingPayment={editingPayment}
-            formState={formState}
-            onFormFieldChange={handleFormFieldChange}
-            onOpenCreate={handleOpenCreate}
-            onOpenEdit={handleOpenEdit}
-            onSave={handleSave}
-            onDelete={handleDelete}
-        />
-    );
-};
-
-export default SupplierPaymentPage;
+export default SupplierPaymentPage
