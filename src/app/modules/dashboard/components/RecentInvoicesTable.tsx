@@ -1,7 +1,7 @@
 import React from 'react';
 import type { RecentInvoice } from '../types/dashboard.types';
 
-export const RecentInvoicesTable: React.FC<{ invoices?: RecentInvoice[] }> = ({
+export const RecentInvoicesTable: React.FC<{ invoices?: RecentInvoice[] }> = React.memo(({ 
     invoices = []
 }) => {
     const list = Array.isArray(invoices) ? invoices : [];
@@ -62,4 +62,4 @@ export const RecentInvoicesTable: React.FC<{ invoices?: RecentInvoice[] }> = ({
             )}
         </div>
     );
-};
+});

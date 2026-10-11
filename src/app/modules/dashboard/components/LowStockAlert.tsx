@@ -6,7 +6,7 @@ export interface LowStockAlertProps {
     summary?: StockSummary;
 }
 
-export const LowStockAlert: React.FC<LowStockAlertProps> = ({
+export const LowStockAlert: React.FC<LowStockAlertProps> = React.memo(({ 
     items = [],
     summary
 }) => {
@@ -96,4 +96,4 @@ export const LowStockAlert: React.FC<LowStockAlertProps> = ({
             )}
         </div>
     );
-};
+});

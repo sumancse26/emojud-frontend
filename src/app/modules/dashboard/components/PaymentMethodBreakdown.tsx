@@ -1,7 +1,7 @@
 import React from 'react';
 import type { PaymentMethodSummaryItem } from '../types/dashboard.types';
 
-export const PaymentMethodBreakdown: React.FC<{ items?: PaymentMethodSummaryItem[] }> = ({
+export const PaymentMethodBreakdown: React.FC<{ items?: PaymentMethodSummaryItem[] }> = React.memo(({ 
     items = []
 }) => {
     const list = Array.isArray(items) ? items : [];
@@ -58,4 +58,4 @@ export const PaymentMethodBreakdown: React.FC<{ items?: PaymentMethodSummaryItem
             </div>
         </div>
     );
-};
+});

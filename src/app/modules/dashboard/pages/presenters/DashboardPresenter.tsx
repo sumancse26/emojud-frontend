@@ -16,7 +16,7 @@ export interface DashboardPresenterProps {
     onRetry: () => void;
 }
 
-export const DashboardPresenter: React.FC<DashboardPresenterProps> = ({
+export const DashboardPresenter: React.FC<DashboardPresenterProps> = React.memo(({ 
     data,
     isLoading,
     error,
@@ -86,4 +86,4 @@ export const DashboardPresenter: React.FC<DashboardPresenterProps> = ({
             </div>
         </section>
     );
-};
+});

@@ -77,7 +77,7 @@ export interface StatsGridProps {
     monthlyTotals?: MonthlyTotalsData | null;
 }
 
-export const StatsGrid: React.FC<StatsGridProps> = ({ summary, monthlyTotals }) => {
+export const StatsGrid: React.FC<StatsGridProps> = React.memo(({ summary, monthlyTotals }) => {
     const [period, setPeriod] = useState<'monthly' | 'daily'>('monthly');
 
     const activeSummary = period === 'monthly'
@@ -200,4 +200,4 @@ export const StatsGrid: React.FC<StatsGridProps> = ({ summary, monthlyTotals }) 
             </div>
         </div>
     );
-};
+});

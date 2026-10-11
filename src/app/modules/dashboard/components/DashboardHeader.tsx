@@ -87,7 +87,7 @@ function getCurrentMonthDateRange(): string {
     return `${monthName} 1, ${year} – ${monthName} ${lastDay}, ${year}`;
 }
 
-export const DashboardHeader: React.FC = () => {
+export const DashboardHeader: React.FC = React.memo(() => {
     const navigate = useNavigate();
     const dateRange = getCurrentMonthDateRange();
 
@@ -117,4 +117,4 @@ export const DashboardHeader: React.FC = () => {
             </div>
         </div>
     );
-};
+});

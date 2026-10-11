@@ -5,7 +5,7 @@ import type { OverviewChartItem } from '../types/dashboard.types';
 
 Chart.register(...registerables);
 
-export const RevenueChart: React.FC<{ items?: OverviewChartItem[] }> = ({ items = [] }) => {
+export const RevenueChart: React.FC<{ items?: OverviewChartItem[] }> = React.memo(({ items = [] }) => {
     const chartRef = useRef<HTMLCanvasElement | null>(null);
     const chartInstance = useRef<Chart | null>(null);
     const { isDarkMode } = useApp();
@@ -176,4 +176,4 @@ export const RevenueChart: React.FC<{ items?: OverviewChartItem[] }> = ({ items 
             </div>
         </div>
     );
-};
+});

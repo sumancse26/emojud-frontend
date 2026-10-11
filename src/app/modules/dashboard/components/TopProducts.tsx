@@ -1,7 +1,7 @@
 import React from 'react';
 import type { TopSellingProductItem } from '../types/dashboard.types';
 
-export const TopProducts: React.FC<{ products?: TopSellingProductItem[] }> = ({ products = [] }) => {
+export const TopProducts: React.FC<{ products?: TopSellingProductItem[] }> = React.memo(({ products = [] }) => {
     const list = Array.isArray(products) ? products : [];
 
     return (
@@ -39,4 +39,4 @@ export const TopProducts: React.FC<{ products?: TopSellingProductItem[] }> = ({ 
             )}
         </div>
     );
-};
+});
