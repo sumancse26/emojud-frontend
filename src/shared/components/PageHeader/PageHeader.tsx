@@ -329,7 +329,7 @@ export const PageHeader: PageHeaderComponent = ({
     }
 
     return (
-        <div className={`${containerStyle} ${className}`.trim()}>
+        <div className={`page-header ${containerStyle} ${className}`.trim()}>
             {/* Top Accent Bar */}
             {withAccent && variant !== 'flat' && (
                 <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-500" />

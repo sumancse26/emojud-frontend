@@ -1,0 +1,8 @@
+import { useCallback, useMemo } from 'react'
+import { useApi } from '@/shared/hooks/useApi'
+import { clearGetCache } from '@/shared/services/apiClient'
+import { commissionProfitService } from '../services/commissionProfitService'
+import type { CommissionProfitApiResponse, CommissionProfitItem, CommissionProfitListParams, CreateCommissionProfitPayload } from '../types/commission-profit.types'
+export interface UseCommissionProfitReturn { records: CommissionProfitItem[]; isLoading: boolean; error: string | null; refetch: () => Promise<CommissionProfitApiResponse<CommissionProfitItem[]>>; create: (payload: CreateCommissionProfitPayload) => Promise<CommissionProfitApiResponse<unknown>>; isCreating: boolean; createError: string | null }
+export function useCommissionProfit(shopId: string | number): UseCommissionProfitReturn { const params = useMemo<CommissionProfitListParams>(() => ({ shop_id: shopId }), [shopId]); const listRequest = useApi<CommissionProfitApiResponse<CommissionProfitItem[]>, CommissionProfitListParams>(commissionProfitService.getList, { immediate: true, initialParams: params }); const createRequest = useApi<CommissionProfitApiResponse<unknown>, CreateCommissionProfitPayload>(commissionProfitService.create); const create = useCallback(async (payload: CreateCommissionProfitPayload) => { const response = await createRequest.execute(payload); clearGetCache(); await listRequest.execute(params); return response }, [createRequest.execute, listRequest.execute, params]); return { records: listRequest.data?.data ?? [], isLoading: listRequest.isLoading, error: listRequest.error, refetch: () => listRequest.execute(params), create, isCreating: createRequest.isLoading, createError: createRequest.error } }
+export default useCommissionProfit

@@ -13,3 +13,6 @@ export * from './types/supplier-payment.types';
 export * from './hooks/useCustomerDue';
 export * from './services/customerDueService';
 export * from './types/customer-due.types';
+export * from './hooks/useCommissionProfit';
+export * from './services/commissionProfitService';
+export * from './types/commission-profit.types';

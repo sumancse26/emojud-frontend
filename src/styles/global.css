@@ -36,6 +36,26 @@
   }
 }
 
+@layer components {
+  .page-header input[placeholder*="Search" i] {
+    border-color: rgb(167 243 208 / 0.95);
+  }
+
+  .page-header input[placeholder*="Search" i]:focus {
+    border-color: rgb(16 185 129) !important;
+    box-shadow: 0 0 0 2px rgb(16 185 129 / 0.18);
+    outline: none;
+  }
+
+  .dark .page-header input[placeholder*="Search" i] {
+    border-color: rgb(6 95 70 / 0.85);
+  }
+
+  .dark .page-header input[placeholder*="Search" i]:focus {
+    border-color: rgb(52 211 153) !important;
+  }
+}
+
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 5px;
