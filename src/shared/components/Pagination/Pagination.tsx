@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 
 export interface PaginationProps {
@@ -14,6 +15,8 @@ export interface PaginationProps {
     itemLabel?: string;
     variant?: 'default' | 'compact' | 'minimal';
     className?: string;
+    /** Render in the shared page footer instead of inside a table/card. */
+    pageFooter?: boolean;
 }
 
 export const Pagination: React.FC<PaginationProps> = ({
@@ -28,10 +31,17 @@ export const Pagination: React.FC<PaginationProps> = ({
     showTotalInfo = true,
     itemLabel = 'records',
     variant = 'default',
-    className = ''
+    className = '',
+    pageFooter = true
 }) => {
     const [internalPage, setInternalPage] = useState(1);
+    const [footerTarget, setFooterTarget] = useState<HTMLElement | null | undefined>(undefined);
     const currentPage = controlledPage ?? internalPage;
+
+    useEffect(() => {
+        if (!pageFooter) return;
+        setFooterTarget(document.getElementById('page-pagination-footer'));
+    }, [pageFooter]);
 
     const totalPages = Math.max(
         1,
@@ -80,10 +90,9 @@ export const Pagination: React.FC<PaginationProps> = ({
         : (currentPage - 1) * pageSize + 1;
     const endItem = totalItems ? Math.min(currentPage * pageSize, totalItems) : currentPage * pageSize;
 
-    if (variant === 'minimal') {
-        return (
+    const paginationContent = variant === 'minimal' ? (
             <div
-                className={`flex items-center justify-between gap-3 px-4 py-3 border-t border-slate-100 dark:border-slate-800/70 text-xs text-slate-500 dark:text-slate-400 ${className}`.trim()}>
+                className={`flex w-full items-center justify-between gap-3 border-t border-slate-200/80 bg-white/95 px-4 py-3 text-xs text-slate-500 shadow-[0_-4px_12px_rgba(15,23,42,0.04)] backdrop-blur-md dark:border-slate-800/80 dark:bg-[#080d1a]/95 dark:text-slate-400 ${className}`.trim()}>
                 <span>
                     Page <strong className="text-slate-800 dark:text-slate-200">{currentPage}</strong> of{' '}
                     <strong className="text-slate-800 dark:text-slate-200">{totalPages}</strong>
@@ -107,12 +116,10 @@ export const Pagination: React.FC<PaginationProps> = ({
                     </button>
                 </div>
             </div>
-        );
-    }
+        ) : (
 
-    return (
-        <div
-            className={`px-4 sm:px-5 py-3.5 border-t border-slate-100 dark:border-slate-800/70 bg-slate-50/40 dark:bg-slate-900/30 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500 dark:text-slate-400 ${className}`.trim()}>
+            <div
+                className={`w-full px-4 py-3.5 sm:px-5 border-t border-slate-200/80 bg-white/95 shadow-[0_-4px_12px_rgba(15,23,42,0.04)] backdrop-blur-md dark:border-slate-800/80 dark:bg-[#080d1a]/95 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500 dark:text-slate-400 ${className}`.trim()}>
             {/* Left: Info or Page Size */}
             <div className="flex items-center gap-4 order-2 sm:order-1">
                 {showTotalInfo && (
@@ -227,6 +234,12 @@ export const Pagination: React.FC<PaginationProps> = ({
             </div>
         </div>
     );
+
+    if (pageFooter && footerTarget) {
+        return createPortal(paginationContent, footerTarget);
+    }
+
+    return paginationContent;
 };
 
 export default Pagination;

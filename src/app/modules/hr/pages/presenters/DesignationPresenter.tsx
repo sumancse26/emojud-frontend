@@ -1,6 +1,6 @@
 import React from 'react';
 import { Award, Plus, Edit3, Save, RefreshCw, AlertCircle, Loader2, Search } from 'lucide-react';
-import { SliderDrawer, FormField, inputClasses, PageHeader, Pagination, Skeleton, Dropdown } from '@/shared';
+import { SliderDrawer, FormField, inputClasses, PageHeader, Pagination, Skeleton, Dropdown, useTablePagination } from '@/shared';
 import type { DesignationItem, CreateDesignationPayload } from '../../types/designation.types';
 
 export interface DesignationPresenterProps {
@@ -44,6 +44,7 @@ export const DesignationPresenter: React.FC<DesignationPresenterProps> = ({
     saveError,
     onRefetch
 }) => {
+    const { currentPage, pageSize, totalPages, paginatedItems, setCurrentPage, setPageSize } = useTablePagination(filteredDesignations);
     return (
         <section className="space-y-6">
             <PageHeader>
@@ -148,7 +149,7 @@ export const DesignationPresenter: React.FC<DesignationPresenterProps> = ({
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
-                                {filteredDesignations.map((item) => (
+                                {paginatedItems.map((item) => (
                                     <tr
                                         key={item.id}
                                         className="hover:bg-slate-50/60 dark:hover:bg-slate-900/40 transition">
@@ -182,11 +183,13 @@ export const DesignationPresenter: React.FC<DesignationPresenterProps> = ({
                                     </tr>
                                 ))}
                             </tbody>
+                            <tfoot className="border-t border-slate-200/80 bg-slate-50/95 dark:border-slate-800/80 dark:bg-slate-900/60">
+                                <tr><td colSpan={3} className="p-0">
+                                    <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} totalItems={filteredDesignations.length} pageSize={pageSize} onPageSizeChange={setPageSize} showPageSizeSelector itemLabel="designations" pageFooter={false} className="border-0 bg-transparent shadow-none" />
+                                </td></tr>
+                            </tfoot>
                         </table>
                     </div>
-
-                    {/* Pagination footer */}
-                    <Pagination totalItems={filteredDesignations.length} pageSize={10} itemLabel="designations" />
                 </div>
             )}
 

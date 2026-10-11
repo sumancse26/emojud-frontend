@@ -1,7 +1,5 @@
-import React, { useState } from 'react'
+import React, { useCallback, useState } from 'react'
 import {
-  Plus,
-  Search,
   ShoppingCart,
   Printer,
   FileText,
@@ -14,9 +12,13 @@ import {
   ScanBarcode,
   Trash2,
 } from 'lucide-react'
-import { SliderDrawer } from '@/shared'
-import { InvoiceTable } from '../components/InvoiceTable'
-import type { Invoice } from '../types/invoice.types'
+import { PageHeader, SliderDrawer, Skeleton } from '@/shared'
+import { useApp } from '@/app/providers'
+import { tokenStorage } from '@/shared/services/tokenStorage'
+import { useInvoice } from '../hooks/useInvoice'
+import { InvoicesPresenter } from './presenters/InvoicesPresenter'
+import type { CreateInvoicePayload, Invoice } from '../types/invoice.types'
+import type { User as AuthUser } from '@/app/modules/auth/types/auth.types'
 
 interface CartItem {
   id: string
@@ -44,6 +46,20 @@ const INITIAL_CART: CartItem[] = [
 ]
 
 export const InvoicesPage: React.FC = () => {
+  const { selectedBranch } = useApp()
+  const {
+    invoices,
+    isLoading,
+    refetch,
+    isError,
+    error,
+    getInvoiceDetails,
+    isDetailLoading,
+    detailError,
+    createInvoice,
+    isCreating,
+    createError,
+  } = useInvoice(selectedBranch)
   const [searchTerm, setSearchTerm] = useState('')
   const [isPOSDrawerOpen, setIsPOSDrawerOpen] = useState(false)
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null)
@@ -78,62 +94,67 @@ export const InvoicesPage: React.FC = () => {
   const discount = subtotal > 0 ? 100.0 : 0.0
   const grandTotal = Math.max(0, subtotal + tax - discount)
 
-  const handleConfirmAndPrint = () => {
-    alert(`Invoice Confirmed! Grand Total: ৳ ${grandTotal.toFixed(2)}. Sent to Thermal Printer!`)
-    setIsPOSDrawerOpen(false)
-  }
+  const handleConfirmAndPrint = useCallback(async () => {
+    const user = tokenStorage.getUser<AuthUser>()
+    const payload: CreateInvoicePayload = {
+      id: 1,
+      shop_id: Number(selectedBranch),
+      customer_id: 1,
+      invoice_date: new Date().toISOString().slice(0, 10),
+      total_amount: subtotal,
+      discount_amount: discount,
+      vat_amount: tax,
+      net_amount: grandTotal,
+      paid_amount: grandTotal,
+      due_amount: 0,
+      is_submit: 1,
+      user_id: Number(user?.id ?? 1),
+      products: cartItems.map((item) => ({
+        id: Number(item.id),
+        product_id: Number(item.id),
+        qty: item.quantity,
+        rate: item.unitPrice,
+        vat_amt: 0,
+        disc_amt: 0,
+        total_amount: item.unitPrice * item.quantity,
+      })),
+    }
 
-  const handleViewInvoice = (invoice: Invoice) => {
+    try {
+      await createInvoice(payload)
+      setIsPOSDrawerOpen(false)
+      setCartItems(INITIAL_CART)
+    } catch {
+      // The mutation error is exposed through createError for the UI.
+    }
+  }, [cartItems, createInvoice, discount, grandTotal, selectedBranch, subtotal, tax])
+
+  const handleViewInvoice = useCallback(async (invoice: Invoice) => {
     setSelectedInvoice(invoice)
     setIsDetailDrawerOpen(true)
-  }
+    try {
+      const detail = await getInvoiceDetails(invoice)
+      setSelectedInvoice(detail)
+    } catch {
+      // The detail error is rendered inside the drawer.
+    }
+  }, [getInvoiceDetails])
 
-  const handlePrintInvoice = (invoice: Invoice) => {
-    setSelectedInvoice(invoice)
-    setIsDetailDrawerOpen(true)
-  }
+  const handlePrintInvoice = handleViewInvoice
+  const handleOpenCreate = useCallback(() => setIsPOSDrawerOpen(true), [])
 
   return (
     <section className="space-y-6">
-      {/* Invoices Header */}
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">Sales Invoices</h2>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-            Customer billing records, point-of-sale checkouts, and receivables
-          </p>
-        </div>
-        <button
-          onClick={() => setIsPOSDrawerOpen(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold rounded-xl transition-all shadow-sm shadow-emerald-600/25 hover:shadow-emerald-500/30 shrink-0 cursor-pointer"
-        >
-          <Plus className="w-4 h-4" />
-          <span>New Invoice</span>
-        </button>
-      </div>
-
-      {/* Search & Filter Toolbar */}
-      <div className="flex items-center gap-3">
-        <div className="relative flex-1 max-w-sm">
-          <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-            <Search className="w-4 h-4" />
-          </span>
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search by invoice no, customer or phone…"
-            className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-[#0d1729] border border-slate-200/80 dark:border-slate-700/50 rounded-xl text-sm text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 dark:focus:border-emerald-500 transition-all font-medium"
-          />
-        </div>
-        <p className="text-sm text-slate-400 dark:text-slate-500 shrink-0">
-          Showing 1–10 of 480 invoices
-        </p>
-      </div>
-
-      {/* Invoice Table */}
-      <InvoiceTable
+      <InvoicesPresenter
+        invoices={invoices}
         searchTerm={searchTerm}
+        isLoading={isLoading}
+        isError={isError}
+        error={error}
+        createError={createError}
+        onSearchChange={setSearchTerm}
+        onOpenCreate={handleOpenCreate}
+        onRefetch={() => void refetch()}
         onViewInvoice={handleViewInvoice}
         onPrintInvoice={handlePrintInvoice}
       />
@@ -288,11 +309,12 @@ export const InvoicesPage: React.FC = () => {
               Discard & Close
             </button>
             <button
-              onClick={handleConfirmAndPrint}
+              onClick={() => void handleConfirmAndPrint()}
+              disabled={isCreating}
               className="w-2/3 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md shadow-emerald-600/30 flex items-center justify-center gap-1.5 cursor-pointer"
             >
               <Printer className="w-4 h-4" />
-              <span>Confirm & Print Bill (৳ {grandTotal.toFixed(2)})</span>
+              <span>{isCreating ? 'Saving Invoice...' : `Confirm & Print Bill (৳ ${grandTotal.toFixed(2)})`}</span>
             </button>
           </div>
         </SliderDrawer.Footer>
@@ -304,23 +326,45 @@ export const InvoicesPage: React.FC = () => {
         onClose={() => setIsDetailDrawerOpen(false)}
         width="max-w-xl"
       >
-        <SliderDrawer.Header onClose={() => setIsDetailDrawerOpen(false)}>
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-emerald-500 text-slate-950 flex items-center justify-center font-bold">
-              <FileText className="w-4 h-4" />
-            </div>
-            <div>
-              <h2 className="font-bold text-sm text-slate-900 dark:text-white">
-                Invoice Details
-              </h2>
-              <p className="text-[10px] font-mono text-slate-400">
-                {selectedInvoice?.invoiceNumber}
-              </p>
-            </div>
-          </div>
+        <SliderDrawer.Header onClose={() => setIsDetailDrawerOpen(false)} className="items-start">
+          <PageHeader variant="flat" withAccent={false} className="min-w-0 flex-1 py-0">
+            <PageHeader.Header
+              title={
+                <span className="flex items-center gap-2">
+                  <span className="w-8 h-8 rounded-xl bg-emerald-500 text-slate-950 flex items-center justify-center font-bold shrink-0">
+                    <FileText className="w-4 h-4" />
+                  </span>
+                  <span>Invoice Details</span>
+                </span>
+              }
+              description={selectedInvoice?.invoiceNumber ?? 'Invoice information'}
+            />
+            <PageHeader.Bottom>
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-slate-500 dark:text-slate-400">
+                <span>
+                  Customer:{' '}
+                  <strong className="text-slate-700 dark:text-slate-200">
+                    {selectedInvoice?.customerName ?? 'Loading...'}
+                  </strong>
+                </span>
+                <span>
+                  Issue date:{' '}
+                  <strong className="text-slate-700 dark:text-slate-200">
+                    {selectedInvoice?.issueDate ?? '—'}
+                  </strong>
+                </span>
+              </div>
+            </PageHeader.Bottom>
+          </PageHeader>
         </SliderDrawer.Header>
 
         <SliderDrawer.Body>
+          {isDetailLoading && <Skeleton.Table rows={4} columns={4} />}
+          {detailError && (
+            <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700 dark:border-rose-900/50 dark:bg-rose-950/20 dark:text-rose-300">
+              {detailError}
+            </div>
+          )}
           {selectedInvoice && (
             <div className="space-y-5 text-xs">
               {/* Customer & Meta Card */}

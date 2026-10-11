@@ -1,6 +1,6 @@
 import React from 'react';
 import { ShieldCheck, Plus, Edit3, Save, RefreshCw, AlertCircle, Loader2, Search } from 'lucide-react';
-import { SliderDrawer, FormField, inputClasses, PageHeader, Pagination, Skeleton, Dropdown } from '@/shared';
+import { SliderDrawer, FormField, inputClasses, PageHeader, Pagination, Skeleton, Dropdown, useTablePagination } from '@/shared';
 import type { RoleItem, CreateRolePayload } from '../../types/role.types';
 
 export interface RolesPresenterProps {
@@ -44,6 +44,7 @@ export const RolesPresenter: React.FC<RolesPresenterProps> = ({
     saveError,
     onRefetch
 }) => {
+    const { currentPage, pageSize, totalPages, paginatedItems, setCurrentPage, setPageSize } = useTablePagination(filteredRoles, 6);
     return (
         <section className="space-y-6">
             <PageHeader>
@@ -147,7 +148,7 @@ export const RolesPresenter: React.FC<RolesPresenterProps> = ({
             {/* Role Grid */}
             {!isLoading && !isError && filteredRoles.length > 0 && (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {filteredRoles.map((role) => (
+                    {paginatedItems.map((role) => (
                         <div
                             key={role.id}
                             className="bg-white dark:bg-[#080d1a] border border-slate-200/80 dark:border-slate-800/60 rounded-2xl p-5 shadow-xs space-y-3 hover:border-emerald-500/30 transition flex flex-col justify-between">
@@ -186,8 +187,13 @@ export const RolesPresenter: React.FC<RolesPresenterProps> = ({
             {/* Pagination */}
             {!isLoading && !isError && filteredRoles.length > 0 && (
                 <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={setCurrentPage}
                     totalItems={filteredRoles.length}
-                    pageSize={6}
+                    pageSize={pageSize}
+                    onPageSizeChange={setPageSize}
+                    showPageSizeSelector
                     itemLabel="roles"
                     className="rounded-2xl border border-slate-200/80 dark:border-slate-800/70 bg-white dark:bg-[#0a1020]"
                 />

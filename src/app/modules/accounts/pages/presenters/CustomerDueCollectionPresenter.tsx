@@ -1,6 +1,6 @@
 import React from 'react';
 import { Plus, Search, Edit3, Trash2, Save, HandCoins, Receipt, TrendingUp } from 'lucide-react';
-import { SliderDrawer, FormField, inputClasses, PageHeader, Pagination } from '@/shared';
+import { SliderDrawer, FormField, inputClasses, PageHeader, Pagination, useTablePagination } from '@/shared';
 import type { DueCollection, DueCollectionFormData } from '../CustomerDueCollectionPage';
 
 export interface CustomerDueCollectionPresenterProps {
@@ -36,6 +36,7 @@ export const CustomerDueCollectionPresenter: React.FC<CustomerDueCollectionPrese
     onSave,
     onDelete
 }) => {
+    const { currentPage, pageSize, totalPages, paginatedItems, setCurrentPage, setPageSize } = useTablePagination(filteredCollections);
     return (
         <section className="space-y-6">
             <PageHeader>
@@ -113,7 +114,7 @@ export const CustomerDueCollectionPresenter: React.FC<CustomerDueCollectionPrese
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
-                            {filteredCollections.map((c) => (
+                            {paginatedItems.map((c) => (
                                 <tr key={c.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-900/40 transition">
                                     <td className="px-5 py-3.5">
                                         <p className="font-mono font-bold text-slate-900 dark:text-white">{c.receiptNo}</p>
@@ -155,15 +156,13 @@ export const CustomerDueCollectionPresenter: React.FC<CustomerDueCollectionPrese
                                 </tr>
                             ))}
                         </tbody>
+                        <tfoot className="border-t border-slate-200/80 bg-slate-50/95 dark:border-slate-800/80 dark:bg-slate-900/60">
+                            <tr><td colSpan={8} className="p-0">
+                                <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} totalItems={filteredCollections.length} pageSize={pageSize} onPageSizeChange={setPageSize} showPageSizeSelector itemLabel="collections" pageFooter={false} className="border-0 bg-transparent shadow-none" />
+                            </td></tr>
+                        </tfoot>
                     </table>
                 </div>
-
-                {/* Pagination footer */}
-                <Pagination
-                    totalItems={filteredCollections.length}
-                    pageSize={10}
-                    itemLabel="collections"
-                />
             </div>
 
             {/* Slider Drawer */}

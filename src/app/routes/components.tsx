@@ -62,10 +62,10 @@ export const InvoicesPage = lazy(() =>
 
 // 6. Stock Management Module
 export const PurchasesPage = lazy(() =>
-    import('../modules/purchases/pages/PurchasesPage').then((m) => ({ default: m.PurchasesPage }))
+    import('../modules/stock-management/purchases/pages/PurchasesPage').then((m) => ({ default: m.PurchasesPage }))
 );
 export const StockSummaryPage = lazy(() =>
-    import('../modules/stock/pages/StockSummaryPage').then((m) => ({ default: m.StockSummaryPage }))
+    import('../modules/stock-management/stock/pages/StockSummaryPage').then((m) => ({ default: m.StockSummaryPage }))
 );
 
 // 7. Accounts Module

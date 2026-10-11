@@ -13,7 +13,7 @@ import {
     RefreshCw,
     Sparkles
 } from 'lucide-react';
-import { SliderDrawer, FormField, inputClasses, selectClasses, Pagination, Skeleton } from '@/shared';
+import { SliderDrawer, FormField, inputClasses, selectClasses, Pagination, Skeleton, useTablePagination } from '@/shared';
 import PageHeader from '@/shared/components/PageHeader/PageHeader';
 import type { ShopItem, CreateUpdateShopPayload } from '../../types/shop.types';
 
@@ -61,6 +61,7 @@ export const ShopPresenter: React.FC<ShopPresenterProps> = (props) => {
         saveError,
         onRefetch
     } = props;
+    const { currentPage, pageSize, totalPages, paginatedItems, setCurrentPage, setPageSize } = useTablePagination(filteredShops, 6);
 
     return (
         <section className="space-y-6">
@@ -160,7 +161,7 @@ export const ShopPresenter: React.FC<ShopPresenterProps> = (props) => {
             {/* Outlets Grid */}
             {!isLoading && filteredShops.length > 0 && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {filteredShops.map((shop) => {
+                    {paginatedItems.map((shop) => {
                         const isActive = shop.status === 1 || shop.status === undefined;
                         return (
                             <div
@@ -248,8 +249,13 @@ export const ShopPresenter: React.FC<ShopPresenterProps> = (props) => {
             {/* Outlets Grid Pagination */}
             {!isLoading && filteredShops.length > 0 && (
                 <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={setCurrentPage}
                     totalItems={filteredShops.length}
-                    pageSize={6}
+                    pageSize={pageSize}
+                    onPageSizeChange={setPageSize}
+                    showPageSizeSelector
                     itemLabel="shops"
                     className="rounded-2xl border border-slate-200/80 dark:border-slate-800/70 bg-white dark:bg-[#0a1020]"
                 />

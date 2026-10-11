@@ -1,5 +1,6 @@
 import React from 'react';
 import { Printer, Download } from 'lucide-react';
+import { Pagination, useTablePagination } from '@/shared';
 
 export const SupplierDueReportPage: React.FC = () => {
     const data = [
@@ -32,6 +33,7 @@ export const SupplierDueReportPage: React.FC = () => {
         }
     ];
 
+    const { currentPage, pageSize, totalPages, paginatedItems, setCurrentPage, setPageSize } = useTablePagination(data);
     return (
         <section className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -71,7 +73,7 @@ export const SupplierDueReportPage: React.FC = () => {
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
-                        {data.map((s, idx) => (
+                        {paginatedItems.map((s, idx) => (
                             <tr key={idx} className="hover:bg-slate-50/60 dark:hover:bg-slate-900/40 transition">
                                 <td className="px-5 py-3.5 font-bold text-slate-900 dark:text-white">
                                     <p>{s.supplier}</p>
@@ -95,6 +97,7 @@ export const SupplierDueReportPage: React.FC = () => {
                             </tr>
                         ))}
                     </tbody>
+                    <tfoot><tr><td colSpan={7} className="p-0"><Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} totalItems={data.length} pageSize={pageSize} onPageSizeChange={setPageSize} showPageSizeSelector itemLabel="suppliers" pageFooter={false} /></td></tr></tfoot>
                 </table>
             </div>
         </section>

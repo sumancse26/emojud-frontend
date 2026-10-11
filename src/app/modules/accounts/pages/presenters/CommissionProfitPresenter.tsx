@@ -1,6 +1,6 @@
 import React from 'react';
 import { DollarSign, Search, Edit3, Trash2, Save, Award, Users, Calendar } from 'lucide-react';
-import { SliderDrawer, FormField, inputClasses, PageHeader, Pagination } from '@/shared';
+import { SliderDrawer, FormField, inputClasses, PageHeader, Pagination, useTablePagination } from '@/shared';
 import type { CommissionRecord, CommissionProfitFormData } from '../CommissionProfitPage';
 
 export interface CommissionProfitPresenterProps {
@@ -36,6 +36,7 @@ export const CommissionProfitPresenter: React.FC<CommissionProfitPresenterProps>
     onSave,
     onDelete
 }) => {
+    const { currentPage, pageSize, totalPages, paginatedItems, setCurrentPage, setPageSize } = useTablePagination(filteredCommissions);
     const eligibleCount = commissions.filter((c) => c.payoutStatus === 'Eligible').length;
 
     return (
@@ -115,7 +116,7 @@ export const CommissionProfitPresenter: React.FC<CommissionProfitPresenterProps>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
-                            {filteredCommissions.map((c) => (
+                            {paginatedItems.map((c) => (
                                 <tr key={c.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-900/40 transition">
                                     <td className="px-5 py-3.5">
                                         <p className="font-bold text-slate-900 dark:text-white">{c.repName}</p>
@@ -165,15 +166,13 @@ export const CommissionProfitPresenter: React.FC<CommissionProfitPresenterProps>
                                 </tr>
                             ))}
                         </tbody>
+                        <tfoot className="border-t border-slate-200/80 bg-slate-50/95 dark:border-slate-800/80 dark:bg-slate-900/60">
+                            <tr><td colSpan={8} className="p-0">
+                                <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} totalItems={filteredCommissions.length} pageSize={pageSize} onPageSizeChange={setPageSize} showPageSizeSelector itemLabel="commission records" pageFooter={false} className="border-0 bg-transparent shadow-none" />
+                            </td></tr>
+                        </tfoot>
                     </table>
                 </div>
-
-                {/* Pagination footer */}
-                <Pagination
-                    totalItems={filteredCommissions.length}
-                    pageSize={10}
-                    itemLabel="commission records"
-                />
             </div>
 
             {/* Slider Drawer */}

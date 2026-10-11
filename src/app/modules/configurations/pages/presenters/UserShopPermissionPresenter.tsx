@@ -1,6 +1,6 @@
 import React from 'react';
 import { Save, User, Store, RefreshCw, AlertCircle, Loader2 } from 'lucide-react';
-import { PageHeader, Pagination, Skeleton } from '@/shared';
+import { PageHeader, Pagination, Skeleton, useTablePagination } from '@/shared';
 import type { UserPermissionMatrixRow } from '../UserShopPermissionPage';
 import type { ShopItem } from '../../types/shop.types';
 
@@ -29,6 +29,7 @@ export const UserShopPermissionPresenter: React.FC<UserShopPermissionPresenterPr
     onSave,
     onRefetch
 }) => {
+    const { currentPage, pageSize, totalPages, paginatedItems, setCurrentPage, setPageSize } = useTablePagination(userRows);
     return (
         <section className="space-y-6">
             <PageHeader>
@@ -132,7 +133,7 @@ export const UserShopPermissionPresenter: React.FC<UserShopPermissionPresenterPr
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
-                                {userRows.map((user) => (
+                                    {paginatedItems.map((user) => (
                                     <tr
                                         key={user.userId}
                                         className="hover:bg-slate-50/60 dark:hover:bg-slate-900/40 transition">
@@ -176,15 +177,13 @@ export const UserShopPermissionPresenter: React.FC<UserShopPermissionPresenterPr
                                     </tr>
                                 ))}
                             </tbody>
+                            <tfoot className="border-t border-slate-200/80 bg-slate-50/95 dark:border-slate-800/80 dark:bg-slate-900/60">
+                                <tr><td colSpan={3} className="p-0">
+                                    <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} totalItems={userRows.length} pageSize={pageSize} onPageSizeChange={setPageSize} showPageSizeSelector itemLabel="operators" pageFooter={false} className="border-0 bg-transparent shadow-none" />
+                                </td></tr>
+                            </tfoot>
                         </table>
                     </div>
-
-                    {/* Pagination footer */}
-                    <Pagination
-                        totalItems={userRows.length}
-                        pageSize={10}
-                        itemLabel="operators"
-                    />
                 </div>
             )}
         </section>

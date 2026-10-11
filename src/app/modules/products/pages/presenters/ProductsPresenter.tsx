@@ -20,6 +20,7 @@ import {
     Pagination,
     Skeleton,
     Dropdown,
+    useTablePagination,
     type DropdownOption
 } from '@/shared';
 import type { ProductItem, CreateUpdateProductPayload } from '../../types/product.types';
@@ -82,6 +83,7 @@ export const ProductsPresenter: React.FC<ProductsPresenterProps> = ({
     unitOptions,
     isLoadingCategories
 }) => {
+    const { currentPage, pageSize, totalPages, paginatedItems, setCurrentPage, setPageSize } = useTablePagination(filteredProducts);
     return (
         <section className="space-y-6">
             <PageHeader>
@@ -217,7 +219,7 @@ export const ProductsPresenter: React.FC<ProductsPresenterProps> = ({
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
-                                {filteredProducts.map((p) => {
+                                {paginatedItems.map((p) => {
                                     const stockNum =
                                         p.avail_stock !== undefined && p.avail_stock !== null && p.avail_stock !== '—'
                                             ? Number(p.avail_stock)
@@ -333,15 +335,13 @@ export const ProductsPresenter: React.FC<ProductsPresenterProps> = ({
                                     );
                                 })}
                             </tbody>
+                            <tfoot className="border-t border-slate-200/80 bg-slate-50/95 dark:border-slate-800/80 dark:bg-slate-900/60">
+                                <tr><td colSpan={8} className="p-0">
+                                    <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} totalItems={filteredProducts.length} pageSize={pageSize} onPageSizeChange={setPageSize} showPageSizeSelector itemLabel="products" pageFooter={false} className="border-0 bg-transparent shadow-none" />
+                                </td></tr>
+                            </tfoot>
                         </table>
                     </div>
-
-                    {/* Pagination */}
-                    <Pagination
-                        totalItems={filteredProducts.length}
-                        pageSize={10}
-                        itemLabel="products"
-                    />
                 </div>
             )}
 

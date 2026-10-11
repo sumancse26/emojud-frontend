@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Printer, Download, Calendar } from 'lucide-react';
-import { Pagination } from '@/shared';
+import { Pagination, useTablePagination } from '@/shared';
 
 export const DailySalesReportPage: React.FC = () => {
     const [selectedDate, setSelectedDate] = useState('2026-09-17');
@@ -51,6 +51,7 @@ export const DailySalesReportPage: React.FC = () => {
             net: 5267.5
         }
     ];
+    const { currentPage, pageSize, totalPages, paginatedItems, setCurrentPage, setPageSize } = useTablePagination(salesData);
 
     const totalGross = salesData.reduce((acc, curr) => acc + curr.amount, 0);
     const totalVat = salesData.reduce((acc, curr) => acc + curr.vat, 0);
@@ -136,7 +137,7 @@ export const DailySalesReportPage: React.FC = () => {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
-                            {salesData.map((s, idx) => (
+                            {paginatedItems.map((s, idx) => (
                                 <tr key={idx} className="hover:bg-slate-50/60 dark:hover:bg-slate-900/40 transition">
                                     <td className="px-5 py-3.5">
                                         <p className="font-mono font-bold text-slate-900 dark:text-white">{s.invoice}</p>
@@ -166,15 +167,13 @@ export const DailySalesReportPage: React.FC = () => {
                                 </tr>
                             ))}
                         </tbody>
+                        <tfoot className="border-t border-slate-200/80 bg-slate-50/95 dark:border-slate-800/80 dark:bg-slate-900/60">
+                            <tr><td colSpan={8} className="p-0">
+                                <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} totalItems={salesData.length} pageSize={pageSize} onPageSizeChange={setPageSize} showPageSizeSelector itemLabel="invoices" pageFooter={false} className="border-0 bg-transparent shadow-none" />
+                            </td></tr>
+                        </tfoot>
                     </table>
                 </div>
-
-                {/* Pagination footer */}
-                <Pagination
-                    totalItems={salesData.length}
-                    pageSize={10}
-                    itemLabel="invoices"
-                />
             </div>
         </section>
     );

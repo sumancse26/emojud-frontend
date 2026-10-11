@@ -17,8 +17,14 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                 {/* Main Content Viewport with Fixed Header & Independently Scrollable Page Body */}
                 <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
                     <Header />
-                    <main className="flex-1 min-h-0 overflow-y-auto p-4 lg:p-6 space-y-6 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800">
-                        {children || <Outlet />}
+                    <main className="relative flex flex-1 min-h-0 flex-col overflow-y-auto p-4 lg:p-6 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800">
+                        <div className="flex-1 space-y-6">
+                            {children || <Outlet />}
+                        </div>
+                        <div
+                            id="page-pagination-footer"
+                            className="sticky bottom-0 z-30 mt-6 bg-slate-100/95 shadow-[0_-8px_20px_rgba(15,23,42,0.06)] backdrop-blur-md dark:bg-[#060d17]/95"
+                        />
                     </main>
                 </div>
             </div>

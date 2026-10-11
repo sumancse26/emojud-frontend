@@ -100,6 +100,8 @@ export const AppRouter: React.FC = () => {
 
                     {/* 6. Stock Management Module */}
                     <Route path={ROUTES.STOCK_MANAGEMENT.PURCHASE} element={<PurchasesPage />} />
+                    <Route path={ROUTES.STOCK_MANAGEMENT.PURCHASE_LEGACY} element={<PurchasesPage />} />
+                    <Route path={ROUTES.STOCK_MANAGEMENT.PURCHASE_MODULE} element={<PurchasesPage />} />
                     <Route
                         path={ROUTES.STOCK_MANAGEMENT.STOCK_SUMMARY}
                         element={<StockSummaryPage />}

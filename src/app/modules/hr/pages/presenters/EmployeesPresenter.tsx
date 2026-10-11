@@ -15,6 +15,7 @@ import {
     inputClasses,
     PageHeader,
     Pagination,
+    useTablePagination,
     Skeleton,
     Dropdown
 } from '@/shared';
@@ -113,6 +114,7 @@ export const EmployeesPresenter: React.FC<EmployeesPresenterProps> = ({
     isLoadingDepts = false,
     isLoadingDesignations = false
 }) => {
+    const { currentPage, pageSize, totalPages, paginatedItems, setCurrentPage, setPageSize } = useTablePagination(filteredEmployees);
     const deptNames = [...new Set(employees.map((e) => e.department?.department_name).filter(Boolean))];
 
     const filterDeptOptions: DropdownOption[] = [
@@ -239,7 +241,7 @@ export const EmployeesPresenter: React.FC<EmployeesPresenterProps> = ({
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
-                                {filteredEmployees.map((emp) => (
+                                {paginatedItems.map((emp) => (
                                     <tr
                                         key={emp.id}
                                         className="hover:bg-slate-50/60 dark:hover:bg-slate-900/40 transition">
@@ -294,11 +296,13 @@ export const EmployeesPresenter: React.FC<EmployeesPresenterProps> = ({
                                     </tr>
                                 ))}
                             </tbody>
+                            <tfoot className="border-t border-slate-200/80 bg-slate-50/95 dark:border-slate-800/80 dark:bg-slate-900/60">
+                                <tr><td colSpan={7} className="p-0">
+                                    <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} totalItems={filteredEmployees.length} pageSize={pageSize} onPageSizeChange={setPageSize} showPageSizeSelector itemLabel="employees" pageFooter={false} className="border-0 bg-transparent shadow-none" />
+                                </td></tr>
+                            </tfoot>
                         </table>
                     </div>
-
-                    {/* Pagination footer */}
-                    <Pagination totalItems={filteredEmployees.length} pageSize={10} itemLabel="employees" />
                 </div>
             )}
 

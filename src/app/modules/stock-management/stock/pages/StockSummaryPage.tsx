@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Search, Download, Plus, Boxes, Save } from 'lucide-react';
-import { SliderDrawer, FormField, inputClasses, selectClasses, Pagination } from '@/shared';
+import { SliderDrawer, FormField, inputClasses, selectClasses, Pagination, useTablePagination } from '@/shared';
 
 interface StockSummaryItem {
     id: string;
@@ -107,6 +107,7 @@ export const StockSummaryPage: React.FC = () => {
         return matchesSearch && matchesStatus;
     });
 
+    const { currentPage, pageSize, totalPages, paginatedItems, setCurrentPage, setPageSize } = useTablePagination(filtered);
     const totalValuation = MOCK_STOCK.reduce((acc, item) => acc + item.inStock * item.unitCost, 0);
 
     const handleSaveEntry = () => {
@@ -205,7 +206,7 @@ export const StockSummaryPage: React.FC = () => {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
-                            {filtered.map((item) => {
+                            {paginatedItems.map((item) => {
                                 const lineValuation = item.inStock * item.unitCost;
 
                                 return (
@@ -247,15 +248,13 @@ export const StockSummaryPage: React.FC = () => {
                                 );
                             })}
                         </tbody>
+                        <tfoot className="border-t border-slate-200/80 bg-slate-50/95 dark:border-slate-800/80 dark:bg-slate-900/60">
+                            <tr><td colSpan={7} className="p-0">
+                                <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} totalItems={filtered.length} pageSize={pageSize} onPageSizeChange={setPageSize} showPageSizeSelector itemLabel="inventory lines" pageFooter={false} className="border-0 bg-transparent shadow-none" />
+                            </td></tr>
+                        </tfoot>
                     </table>
                 </div>
-
-                {/* Pagination footer */}
-                <Pagination
-                    totalItems={filtered.length}
-                    pageSize={10}
-                    itemLabel="inventory lines"
-                />
             </div>
 
             {/* SliderDrawer modal for Stock Entry */}

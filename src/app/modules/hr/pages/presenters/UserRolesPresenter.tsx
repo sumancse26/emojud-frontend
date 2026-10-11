@@ -1,6 +1,6 @@
 import React from 'react';
 import { Shield, Plus, Edit3, Trash2, Save, Search } from 'lucide-react';
-import { SliderDrawer, FormField, inputClasses, PageHeader, Pagination } from '@/shared';
+import { SliderDrawer, FormField, inputClasses, PageHeader, Pagination, useTablePagination } from '@/shared';
 import type { UserRoleAssignment, UserRoleFormData } from '../UserRolesPage';
 
 export interface UserRolesPresenterProps {
@@ -33,6 +33,7 @@ export const UserRolesPresenter: React.FC<UserRolesPresenterProps> = ({
     onSave,
     onDelete
 }) => {
+    const { currentPage, pageSize, totalPages, paginatedItems, setCurrentPage, setPageSize } = useTablePagination(filteredUserRoles);
     return (
         <section className="space-y-6">
             <PageHeader>
@@ -77,7 +78,7 @@ export const UserRolesPresenter: React.FC<UserRolesPresenterProps> = ({
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
-                            {filteredUserRoles.map((u) => (
+                            {paginatedItems.map((u) => (
                                 <tr key={u.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-900/40 transition">
                                     <td className="px-5 py-3.5">
                                         <p className="font-bold text-slate-900 dark:text-white">{u.userName}</p>
@@ -125,15 +126,13 @@ export const UserRolesPresenter: React.FC<UserRolesPresenterProps> = ({
                                 </tr>
                             ))}
                         </tbody>
+                        <tfoot className="border-t border-slate-200/80 bg-slate-50/95 dark:border-slate-800/80 dark:bg-slate-900/60">
+                            <tr><td colSpan={6} className="p-0">
+                                <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} totalItems={filteredUserRoles.length} pageSize={pageSize} onPageSizeChange={setPageSize} showPageSizeSelector itemLabel="user assignments" pageFooter={false} className="border-0 bg-transparent shadow-none" />
+                            </td></tr>
+                        </tfoot>
                     </table>
                 </div>
-
-                {/* Pagination footer */}
-                <Pagination
-                    totalItems={filteredUserRoles.length}
-                    pageSize={10}
-                    itemLabel="user assignments"
-                />
             </div>
 
             {/* Slider Drawer */}

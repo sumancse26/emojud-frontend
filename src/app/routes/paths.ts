@@ -35,7 +35,10 @@ export const ROUTES = {
         INVOICES: '/feature/invoices'
     },
     STOCK_MANAGEMENT: {
+        ROOT: '/feature/stock-management',
         PURCHASE: '/feature/purchases',
+        PURCHASE_LEGACY: '/feature/purchase',
+        PURCHASE_MODULE: '/feature/stock-management/purchase',
         STOCK_SUMMARY: '/feature/stock-summary'
     },
     ACCOUNTS: {

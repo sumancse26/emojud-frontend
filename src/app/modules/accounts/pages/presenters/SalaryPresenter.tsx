@@ -1,6 +1,6 @@
 import React from 'react';
 import { DollarSign, Edit3, Trash2, Save, Search, Coins, CheckCircle2, Calendar } from 'lucide-react';
-import { SliderDrawer, FormField, inputClasses, PageHeader, Pagination } from '@/shared';
+import { SliderDrawer, FormField, inputClasses, PageHeader, Pagination, useTablePagination } from '@/shared';
 import type { SalaryRecord, SalaryFormData } from '../SalaryPage';
 
 export interface SalaryPresenterProps {
@@ -36,6 +36,7 @@ export const SalaryPresenter: React.FC<SalaryPresenterProps> = ({
     onSave,
     onDelete
 }) => {
+    const { currentPage, pageSize, totalPages, paginatedItems, setCurrentPage, setPageSize } = useTablePagination(filteredSalaries);
     const paidCount = salaries.filter((s) => s.paymentStatus === 'Paid').length;
 
     return (
@@ -113,7 +114,7 @@ export const SalaryPresenter: React.FC<SalaryPresenterProps> = ({
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
-                            {filteredSalaries.map((s) => (
+                            {paginatedItems.map((s) => (
                                 <tr key={s.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-900/40 transition">
                                     <td className="px-5 py-3.5">
                                         <p className="font-bold text-slate-900 dark:text-white">{s.empName}</p>
@@ -160,15 +161,13 @@ export const SalaryPresenter: React.FC<SalaryPresenterProps> = ({
                                 </tr>
                             ))}
                         </tbody>
+                        <tfoot className="border-t border-slate-200/80 bg-slate-50/95 dark:border-slate-800/80 dark:bg-slate-900/60">
+                            <tr><td colSpan={8} className="p-0">
+                                <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} totalItems={filteredSalaries.length} pageSize={pageSize} onPageSizeChange={setPageSize} showPageSizeSelector itemLabel="payroll slips" pageFooter={false} className="border-0 bg-transparent shadow-none" />
+                            </td></tr>
+                        </tfoot>
                     </table>
                 </div>
-
-                {/* Pagination footer */}
-                <Pagination
-                    totalItems={filteredSalaries.length}
-                    pageSize={10}
-                    itemLabel="payroll slips"
-                />
             </div>
 
             {/* Slider Drawer */}

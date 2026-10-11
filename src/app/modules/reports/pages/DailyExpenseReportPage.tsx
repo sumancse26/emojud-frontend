@@ -1,5 +1,6 @@
 import React from 'react';
 import { Printer, Download } from 'lucide-react';
+import { Pagination, useTablePagination } from '@/shared';
 
 export const DailyExpenseReportPage: React.FC = () => {
     const data = [
@@ -34,6 +35,7 @@ export const DailyExpenseReportPage: React.FC = () => {
 
     const total = data.reduce((acc, curr) => acc + curr.amount, 0);
 
+    const { currentPage, pageSize, totalPages, paginatedItems, setCurrentPage, setPageSize } = useTablePagination(data);
     return (
         <section className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -73,7 +75,7 @@ export const DailyExpenseReportPage: React.FC = () => {
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
-                        {data.map((row, idx) => (
+                        {paginatedItems.map((row, idx) => (
                             <tr key={idx} className="hover:bg-slate-50/60 dark:hover:bg-slate-900/40 transition">
                                 <td className="px-5 py-3.5 font-mono text-slate-400 font-bold">
                                     {row.voucher}
@@ -97,6 +99,7 @@ export const DailyExpenseReportPage: React.FC = () => {
                         ))}
                     </tbody>
                     <tfoot className="border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40 font-bold">
+                        <tr><td colSpan={7} className="p-0"><Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} totalItems={data.length} pageSize={pageSize} onPageSizeChange={setPageSize} showPageSizeSelector itemLabel="expense records" pageFooter={false} /></td></tr>
                         <tr>
                             <td colSpan={5} className="px-5 py-3 text-right text-slate-600 dark:text-slate-300">
                                 Total Daily Overhead:

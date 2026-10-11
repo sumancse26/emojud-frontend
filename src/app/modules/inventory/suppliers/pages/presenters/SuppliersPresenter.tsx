@@ -18,7 +18,8 @@ import {
     inputClasses,
     PageHeader,
     Pagination,
-    Skeleton
+    Skeleton,
+    useTablePagination
 } from '@/shared';
 import type { SupplierItem, CreateUpdateSupplierPayload } from '../../types/supplier.types';
 
@@ -66,6 +67,7 @@ export const SuppliersPresenter: React.FC<SuppliersPresenterProps> = ({
     saveError,
     onRefetch
 }) => {
+    const { currentPage, pageSize, totalPages, paginatedItems, setCurrentPage, setPageSize } = useTablePagination(filteredSuppliers);
     return (
         <section className="space-y-6">
             <PageHeader>
@@ -173,7 +175,7 @@ export const SuppliersPresenter: React.FC<SuppliersPresenterProps> = ({
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
-                                {filteredSuppliers.map((supplier) => {
+                                {paginatedItems.map((supplier) => {
                                     const dueAmount = Number(supplier.previous_due || 0);
 
                                     return (
@@ -255,15 +257,13 @@ export const SuppliersPresenter: React.FC<SuppliersPresenterProps> = ({
                                     );
                                 })}
                             </tbody>
+                            <tfoot className="border-t border-slate-200/80 bg-slate-50/95 dark:border-slate-800/80 dark:bg-slate-900/60">
+                                <tr><td colSpan={6} className="p-0">
+                                    <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} totalItems={filteredSuppliers.length} pageSize={pageSize} onPageSizeChange={setPageSize} showPageSizeSelector itemLabel="suppliers" pageFooter={false} className="border-0 bg-transparent shadow-none" />
+                                </td></tr>
+                            </tfoot>
                         </table>
                     </div>
-
-                    {/* Pagination */}
-                    <Pagination
-                        totalItems={filteredSuppliers.length}
-                        pageSize={10}
-                        itemLabel="suppliers"
-                    />
                 </div>
             )}
 

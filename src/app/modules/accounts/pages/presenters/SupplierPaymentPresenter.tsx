@@ -1,6 +1,6 @@
 import React from 'react';
 import { Plus, Search, Edit3, Trash2, Save, BadgeDollarSign, FileCheck2, Clock } from 'lucide-react';
-import { SliderDrawer, FormField, inputClasses, PageHeader, Pagination } from '@/shared';
+import { SliderDrawer, FormField, inputClasses, PageHeader, Pagination, useTablePagination } from '@/shared';
 import type { SupplierPayment, SupplierPaymentFormData } from '../SupplierPaymentPage';
 
 export interface SupplierPaymentPresenterProps {
@@ -36,6 +36,7 @@ export const SupplierPaymentPresenter: React.FC<SupplierPaymentPresenterProps> =
     onSave,
     onDelete
 }) => {
+    const { currentPage, pageSize, totalPages, paginatedItems, setCurrentPage, setPageSize } = useTablePagination(filteredPayments);
     const pendingCount = payments.filter((p) => p.status === 'Pending Clearance').length;
 
     return (
@@ -114,7 +115,7 @@ export const SupplierPaymentPresenter: React.FC<SupplierPaymentPresenterProps> =
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
-                            {filteredPayments.map((p) => (
+                            {paginatedItems.map((p) => (
                                 <tr key={p.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-900/40 transition">
                                     <td className="px-5 py-3.5">
                                         <p className="font-mono font-bold text-slate-900 dark:text-white">{p.paymentNo}</p>
@@ -159,15 +160,13 @@ export const SupplierPaymentPresenter: React.FC<SupplierPaymentPresenterProps> =
                                 </tr>
                             ))}
                         </tbody>
+                        <tfoot className="border-t border-slate-200/80 bg-slate-50/95 dark:border-slate-800/80 dark:bg-slate-900/60">
+                            <tr><td colSpan={7} className="p-0">
+                                <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} totalItems={filteredPayments.length} pageSize={pageSize} onPageSizeChange={setPageSize} showPageSizeSelector itemLabel="payments" pageFooter={false} className="border-0 bg-transparent shadow-none" />
+                            </td></tr>
+                        </tfoot>
                     </table>
                 </div>
-
-                {/* Pagination footer */}
-                <Pagination
-                    totalItems={filteredPayments.length}
-                    pageSize={10}
-                    itemLabel="payments"
-                />
             </div>
 
             {/* Slider Drawer */}

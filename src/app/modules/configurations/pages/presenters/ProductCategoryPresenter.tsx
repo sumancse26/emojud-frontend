@@ -11,7 +11,7 @@ import {
     RefreshCw,
     FolderTree
 } from 'lucide-react';
-import { SliderDrawer, FormField, inputClasses, PageHeader, Pagination, Skeleton } from '@/shared';
+import { SliderDrawer, FormField, inputClasses, PageHeader, Pagination, Skeleton, useTablePagination } from '@/shared';
 import type { ProductCategoryItem, CreateUpdateCategoryPayload } from '../../types/category.types';
 
 export interface ProductCategoryPresenterProps {
@@ -61,6 +61,7 @@ export const ProductCategoryPresenter: React.FC<ProductCategoryPresenterProps> =
     saveError,
     onRefetch
 }) => {
+    const { currentPage, pageSize, totalPages, paginatedItems, setCurrentPage, setPageSize } = useTablePagination(filteredCategories, 6);
     const isSubcategoryMode = Boolean(formData.parent_category_id || parentCategoryForSub);
 
     return (
@@ -162,7 +163,7 @@ export const ProductCategoryPresenter: React.FC<ProductCategoryPresenterProps> =
             {/* Category Cards Grid */}
             {!isLoading && filteredCategories.length > 0 && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    {filteredCategories.map((cat) => {
+                    {paginatedItems.map((cat) => {
                         const subs = cat.subcategories || [];
                         return (
                             <div
@@ -241,8 +242,13 @@ export const ProductCategoryPresenter: React.FC<ProductCategoryPresenterProps> =
             {/* Pagination Footer */}
             {!isLoading && filteredCategories.length > 0 && (
                 <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={setCurrentPage}
                     totalItems={filteredCategories.length}
-                    pageSize={6}
+                    pageSize={pageSize}
+                    onPageSizeChange={setPageSize}
+                    showPageSizeSelector
                     itemLabel="categories"
                     className="rounded-2xl border border-slate-200/80 dark:border-slate-800/70 bg-white dark:bg-[#0a1020]"
                 />

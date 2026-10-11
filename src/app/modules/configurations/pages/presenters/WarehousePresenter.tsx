@@ -12,7 +12,7 @@ import {
     AlertCircle,
     RefreshCw
 } from 'lucide-react';
-import { SliderDrawer, FormField, inputClasses, selectClasses, PageHeader, Pagination, Skeleton } from '@/shared';
+import { SliderDrawer, FormField, inputClasses, selectClasses, PageHeader, Pagination, Skeleton, useTablePagination } from '@/shared';
 import type { WarehouseItem, CreateUpdateWarehousePayload } from '../../types/warehouse.types';
 import type { ShopItem } from '../../types/shop.types';
 
@@ -61,6 +61,7 @@ export const WarehousePresenter: React.FC<WarehousePresenterProps> = ({
     saveError,
     onRefetch
 }) => {
+    const { currentPage, pageSize, totalPages, paginatedItems, setCurrentPage, setPageSize } = useTablePagination(filteredWarehouses, 6);
     return (
         <section className="space-y-6">
             <PageHeader>
@@ -160,7 +161,7 @@ export const WarehousePresenter: React.FC<WarehousePresenterProps> = ({
             {/* Storage Summary Cards */}
             {!isLoading && filteredWarehouses.length > 0 && (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                    {filteredWarehouses.map((wh) => (
+                    {paginatedItems.map((wh) => (
                         <div
                             key={wh.id}
                             className="bg-white dark:bg-[#080d1a] border border-slate-200/80 dark:border-slate-800/60 rounded-2xl p-5 shadow-xs space-y-4 hover:border-slate-300 dark:hover:border-slate-700 transition flex flex-col justify-between">
@@ -228,8 +229,13 @@ export const WarehousePresenter: React.FC<WarehousePresenterProps> = ({
             {/* Pagination Footer */}
             {!isLoading && filteredWarehouses.length > 0 && (
                 <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={setCurrentPage}
                     totalItems={filteredWarehouses.length}
-                    pageSize={6}
+                    pageSize={pageSize}
+                    onPageSizeChange={setPageSize}
+                    showPageSizeSelector
                     itemLabel="warehouses"
                     className="rounded-2xl border border-slate-200/80 dark:border-slate-800/70 bg-white dark:bg-[#0a1020]"
                 />

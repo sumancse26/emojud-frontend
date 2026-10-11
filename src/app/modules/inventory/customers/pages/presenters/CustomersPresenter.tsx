@@ -15,7 +15,7 @@ import {
     PhoneCall,
     X
 } from 'lucide-react';
-import { SliderDrawer, FormField, inputClasses, PageHeader, Pagination, Skeleton } from '@/shared';
+import { SliderDrawer, FormField, inputClasses, PageHeader, Pagination, Skeleton, useTablePagination } from '@/shared';
 import type { CustomerItem, CreateUpdateCustomerPayload, CustomerDetailResponse } from '../../types/customer.types';
 
 export interface CustomersPresenterProps {
@@ -65,10 +65,7 @@ export const CustomersPresenter: React.FC<CustomersPresenterProps> = ({
     onLookupPhone
 }) => {
     // ─── Pagination ───────────────────────────────────────────────────
-    const [currentPage, setCurrentPage] = useState(1);
-    const pageSize = 10;
-    const totalPages = Math.max(1, Math.ceil(filteredCustomers.length / pageSize));
-    const paginatedCustomers = filteredCustomers.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+    const { currentPage, pageSize, totalPages, paginatedItems: paginatedCustomers, setCurrentPage, setPageSize } = useTablePagination(filteredCustomers);
 
     // ─── Phone Lookup Modal State ─────────────────────────────────────
     const [isLookupOpen, setIsLookupOpen] = useState(false);
@@ -336,15 +333,28 @@ export const CustomersPresenter: React.FC<CustomersPresenterProps> = ({
                                 })
                             )}
                         </tbody>
+                        {filteredCustomers.length > pageSize && (
+                            <tfoot className="border-t border-slate-200/80 bg-slate-50/95 dark:border-slate-800/80 dark:bg-slate-900/60">
+                                <tr>
+                                    <td colSpan={6} className="p-0">
+                                        <Pagination
+                                            currentPage={currentPage}
+                                            totalPages={totalPages}
+                                            totalItems={filteredCustomers.length}
+                                            pageSize={pageSize}
+                                            itemLabel="customers"
+                                            onPageChange={setCurrentPage}
+                                            onPageSizeChange={setPageSize}
+                                            showPageSizeSelector
+                                            pageFooter={false}
+                                            className="border-0 bg-transparent shadow-none"
+                                        />
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        )}
                     </table>
                 </div>
-
-                {/* Pagination */}
-                {filteredCustomers.length > pageSize && (
-                    <div className="p-4 border-t border-slate-100 dark:border-slate-800 flex justify-end">
-                        <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
-                    </div>
-                )}
             </div>
 
             {/* SliderDrawer for Register / Edit Customer */}
