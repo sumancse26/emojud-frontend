@@ -7,6 +7,7 @@ import { TopProducts } from '../../components/TopProducts';
 import { RecentInvoicesTable } from '../../components/RecentInvoicesTable';
 import { RecentPurchasesTable } from '../../components/RecentPurchasesTable';
 import { LowStockAlert } from '../../components/LowStockAlert';
+import { DashboardWidgetBoundary, DashboardWidgetSkeleton } from '../../components/DashboardWidgetBoundary';
 import type { DashboardData } from '../../types/dashboard.types';
 
 export interface DashboardPresenterProps {
@@ -63,26 +64,54 @@ export const DashboardPresenter: React.FC<DashboardPresenterProps> = React.memo(
             )}
 
             {/* 1. Stats Cards (Sales, Purchase, Expense, Profit, Stock, Due, Employees) */}
-            <StatsGrid
-                summary={data.summary}
-                monthlyTotals={data.monthlySummary}
-            />
+            <DashboardWidgetBoundary>
+                <React.Suspense fallback={<DashboardWidgetSkeleton />}>
+                    <StatsGrid
+                        summary={data.summary}
+                        monthlyTotals={data.monthlySummary}
+                    />
+                </React.Suspense>
+            </DashboardWidgetBoundary>
 
             {/* 2. Charts Row (Daily Trends, Payment Breakdown, Top Products) */}
             <div className="grid gap-5 xl:grid-cols-[1fr_260px_240px]">
-                <RevenueChart items={data.overview?.overview_chart} />
-                <PaymentMethodBreakdown items={data.overview?.payment_method_summary} />
-                <TopProducts products={data.overview?.top_selling_products} />
+                <DashboardWidgetBoundary>
+                    <React.Suspense fallback={<DashboardWidgetSkeleton />}>
+                        <RevenueChart items={data.overview?.overview_chart} />
+                    </React.Suspense>
+                </DashboardWidgetBoundary>
+                <DashboardWidgetBoundary>
+                    <React.Suspense fallback={<DashboardWidgetSkeleton />}>
+                        <PaymentMethodBreakdown items={data.overview?.payment_method_summary} />
+                    </React.Suspense>
+                </DashboardWidgetBoundary>
+                <DashboardWidgetBoundary>
+                    <React.Suspense fallback={<DashboardWidgetSkeleton />}>
+                        <TopProducts products={data.overview?.top_selling_products} />
+                    </React.Suspense>
+                </DashboardWidgetBoundary>
             </div>
 
             {/* 3. Tables Row (Recent Invoices, Recent POs, Stock Alerts) */}
             <div className="grid gap-5 lg:grid-cols-3">
-                <RecentInvoicesTable invoices={data.recentOperations?.recent_invoice} />
-                <RecentPurchasesTable purchases={data.recentOperations?.recent_purchase} />
-                <LowStockAlert
-                    items={data.stockOverview?.low_stock_alert}
-                    summary={data.stockOverview?.stock_summary}
-                />
+                <DashboardWidgetBoundary>
+                    <React.Suspense fallback={<DashboardWidgetSkeleton />}>
+                        <RecentInvoicesTable invoices={data.recentOperations?.recent_invoice} />
+                    </React.Suspense>
+                </DashboardWidgetBoundary>
+                <DashboardWidgetBoundary>
+                    <React.Suspense fallback={<DashboardWidgetSkeleton />}>
+                        <RecentPurchasesTable purchases={data.recentOperations?.recent_purchase} />
+                    </React.Suspense>
+                </DashboardWidgetBoundary>
+                <DashboardWidgetBoundary>
+                    <React.Suspense fallback={<DashboardWidgetSkeleton />}>
+                        <LowStockAlert
+                            items={data.stockOverview?.low_stock_alert}
+                            summary={data.stockOverview?.stock_summary}
+                        />
+                    </React.Suspense>
+                </DashboardWidgetBoundary>
             </div>
         </section>
     );

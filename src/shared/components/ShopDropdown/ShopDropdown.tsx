@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { Store, ChevronDown, Loader2, Search, Check, MapPin } from 'lucide-react';
 import { useShop } from '@/app/modules/configurations/hooks/useShop';
 import type { ShopItem } from '@/app/modules/configurations/types/shop.types';
@@ -54,8 +55,15 @@ export const ShopDropdown: React.FC<ShopDropdownProps> = ({
     const [searchQuery, setSearchQuery] = useState('');
     const [highlightedIndex, setHighlightedIndex] = useState(-1);
     const dropdownRef = useRef<HTMLDivElement>(null);
+    const panelRef = useRef<HTMLDivElement>(null);
     const searchInputRef = useRef<HTMLInputElement>(null);
     const listRef = useRef<HTMLDivElement>(null);
+    const [panelPosition, setPanelPosition] = useState<{
+        top?: number;
+        bottom?: number;
+        left: number;
+        width: number;
+    } | null>(null);
 
     // Fetch shops internally if not supplied externally
     const shouldFetch = !externalShops;
@@ -95,7 +103,11 @@ export const ShopDropdown: React.FC<ShopDropdownProps> = ({
     // Close dropdown on outside click
     useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+            if (
+                dropdownRef.current &&
+                !dropdownRef.current.contains(e.target as Node) &&
+                !panelRef.current?.contains(e.target as Node)
+            ) {
                 setIsOpen(false);
                 setSearchQuery('');
                 setHighlightedIndex(-1);
@@ -104,6 +116,38 @@ export const ShopDropdown: React.FC<ShopDropdownProps> = ({
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
+
+    // Render the menu outside ancestor stacking/overflow contexts.
+    useEffect(() => {
+        if (!isOpen) {
+            setPanelPosition(null);
+            return;
+        }
+
+        const updatePanelPosition = () => {
+            const trigger = dropdownRef.current?.getBoundingClientRect();
+            if (!trigger) return;
+
+            const openAbove = window.innerHeight - trigger.bottom < 280 && trigger.top > 280;
+            const left = Math.max(8, Math.min(trigger.left, window.innerWidth - trigger.width - 8));
+
+            setPanelPosition({
+                left,
+                width: trigger.width,
+                ...(openAbove
+                    ? { bottom: window.innerHeight - trigger.top + 6 }
+                    : { top: trigger.bottom + 6 })
+            });
+        };
+
+        updatePanelPosition();
+        window.addEventListener('resize', updatePanelPosition);
+        window.addEventListener('scroll', updatePanelPosition, true);
+        return () => {
+            window.removeEventListener('resize', updatePanelPosition);
+            window.removeEventListener('scroll', updatePanelPosition, true);
+        };
+    }, [isOpen]);
 
     // Focus search input when dropdown opens
     useEffect(() => {
@@ -263,9 +307,18 @@ export const ShopDropdown: React.FC<ShopDropdownProps> = ({
             </button>
 
             {/* Dropdown Panel */}
-            {isOpen && (
+            {isOpen && panelPosition && createPortal(
                 <div
-                    className={`absolute left-0 right-0 mt-1.5 z-[100] origin-top animate-in fade-in slide-in-from-top-1 duration-150
+                    ref={panelRef}
+                    style={{
+                        position: 'fixed',
+                        top: panelPosition.top,
+                        bottom: panelPosition.bottom,
+                        left: panelPosition.left,
+                        width: panelPosition.width,
+                        zIndex: 10000
+                    }}
+                    className={`origin-top animate-in fade-in slide-in-from-top-1 duration-150
                         bg-white dark:bg-[#0f172a] border border-slate-200/80 dark:border-slate-700/60
                         rounded-xl shadow-xl shadow-slate-200/50 dark:shadow-black/40
                         overflow-hidden`}
@@ -386,7 +439,8 @@ export const ShopDropdown: React.FC<ShopDropdownProps> = ({
                             </p>
                         </div>
                     )}
-                </div>
+                </div>,
+                document.body
             )}
         </div>
     );
