@@ -27,6 +27,8 @@ export interface Invoice {
 
 export interface InvoiceListParams {
   shop_id: string | number
+  from_date?: string
+  to_date?: string
 }
 
 export interface InvoiceListItem {
