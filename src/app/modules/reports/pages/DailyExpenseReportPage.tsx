@@ -35,7 +35,7 @@ export const DailyExpenseReportPage: React.FC = () => {
     return (
         <section className="print-report-page daily-sales-report space-y-5">
             <div className="daily-sales-report-header rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs dark:border-slate-800/60 dark:bg-[#080d1a] lg:p-6">
-                <div className="report-letterhead"><div className="report-brand print-report-logo" aria-label="NIPRO JMI Pharma"><div className="report-brand-mark">N</div><div><div className="report-brand-name">NIPRO</div><div className="report-brand-subtitle">JMI Pharma</div></div></div></div>
+                <div className="report-letterhead"><div className="report-brand print-report-logo" aria-label="Emojud"><div className="report-brand-mark">E</div><div><div className="report-brand-name">Emojud</div><div className="report-brand-subtitle">Report</div></div></div></div>
                 <div className="report-title-row"><h1>Daily Expense Report</h1><p>{rangeLabel}</p></div>
                 <form onSubmit={(event) => void generate(event)} className="mt-5 rounded-xl border border-slate-200 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-900/40 print-controls">
                     <div className="grid gap-3 md:grid-cols-[1fr_1fr_auto] md:items-end">

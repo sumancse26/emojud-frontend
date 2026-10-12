@@ -26,11 +26,11 @@ export const ReportDisplayShell: React.FC<ReportDisplayShellProps> = ({ title, m
 
     return (
         <div className={`display-report-header space-y-4 ${isGenerated ? 'display-report-generated' : ''}`}>
-            <div className="display-report-print-brand report-brand print-report-logo" aria-label="NIPRO JMI Pharma">
-                <div className="report-brand-mark">N</div>
+            <div className="display-report-print-brand report-brand print-report-logo" aria-label="Emojud">
+                <div className="report-brand-mark">E</div>
                 <div>
-                    <div className="report-brand-name">NIPRO</div>
-                    <div className="report-brand-subtitle">JMI Pharma</div>
+                    <div className="report-brand-name">Emojud</div>
+                    <div className="report-brand-subtitle">Report</div>
                 </div>
             </div>
             <div className="display-report-print-title">

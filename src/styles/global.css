@@ -360,9 +360,9 @@
     color: #0f172a;
   }
 
-  .report-brand { display: flex; align-items: center; gap: 0.45rem; color: #07549a; }
+  .report-brand { display: flex; align-items: center; gap: 0.45rem; color: #059669; }
   .print-report-logo { display: none; }
-  .report-brand-mark { display: grid; width: 2.35rem; height: 2.35rem; place-items: center; border-radius: 0.45rem; background: #07549a; color: white; font-size: 1.85rem; font-weight: 900; line-height: 1; font-style: italic; }
+  .report-brand-mark { display: grid; width: 2.35rem; height: 2.35rem; place-items: center; border-radius: 0.45rem; background: #059669; color: white; font-size: 1.85rem; font-weight: 900; line-height: 1; font-style: italic; }
   .report-brand-name { font-size: 1.35rem; font-weight: 900; letter-spacing: -0.06em; line-height: 0.9; }
   .report-brand-subtitle { margin-top: 0.2rem; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.02em; }
   .report-title-row { margin-top: 0.75rem; text-align: center; }

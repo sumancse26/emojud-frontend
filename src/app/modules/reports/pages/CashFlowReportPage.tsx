@@ -57,11 +57,11 @@ export const CashFlowReportPage: React.FC = () => {
         <section className="print-report-page daily-sales-report space-y-5">
             <div className="daily-sales-report-header rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs dark:border-slate-800/60 dark:bg-[#080d1a] lg:p-6">
                 <div className="report-letterhead">
-                    <div className="report-brand print-report-logo" aria-label="NIPRO JMI Pharma">
-                        <div className="report-brand-mark">N</div>
+                    <div className="report-brand print-report-logo" aria-label="Emojud">
+                        <div className="report-brand-mark">E</div>
                         <div>
-                            <div className="report-brand-name">NIPRO</div>
-                            <div className="report-brand-subtitle">JMI Pharma</div>
+                            <div className="report-brand-name">Emojud</div>
+                            <div className="report-brand-subtitle">Report</div>
                         </div>
                     </div>
                 </div>
