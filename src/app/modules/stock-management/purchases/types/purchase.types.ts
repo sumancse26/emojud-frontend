@@ -84,6 +84,7 @@ export interface PurchaseProductPayload {
   retail_rate: number
   sales_rate: number
   total_amount: number
+  unit_id?: number | null
 }
 
 export interface CreatePurchasePayload {
@@ -104,6 +105,48 @@ export interface CreatePurchasePayload {
   is_confirm: number
   user_id: number
   products: PurchaseProductPayload[]
+}
+
+export interface PurchaseWarehouseItem {
+  id: string | number
+  warehouse_name: string
+  display_code?: string | null
+  short_code?: string | null
+  address?: string | null
+  shop_id?: string | number
+}
+
+export interface PurchaseSupplierItem {
+  id: string | number
+  supplier_code?: string
+  supplier_name: string
+  phone?: string | null
+  email?: string | null
+  address?: string | null
+  previous_due?: string | number
+}
+
+export interface PurchaseProductItem {
+  id: string | number
+  product_code: string
+  product_name: string
+  purchase_rate: string | number
+  retail_rate: string | number
+  sales_rate: string | number
+  avail_stock?: string | number
+  units?: { id: string | number; lookup_code?: string; lookup_value?: string } | null
+}
+
+export interface PurchaseLookupItem {
+  id: string | number
+  lookup_code: string
+  lookup_value: string
+}
+
+export interface PurchaseLookupResponse {
+  success?: boolean
+  response_code?: number
+  data?: Record<string, PurchaseLookupItem[]> | PurchaseLookupItem[] | unknown
 }
 
 export interface PurchaseItem {

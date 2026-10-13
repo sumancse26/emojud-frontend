@@ -6,6 +6,10 @@ import type {
   PurchaseDetailResponse,
   PurchaseListItem,
   PurchaseListParams,
+  PurchaseWarehouseItem,
+  PurchaseSupplierItem,
+  PurchaseProductItem,
+  PurchaseLookupResponse,
 } from '../types/purchase.types'
 
 export const purchaseService = {
@@ -19,6 +23,26 @@ export const purchaseService = {
 
   createPurchase(payload: CreatePurchasePayload): Promise<PurchaseApiResponse<PurchaseDetailResponse>> {
     return axios.post<PurchaseApiResponse<PurchaseDetailResponse>>('/api/purchase', payload)
+  },
+
+  /** GET /api/warehouse */
+  getWarehouses(): Promise<PurchaseWarehouseItem[] | PurchaseApiResponse<PurchaseWarehouseItem[]>> {
+    return axios.get<PurchaseWarehouseItem[] | PurchaseApiResponse<PurchaseWarehouseItem[]>>('/api/warehouse')
+  },
+
+  /** GET /api/suppliers?shop_id=... */
+  getSuppliers(params: { shop_id: string | number }): Promise<PurchaseSupplierItem[] | PurchaseApiResponse<PurchaseSupplierItem[]>> {
+    return axios.get<PurchaseSupplierItem[] | PurchaseApiResponse<PurchaseSupplierItem[]>>('/api/suppliers', params as Record<string, unknown>)
+  },
+
+  /** GET /api/products?shop_id=... */
+  getProducts(params: { shop_id: string | number }): Promise<PurchaseProductItem[] | PurchaseApiResponse<PurchaseProductItem[]>> {
+    return axios.get<PurchaseProductItem[] | PurchaseApiResponse<PurchaseProductItem[]>>('/api/products', params as Record<string, unknown>)
+  },
+
+  /** GET /api/common/lookup?ids=[4] */
+  getQuantityLookups(): Promise<PurchaseLookupResponse> {
+    return axios.get<PurchaseLookupResponse>('/api/common/lookup', { ids: '[4]' })
   },
 }
 

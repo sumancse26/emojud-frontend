@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Printer, Eye, Pencil, Lock } from 'lucide-react';
+import { Printer, Eye, Pencil } from 'lucide-react';
 import { Pagination, useTablePagination } from '@/shared';
 import type { Invoice } from '../types/invoice.types';
 

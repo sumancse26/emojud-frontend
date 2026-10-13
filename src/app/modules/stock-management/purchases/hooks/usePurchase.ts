@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useApi } from '@/shared/hooks/useApi'
 import { clearGetCache } from '@/shared/services/apiClient'
 import { purchaseService } from '../services/purchaseService'
@@ -9,6 +9,10 @@ import type {
   PurchaseItem,
   PurchaseListItem,
   PurchaseListParams,
+  PurchaseWarehouseItem,
+  PurchaseSupplierItem,
+  PurchaseProductItem,
+  PurchaseLookupItem,
 } from '../types/purchase.types'
 
 const numberValue = (value: string | number | undefined) => Number(value ?? 0)
@@ -36,6 +40,48 @@ function normalizePurchase(item: PurchaseListItem | PurchaseDetailResponse['mast
   }
 }
 
+function extractArray<T>(res: unknown): T[] {
+  if (!res) return []
+  if (Array.isArray(res)) return res
+  if (typeof res === 'object' && res !== null && 'data' in res && Array.isArray((res as { data: unknown }).data)) {
+    return (res as { data: T[] }).data
+  }
+  return []
+}
+
+export function normalizeQuantityLookups(raw: unknown): PurchaseLookupItem[] {
+  if (!raw) return []
+  const data = (typeof raw === 'object' && raw !== null && 'data' in raw) ? (raw as { data: unknown }).data : raw
+
+  if (Array.isArray(data)) {
+    return data.map((item) => ({
+      id: String(item.id),
+      lookup_code: String(item.lookup_code ?? ''),
+      lookup_value: String(item.lookup_value ?? item.lookup_code ?? item.id),
+    }))
+  }
+
+  if (data && typeof data === 'object') {
+    const record = data as Record<string, unknown>
+    const arrayCandidate =
+      record['4'] ??
+      record['unit'] ??
+      record['units'] ??
+      record['quantity'] ??
+      record['quantities'] ??
+      Object.values(record).find(Array.isArray)
+    if (Array.isArray(arrayCandidate)) {
+      return arrayCandidate.map((item) => ({
+        id: String(item.id),
+        lookup_code: String(item.lookup_code ?? ''),
+        lookup_value: String(item.lookup_value ?? item.lookup_code ?? item.id),
+      }))
+    }
+  }
+
+  return []
+}
+
 export interface UsePurchaseReturn {
   purchases: PurchaseItem[]
   isLoading: boolean
@@ -49,6 +95,15 @@ export interface UsePurchaseReturn {
   createPurchase: (payload: CreatePurchasePayload) => Promise<PurchaseApiResponse<PurchaseDetailResponse>>
   isCreating: boolean
   createError: string | null
+
+  // Master dropdown lists
+  warehouses: PurchaseWarehouseItem[]
+  suppliers: PurchaseSupplierItem[]
+  products: PurchaseProductItem[]
+  quantityUnits: PurchaseLookupItem[]
+  isLoadingMasters: boolean
+  mastersError: string | null
+  fetchMasters: () => Promise<void>
 }
 
 export function usePurchase(shopId: string | number): UsePurchaseReturn {
@@ -57,8 +112,40 @@ export function usePurchase(shopId: string | number): UsePurchaseReturn {
     immediate: true,
     initialParams: params,
   })
-  const detailRequest = useApi<PurchaseDetailResponse, { id: string; shop_id: string | number }> (purchaseService.getPurchaseDetails, { suspense: false })
+  const detailRequest = useApi<PurchaseDetailResponse, { id: string; shop_id: string | number }>(purchaseService.getPurchaseDetails, { suspense: false })
   const createRequest = useApi<PurchaseApiResponse<PurchaseDetailResponse>, CreatePurchasePayload>(purchaseService.createPurchase)
+
+  const [warehouses, setWarehouses] = useState<PurchaseWarehouseItem[]>([])
+  const [suppliers, setSuppliers] = useState<PurchaseSupplierItem[]>([])
+  const [products, setProducts] = useState<PurchaseProductItem[]>([])
+  const [quantityUnits, setQuantityUnits] = useState<PurchaseLookupItem[]>([])
+  const [isLoadingMasters, setIsLoadingMasters] = useState(false)
+  const [mastersError, setMastersError] = useState<string | null>(null)
+
+  const fetchMasters = useCallback(async () => {
+    setIsLoadingMasters(true)
+    setMastersError(null)
+    try {
+      const [warehouseRes, supplierRes, productRes, lookupRes] = await Promise.all([
+        purchaseService.getWarehouses().catch(() => []),
+        purchaseService.getSuppliers({ shop_id: shopId }).catch(() => []),
+        purchaseService.getProducts({ shop_id: shopId }).catch(() => []),
+        purchaseService.getQuantityLookups().catch(() => null),
+      ])
+      setWarehouses(extractArray<PurchaseWarehouseItem>(warehouseRes))
+      setSuppliers(extractArray<PurchaseSupplierItem>(supplierRes))
+      setProducts(extractArray<PurchaseProductItem>(productRes))
+      setQuantityUnits(normalizeQuantityLookups(lookupRes))
+    } catch (err) {
+      setMastersError(err instanceof Error ? err.message : 'Failed to load purchase options')
+    } finally {
+      setIsLoadingMasters(false)
+    }
+  }, [shopId])
+
+  useEffect(() => {
+    void fetchMasters()
+  }, [fetchMasters])
 
   const purchases = useMemo(() => listRequest.data?.data?.map((item) => normalizePurchase(item)) ?? [], [listRequest.data])
   const getPurchaseDetails = useCallback(async (purchase: PurchaseItem) => {
@@ -88,6 +175,13 @@ export function usePurchase(shopId: string | number): UsePurchaseReturn {
     createPurchase,
     isCreating: createRequest.isLoading,
     createError: createRequest.error,
+    warehouses,
+    suppliers,
+    products,
+    quantityUnits,
+    isLoadingMasters,
+    mastersError,
+    fetchMasters,
   }
 }
 
