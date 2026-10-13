@@ -16,6 +16,7 @@ export interface InvoicesPresenterProps {
   onRefetch: () => void
   onViewInvoice: (invoice: Invoice) => void
   onPrintInvoice: (invoice: Invoice) => void
+  onEditInvoice?: (invoice: Invoice) => void
 }
 
 export const InvoicesPresenter: React.FC<InvoicesPresenterProps> = React.memo(({
@@ -30,6 +31,7 @@ export const InvoicesPresenter: React.FC<InvoicesPresenterProps> = React.memo(({
   onRefetch,
   onViewInvoice,
   onPrintInvoice,
+  onEditInvoice,
 }) => (
   <>
     <PageHeader>
@@ -101,6 +103,7 @@ export const InvoicesPresenter: React.FC<InvoicesPresenterProps> = React.memo(({
         searchTerm={searchTerm}
         onViewInvoice={onViewInvoice}
         onPrintInvoice={onPrintInvoice}
+        onEditInvoice={onEditInvoice}
       />
     )}
   </>
