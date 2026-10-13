@@ -4,14 +4,24 @@ import { clearGetCache } from '@/shared/services/apiClient'
 import { stockService } from '../services/stockService'
 import type { StockApiResponse, StockDetailItem, StockItem, StockListItem, StockListParams } from '../types/stock.types'
 
-const toNumber = (value: string | number | undefined) => Number(value ?? 0)
+const toNumber = (value: string | number | undefined | null) => Number(value ?? 0)
+
 const normalizeStock = (item: StockListItem): StockItem => {
-  const stock = item.prod_stock?.[0]
+  const prodStock = Array.isArray(item.prod_stock) ? item.prod_stock[0] : item.prod_stock
+  const currentStock = item.available_stock !== undefined && item.available_stock !== null
+    ? toNumber(item.available_stock)
+    : toNumber(prodStock?.current_stock)
+
   return {
-    id: String(item.id), productCode: item.product_code, productName: item.product_name,
-    category: item.category?.category_name ?? '—', brand: item.brand?.lookup_value ?? item.brand?.lookup_code ?? '—',
-    unit: item.units?.lookup_value ?? item.units?.lookup_code ?? '—', currentStock: toNumber(stock?.current_stock),
-    stockDate: stock?.stock_date,
+    id: String(item.id),
+    productCode: item.product_code,
+    productName: item.product_name,
+    category: item.category?.category_name ?? '—',
+    brand: item.brand?.lookup_value ?? item.brand?.lookup_code ?? '—',
+    unit: item.units?.lookup_value ?? item.units?.lookup_code ?? '—',
+    currentStock,
+    availableStock: item.available_stock !== undefined && item.available_stock !== null ? toNumber(item.available_stock) : undefined,
+    stockDate: prodStock?.stock_date,
   }
 }
 

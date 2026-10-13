@@ -11,7 +11,7 @@ export interface ProductLookupRef {
 }
 
 export interface ProductItem {
-    id: string;
+    id: string | number;
     product_code: string;
     product_name: string;
     barcode?: string | null;
@@ -32,7 +32,7 @@ export interface ProductItem {
 }
 
 export interface ShopWiseProductItem {
-    id: string;
+    id: string | number;
     product_code: string;
     product_name: string;
     purchase_rate: string | number;
@@ -43,20 +43,20 @@ export interface ShopWiseProductItem {
 }
 
 export interface CreateUpdateProductPayload {
-    id?: number | string;
+    id?: number | string | null;
     product_name: string;
     product_code: string;
-    specifications?: string;
-    barcode?: string;
-    category_id?: number | string;
-    sub_category_id?: number | string;
-    brand_id?: number | string;
-    unit_id?: number | string;
+    specifications?: string | null;
+    barcode?: string | null;
+    category_id?: number | string | null;
+    sub_category_id?: number | string | null;
+    brand_id?: number | string | null;
+    unit_id?: number | string | null;
     purchase_rate: number | string;
     retail_rate: number | string;
     sales_rate: number | string;
     min_stock_qty?: number | string;
-    image?: number | string;
+    image?: number | string | null;
     is_batch_wise: number;
     is_expire_wise: number;
     status: number;
@@ -70,6 +70,21 @@ export interface ProductListParams {
     [key: string]: unknown;
 }
 
+export interface ProductCategoryEntry {
+    id: string | number;
+    category_name: string;
+    parent_category_id?: string | number | null;
+    display_code?: string | null;
+    short_code?: string | null;
+}
+
+export interface ProductLookupItem {
+    id: string | number;
+    lookup_code: string;
+    lookup_value: string;
+    lookup_type_id?: string | number;
+}
+
 export interface ProductApiResponse<T> {
     success?: boolean;
     response_code?: number;
@@ -79,4 +94,10 @@ export interface ProductApiResponse<T> {
 
 export type ProductListResponse = ProductItem[] | ProductApiResponse<ProductItem[]>;
 export type ShopWiseProductListResponse = ShopWiseProductItem[] | ProductApiResponse<ShopWiseProductItem[]>;
+export type ProductCategoryResponse = ProductCategoryEntry[] | ProductApiResponse<ProductCategoryEntry[]>;
+export type ProductCommonLookupResponse =
+    | Record<string, ProductLookupItem[]>
+    | ProductLookupItem[]
+    | ProductApiResponse<Record<string, ProductLookupItem[]> | ProductLookupItem[]>
+    | unknown;
 export type ProductMutationResponse = ProductItem | ProductApiResponse<ProductItem>;

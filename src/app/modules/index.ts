@@ -8,3 +8,4 @@ export * from './hr';
 export * from './stock-management/stock';
 export * from './accounts';
 export * from './inventory';
+export type { ShopWiseProductItem } from './products';

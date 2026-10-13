@@ -1,11 +1,10 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useApp } from '@/app/providers';
 import { useToast } from '@/shared/components/Toast';
 import { useProduct } from '../hooks/useProduct';
-import { useCategory } from '@/app/modules/configurations/hooks/useCategory';
 import { ProductsPresenter } from './presenters/ProductsPresenter';
 import type { DropdownOption } from '@/shared';
-import type { ProductItem, CreateUpdateProductPayload } from '../types/product.types';
+import type { ProductItem, CreateUpdateProductPayload, ProductCategoryEntry } from '../types/product.types';
 
 const defaultFormState: CreateUpdateProductPayload = {
     product_name: '',
@@ -20,7 +19,7 @@ const defaultFormState: CreateUpdateProductPayload = {
     retail_rate: '',
     sales_rate: '',
     min_stock_qty: 10,
-    image: '',
+    image: null,
     is_batch_wise: 0,
     is_expire_wise: 0,
     status: 1
@@ -40,11 +39,17 @@ export const ProductsPage: React.FC = () => {
     const {
         products,
         shopWiseProducts,
+        categories,
+        brands,
+        units,
         isLoading,
+        isLoadingMasters,
         isError,
         error,
         refetch,
         refetchShopWise,
+        fetchMasters,
+        fetchSubCategories,
         createOrUpdateProduct,
         isSaving,
         saveError
@@ -53,20 +58,14 @@ export const ProductsPage: React.FC = () => {
         initialParams: productParams
     });
 
-    // ─── Category Hook ────────────────────────────────────────────────
-    const {
-        categories,
-        isLoading: isLoadingCategories,
-        fetchSubCategories
-    } = useCategory({ immediate: true, loadSubcategories: false });
-
     // ─── Local UI States ──────────────────────────────────────────────
     const [searchQuery, setSearchQuery] = useState('');
     const [activeTab, setActiveTab] = useState<'all' | 'shopWise'>('all');
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [editingProduct, setEditingProduct] = useState<ProductItem | null>(null);
     const [formState, setFormState] = useState<CreateUpdateProductPayload>(defaultFormState);
-    const [subCategoriesList, setSubCategoriesList] = useState<{ id: string | number; category_name: string }[]>([]);
+    const [subCategoriesList, setSubCategoriesList] = useState<ProductCategoryEntry[]>([]);
+    const [isLoadingSubCategories, setIsLoadingSubCategories] = useState(false);
 
     // ─── Fetch Subcategories on Category Change ───────────────────────
     useEffect(() => {
@@ -76,6 +75,7 @@ export const ProductsPage: React.FC = () => {
         }
 
         let isMounted = true;
+        setIsLoadingSubCategories(true);
         fetchSubCategories(formState.category_id)
             .then((subs) => {
                 if (isMounted) {
@@ -85,6 +85,11 @@ export const ProductsPage: React.FC = () => {
             .catch(() => {
                 if (isMounted) {
                     setSubCategoriesList([]);
+                }
+            })
+            .finally(() => {
+                if (isMounted) {
+                    setIsLoadingSubCategories(false);
                 }
             });
 
@@ -98,62 +103,39 @@ export const ProductsPage: React.FC = () => {
         return categories.map((c) => ({
             value: String(c.id),
             label: c.category_name,
-            subLabel: c.display_code
+            subLabel: c.display_code ? String(c.display_code) : undefined
         }));
     }, [categories]);
 
     const subCategoryOptions = useMemo<DropdownOption[]>(() => {
         return subCategoriesList.map((s) => ({
             value: String(s.id),
-            label: s.category_name
+            label: s.category_name,
+            subLabel: s.display_code ? String(s.display_code) : undefined
         }));
     }, [subCategoriesList]);
 
-    // Collect Brands & Units dynamically from products with fallbacks
     const brandOptions = useMemo<DropdownOption[]>(() => {
-        const map = new Map<string, string>();
-        products.forEach((p) => {
-            if (p.brand?.id && p.brand?.lookup_value) {
-                map.set(String(p.brand.id), p.brand.lookup_value);
-            }
-        });
-        if (map.size === 0) {
-            // default standard brand choices if none in product list yet
-            return [
-                { value: '1', label: 'General / No Brand' },
-                { value: '12', label: 'Vivo' },
-                { value: '13', label: 'Samsung' },
-                { value: '14', label: 'Infinix' },
-                { value: '15', label: 'Apple' }
-            ];
-        }
-        return Array.from(map.entries()).map(([value, label]) => ({ value, label }));
-    }, [products]);
+        return brands.map((b) => ({
+            value: String(b.id),
+            label: b.lookup_value,
+            subLabel: b.lookup_code !== b.lookup_value ? b.lookup_code : undefined
+        }));
+    }, [brands]);
 
     const unitOptions = useMemo<DropdownOption[]>(() => {
-        const map = new Map<string, string>();
-        products.forEach((p) => {
-            if (p.units?.id && p.units?.lookup_value) {
-                map.set(String(p.units.id), p.units.lookup_value);
-            }
-        });
-        if (map.size === 0) {
-            return [
-                { value: '17', label: 'PCS (Pieces)' },
-                { value: '18', label: 'BOX (Boxes)' },
-                { value: '19', label: 'KG (Kilograms)' },
-                { value: '20', label: 'PACK (Packs)' }
-            ];
-        }
-        return Array.from(map.entries()).map(([value, label]) => ({ value, label }));
-    }, [products]);
+        return units.map((u) => ({
+            value: String(u.id),
+            label: u.lookup_value,
+            subLabel: u.lookup_code !== u.lookup_value ? u.lookup_code : undefined
+        }));
+    }, [units]);
 
     // ─── Filtering based on tab and search query ──────────────────────
     const filteredProducts = useMemo(() => {
         let baseList: ProductItem[] = [];
 
         if (activeTab === 'shopWise') {
-            // Map shop-wise product items into ProductItem structure
             baseList = shopWiseProducts.map((sp) => ({
                 id: sp.id,
                 product_code: sp.product_code,
@@ -182,49 +164,71 @@ export const ProductsPage: React.FC = () => {
     }, [products, shopWiseProducts, activeTab, searchQuery]);
 
     // ─── Handlers ─────────────────────────────────────────────────────
-    const handleOpenCreate = () => {
+    const handleOpenCreate = useCallback(() => {
         setEditingProduct(null);
         setFormState({
             ...defaultFormState,
             product_code: `PRD-${Date.now().toString().slice(-5)}`
         });
+        setSubCategoriesList([]);
+        void fetchMasters();
         setIsDrawerOpen(true);
-    };
+    }, [fetchMasters]);
 
-    const handleOpenEdit = (item: ProductItem) => {
-        setEditingProduct(item);
-        setFormState({
-            id: Number(item.id),
-            product_name: item.product_name,
-            product_code: item.product_code,
-            specifications: item.specifications ?? '',
-            barcode: item.barcode ?? '',
-            category_id: item.category?.id ? Number(item.category.id) : '',
-            sub_category_id: (item as Record<string, unknown>).sub_category_id
+    const handleOpenEdit = useCallback(
+        (item: ProductItem) => {
+            setEditingProduct(item);
+            void fetchMasters();
+
+            const catId = item.category?.id ? Number(item.category.id) : '';
+            const subCatId = (item as Record<string, unknown>).sub_category_id
                 ? Number((item as Record<string, unknown>).sub_category_id)
-                : '',
-            brand_id: item.brand?.id ? Number(item.brand.id) : '',
-            unit_id: item.units?.id ? Number(item.units.id) : '',
-            purchase_rate: item.purchase_rate ?? '',
-            retail_rate: item.retail_rate ?? '',
-            sales_rate: item.sales_rate ?? '',
-            min_stock_qty: item.min_stock_qty ?? 10,
-            image: (item as Record<string, unknown>).image ? Number((item as Record<string, unknown>).image) : '',
-            is_batch_wise: Number(item.is_batch_wise ?? 0),
-            is_expire_wise: Number(item.is_expire_wise ?? 0),
-            status: item.status !== undefined ? Number(item.status) : 1
-        });
-        setIsDrawerOpen(true);
-    };
+                : '';
+
+            setFormState({
+                id: Number(item.id),
+                product_name: item.product_name,
+                product_code: item.product_code,
+                specifications: item.specifications ?? '',
+                barcode: item.barcode ?? '',
+                category_id: catId,
+                sub_category_id: subCatId,
+                brand_id: item.brand?.id ? Number(item.brand.id) : '',
+                unit_id: item.units?.id ? Number(item.units.id) : '',
+                purchase_rate: item.purchase_rate ?? '',
+                retail_rate: item.retail_rate ?? '',
+                sales_rate: item.sales_rate ?? '',
+                min_stock_qty: item.min_stock_qty ?? 10,
+                image: (item as Record<string, unknown>).image ? Number((item as Record<string, unknown>).image) : null,
+                is_batch_wise: Number(item.is_batch_wise ?? 0),
+                is_expire_wise: Number(item.is_expire_wise ?? 0),
+                status: item.status !== undefined ? Number(item.status) : 1
+            });
+
+            if (catId) {
+                fetchSubCategories(catId)
+                    .then((subs) => setSubCategoriesList(subs || []))
+                    .catch(() => setSubCategoriesList([]));
+            } else {
+                setSubCategoriesList([]);
+            }
+
+            setIsDrawerOpen(true);
+        },
+        [fetchMasters, fetchSubCategories]
+    );
 
     const handleFormFieldChange = <K extends keyof CreateUpdateProductPayload>(
         field: K,
         value: CreateUpdateProductPayload[K]
     ) => {
-        setFormState((prev) => ({
-            ...prev,
-            [field]: value
-        }));
+        setFormState((prev) => {
+            const next = { ...prev, [field]: value };
+            if (field === 'category_id' && value !== prev.category_id) {
+                next.sub_category_id = '';
+            }
+            return next;
+        });
     };
 
     const handleSave = async (e?: React.FormEvent) => {
@@ -257,17 +261,17 @@ export const ProductsPage: React.FC = () => {
             ...(isUpdating && editingProduct ? { id: Number(editingProduct.id) } : {}),
             product_name: formState.product_name.trim(),
             product_code: formState.product_code.trim(),
-            specifications: formState.specifications?.trim() || undefined,
-            barcode: formState.barcode?.trim() || undefined,
-            category_id: formState.category_id ? Number(formState.category_id) : undefined,
-            sub_category_id: formState.sub_category_id ? Number(formState.sub_category_id) : undefined,
-            brand_id: formState.brand_id ? Number(formState.brand_id) : undefined,
-            unit_id: formState.unit_id ? Number(formState.unit_id) : undefined,
+            specifications: formState.specifications?.trim() || null,
+            barcode: formState.barcode?.trim() || null,
+            category_id: formState.category_id ? Number(formState.category_id) : null,
+            sub_category_id: formState.sub_category_id ? Number(formState.sub_category_id) : null,
+            brand_id: formState.brand_id ? Number(formState.brand_id) : null,
+            unit_id: formState.unit_id ? Number(formState.unit_id) : null,
             purchase_rate: Number(formState.purchase_rate),
             retail_rate: Number(formState.retail_rate),
             sales_rate: Number(formState.sales_rate),
-            min_stock_qty: formState.min_stock_qty !== '' ? Number(formState.min_stock_qty) : 0,
-            image: formState.image ? Number(formState.image) : undefined,
+            min_stock_qty: formState.min_stock_qty !== '' && formState.min_stock_qty !== null ? Number(formState.min_stock_qty) : 10,
+            image: formState.image ? Number(formState.image) : null,
             is_batch_wise: Number(formState.is_batch_wise || 0),
             is_expire_wise: Number(formState.is_expire_wise || 0),
             status: Number(formState.status ?? 1),
@@ -292,7 +296,7 @@ export const ProductsPage: React.FC = () => {
     };
 
     const handleRefetch = () => {
-        void Promise.allSettled([refetch(), refetchShopWise()]);
+        void Promise.allSettled([refetch(), refetchShopWise(), fetchMasters()]);
     };
 
     return (
@@ -321,7 +325,8 @@ export const ProductsPage: React.FC = () => {
             subCategoryOptions={subCategoryOptions}
             brandOptions={brandOptions}
             unitOptions={unitOptions}
-            isLoadingCategories={isLoadingCategories}
+            isLoadingCategories={isLoadingMasters}
+            isLoadingSubCategories={isLoadingSubCategories}
         />
     );
 };

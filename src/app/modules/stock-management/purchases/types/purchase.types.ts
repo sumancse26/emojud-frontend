@@ -37,6 +37,8 @@ export interface PurchaseDetailMaster {
   warehouse_id: string
   supplier_id: string
   supplier_name: string
+  challan_no?: string | null
+  challan_date?: string | null
   total_amount: string | number
   discount_amount: string | number
   vat_amount: string | number
@@ -59,6 +61,7 @@ export interface PurchaseDetailItem {
   retail_rate: string | number
   sales_rate: string | number
   total_amount: string | number
+  unit_id?: string | number | null
 }
 
 export interface PurchaseDetailResponse {
@@ -165,5 +168,11 @@ export interface PurchaseItem {
   dueAmount: number
   warehouseId?: number
   supplierId?: number
+  challanNo?: string
+  challanDate?: string
+  rawPurchaseDate?: string
+  rawChallanDate?: string
+  isSubmit?: string | number
+  isConfirm?: string | number
   products?: PurchaseDetailItem[]
 }

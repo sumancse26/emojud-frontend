@@ -54,6 +54,7 @@ export interface ProductsPresenterProps {
     brandOptions: DropdownOption[];
     unitOptions: DropdownOption[];
     isLoadingCategories?: boolean;
+    isLoadingSubCategories?: boolean;
 }
 
 export const ProductsPresenter: React.FC<ProductsPresenterProps> = ({
@@ -81,7 +82,8 @@ export const ProductsPresenter: React.FC<ProductsPresenterProps> = ({
     subCategoryOptions,
     brandOptions,
     unitOptions,
-    isLoadingCategories
+    isLoadingCategories,
+    isLoadingSubCategories
 }) => {
     const { currentPage, pageSize, totalPages, paginatedItems, setCurrentPage, setPageSize } = useTablePagination(filteredProducts);
     return (
@@ -402,7 +404,7 @@ export const ProductsPresenter: React.FC<ProductsPresenterProps> = ({
                             <FormField label="Category" required>
                                 <Dropdown
                                     options={categoryOptions}
-                                    value={formState.category_id !== undefined ? String(formState.category_id) : ''}
+                                    value={formState.category_id ? String(formState.category_id) : ''}
                                     onChange={(val) => onFormFieldChange('category_id', val ? Number(val) : '')}
                                     placeholder="Select Category"
                                     searchable={true}
@@ -413,10 +415,12 @@ export const ProductsPresenter: React.FC<ProductsPresenterProps> = ({
                             <FormField label="Sub Category">
                                 <Dropdown
                                     options={subCategoryOptions}
-                                    value={formState.sub_category_id !== undefined ? String(formState.sub_category_id) : ''}
+                                    value={formState.sub_category_id ? String(formState.sub_category_id) : ''}
                                     onChange={(val) => onFormFieldChange('sub_category_id', val ? Number(val) : '')}
-                                    placeholder="Select Subcategory"
+                                    placeholder={!formState.category_id ? 'Select Category first' : subCategoryOptions.length === 0 ? 'No Subcategories' : 'Select Subcategory'}
                                     searchable={true}
+                                    isLoading={isLoadingSubCategories}
+                                    disabled={!formState.category_id}
                                 />
                             </FormField>
                         </div>
@@ -425,7 +429,7 @@ export const ProductsPresenter: React.FC<ProductsPresenterProps> = ({
                             <FormField label="Brand">
                                 <Dropdown
                                     options={brandOptions}
-                                    value={formState.brand_id !== undefined ? String(formState.brand_id) : ''}
+                                    value={formState.brand_id ? String(formState.brand_id) : ''}
                                     onChange={(val) => onFormFieldChange('brand_id', val ? Number(val) : '')}
                                     placeholder="Select Brand"
                                     searchable={true}
@@ -435,7 +439,7 @@ export const ProductsPresenter: React.FC<ProductsPresenterProps> = ({
                             <FormField label="Unit of Measure">
                                 <Dropdown
                                     options={unitOptions}
-                                    value={formState.unit_id !== undefined ? String(formState.unit_id) : ''}
+                                    value={formState.unit_id ? String(formState.unit_id) : ''}
                                     onChange={(val) => onFormFieldChange('unit_id', val ? Number(val) : '')}
                                     placeholder="Select Unit (PCS, BOX)"
                                     searchable={true}

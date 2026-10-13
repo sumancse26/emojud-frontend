@@ -20,6 +20,7 @@ const numberValue = (value: string | number | undefined) => Number(value ?? 0)
 function normalizePurchase(item: PurchaseListItem | PurchaseDetailResponse['master'], details?: PurchaseDetailResponse['details']): PurchaseItem {
   const isDetail = 'supplier_name' in item
   const status = isDetail ? item.tran_status : item.pur_tran_status?.lookup_code ?? 'Pending'
+  const master = isDetail ? (item as PurchaseDetailResponse['master']) : undefined
   return {
     id: String(item.id),
     purchaseNumber: item.purchase_no,
@@ -36,6 +37,12 @@ function normalizePurchase(item: PurchaseListItem | PurchaseDetailResponse['mast
     dueAmount: isDetail ? numberValue(item.due_amount) : 0,
     warehouseId: isDetail ? Number(item.warehouse_id) : undefined,
     supplierId: isDetail ? Number(item.supplier_id) : undefined,
+    challanNo: master?.challan_no ?? undefined,
+    challanDate: master?.challan_date ? new Date(master.challan_date).toLocaleDateString('en-GB') : undefined,
+    rawPurchaseDate: item.purchase_date,
+    rawChallanDate: master?.challan_date ?? undefined,
+    isSubmit: item.is_submit,
+    isConfirm: item.is_confirm,
     products: details,
   }
 }
@@ -95,6 +102,9 @@ export interface UsePurchaseReturn {
   createPurchase: (payload: CreatePurchasePayload) => Promise<PurchaseApiResponse<PurchaseDetailResponse>>
   isCreating: boolean
   createError: string | null
+  updatePurchase: (payload: CreatePurchasePayload) => Promise<PurchaseApiResponse<PurchaseDetailResponse>>
+  isUpdating: boolean
+  updateError: string | null
 
   // Master dropdown lists
   warehouses: PurchaseWarehouseItem[]
@@ -114,6 +124,7 @@ export function usePurchase(shopId: string | number): UsePurchaseReturn {
   })
   const detailRequest = useApi<PurchaseDetailResponse, { id: string; shop_id: string | number }>(purchaseService.getPurchaseDetails, { suspense: false })
   const createRequest = useApi<PurchaseApiResponse<PurchaseDetailResponse>, CreatePurchasePayload>(purchaseService.createPurchase)
+  const updateRequest = useApi<PurchaseApiResponse<PurchaseDetailResponse>, CreatePurchasePayload>(purchaseService.updatePurchase)
 
   const [warehouses, setWarehouses] = useState<PurchaseWarehouseItem[]>([])
   const [suppliers, setSuppliers] = useState<PurchaseSupplierItem[]>([])
@@ -161,6 +172,11 @@ export function usePurchase(shopId: string | number): UsePurchaseReturn {
     await listRequest.execute(params)
     return response
   }, [createRequest.execute, listRequest.execute, params])
+  const updatePurchase = useCallback(async (payload: CreatePurchasePayload) => {
+    const response = await updateRequest.execute(payload)
+    await listRequest.execute(params)
+    return response
+  }, [updateRequest.execute, listRequest.execute, params])
 
   return {
     purchases,
@@ -175,6 +191,9 @@ export function usePurchase(shopId: string | number): UsePurchaseReturn {
     createPurchase,
     isCreating: createRequest.isLoading,
     createError: createRequest.error,
+    updatePurchase,
+    isUpdating: updateRequest.isLoading,
+    updateError: updateRequest.error,
     warehouses,
     suppliers,
     products,

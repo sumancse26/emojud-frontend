@@ -25,6 +25,10 @@ export const purchaseService = {
     return axios.post<PurchaseApiResponse<PurchaseDetailResponse>>('/api/purchase', payload)
   },
 
+  updatePurchase(payload: CreatePurchasePayload): Promise<PurchaseApiResponse<PurchaseDetailResponse>> {
+    return axios.post<PurchaseApiResponse<PurchaseDetailResponse>>('/api/purchase', payload)
+  },
+
   /** GET /api/warehouse */
   getWarehouses(): Promise<PurchaseWarehouseItem[] | PurchaseApiResponse<PurchaseWarehouseItem[]>> {
     return axios.get<PurchaseWarehouseItem[] | PurchaseApiResponse<PurchaseWarehouseItem[]>>('/api/warehouse')

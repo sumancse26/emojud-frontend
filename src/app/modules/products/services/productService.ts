@@ -4,7 +4,9 @@ import type {
     ProductListResponse,
     ShopWiseProductListResponse,
     CreateUpdateProductPayload,
-    ProductMutationResponse
+    ProductMutationResponse,
+    ProductCategoryResponse,
+    ProductCommonLookupResponse
 } from '../types/product.types';
 
 export const productService = {
@@ -22,6 +24,30 @@ export const productService = {
      */
     async getShopWiseProducts(params?: ProductListParams): Promise<ShopWiseProductListResponse> {
         return axios.get<ShopWiseProductListResponse>('/api/shop-wise-products', params as Record<string, unknown>);
+    },
+
+    /**
+     * Fetch product categories
+     * GET /api/product-category
+     */
+    async getCategories(): Promise<ProductCategoryResponse> {
+        return axios.get<ProductCategoryResponse>('/api/product-category');
+    },
+
+    /**
+     * Fetch product subcategories for a given category
+     * GET /api/product-sub-category/:id
+     */
+    async getSubCategories(categoryId: string | number): Promise<ProductCategoryResponse> {
+        return axios.get<ProductCategoryResponse>(`/api/product-sub-category/${categoryId}`);
+    },
+
+    /**
+     * Fetch common lookups for brands (3) and uom (4)
+     * GET /api/common/lookup?ids=[3,4]
+     */
+    async getLookups(): Promise<ProductCommonLookupResponse> {
+        return axios.get<ProductCommonLookupResponse>('/api/common/lookup', { ids: '[3,4]' });
     },
 
     /**

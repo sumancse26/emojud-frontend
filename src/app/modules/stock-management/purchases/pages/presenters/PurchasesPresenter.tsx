@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react'
-import { AlertCircle, Eye, Plus, Printer, RefreshCw, Search } from 'lucide-react'
+import { AlertCircle, Edit3, Eye, Plus, Printer, RefreshCw, Search } from 'lucide-react'
 import { PageHeader, Pagination, Skeleton, useTablePagination } from '@/shared'
 import type { PurchaseItem } from '../../types/purchase.types'
 
@@ -13,6 +13,7 @@ export interface PurchasesPresenterProps {
   onRefetch: () => void
   onViewPurchase: (purchase: PurchaseItem) => void
   onPrintPurchase: (purchase: PurchaseItem) => void
+  onEditPurchase: (purchase: PurchaseItem) => void
 }
 
 export const PurchasesPresenter: React.FC<PurchasesPresenterProps> = React.memo(({
@@ -25,6 +26,7 @@ export const PurchasesPresenter: React.FC<PurchasesPresenterProps> = React.memo(
   onRefetch,
   onViewPurchase,
   onPrintPurchase,
+  onEditPurchase,
 }) => {
   const [searchQuery, setSearchQuery] = useState('')
   const filteredPurchases = useMemo(() => {
@@ -92,7 +94,17 @@ export const PurchasesPresenter: React.FC<PurchasesPresenterProps> = React.memo(
                     <td className="truncate px-4 py-3.5 text-right font-mono font-bold text-slate-900 dark:text-white">৳ {purchase.netAmount.toLocaleString('en-BD', { minimumFractionDigits: 2 })}</td>
                     <td className="truncate px-4 py-3.5 text-right font-mono text-emerald-600 dark:text-emerald-400">৳ {purchase.paidAmount.toLocaleString('en-BD', { minimumFractionDigits: 2 })}</td>
                     <td className={`truncate px-4 py-3.5 text-right font-mono ${purchase.dueAmount > 0 ? 'font-bold text-rose-500' : 'text-slate-400'}`}>৳ {purchase.dueAmount.toLocaleString('en-BD', { minimumFractionDigits: 2 })}</td>
-                    <td className="whitespace-nowrap px-2 py-3.5 text-center"><button type="button" onClick={() => onPrintPurchase(purchase)} title="Print purchase" className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-emerald-500 dark:hover:bg-slate-800"><Printer className="h-3.5 w-3.5" /></button><button type="button" onClick={() => onViewPurchase(purchase)} title="View details" className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-blue-500 dark:hover:bg-slate-800"><Eye className="h-3.5 w-3.5" /></button></td>
+                    <td className="whitespace-nowrap px-2 py-3.5 text-center">
+                      <button type="button" onClick={() => onEditPurchase(purchase)} title="Edit purchase" className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-amber-500 dark:hover:bg-slate-800">
+                        <Edit3 className="h-3.5 w-3.5" />
+                      </button>
+                      <button type="button" onClick={() => onPrintPurchase(purchase)} title="Print purchase" className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-emerald-500 dark:hover:bg-slate-800">
+                        <Printer className="h-3.5 w-3.5" />
+                      </button>
+                      <button type="button" onClick={() => onViewPurchase(purchase)} title="View details" className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-blue-500 dark:hover:bg-slate-800">
+                        <Eye className="h-3.5 w-3.5" />
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>

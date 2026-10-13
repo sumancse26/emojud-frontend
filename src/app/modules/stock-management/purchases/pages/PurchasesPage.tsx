@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useState } from 'react'
-import { Calendar, FileText, Package, Plus, Printer, RefreshCw, Trash2, User } from 'lucide-react'
+import { Calendar, Edit3, FileText, Package, Plus, Printer, RefreshCw, Trash2, User } from 'lucide-react'
 import { Dropdown, FormField, inputClasses, PageHeader, Skeleton, SliderDrawer, type DropdownOption } from '@/shared'
 import { useApp } from '@/app/providers'
 import { tokenStorage } from '@/shared/services/tokenStorage'
@@ -79,6 +79,9 @@ export const PurchasesPage: React.FC = () => {
     createPurchase,
     isCreating,
     createError,
+    updatePurchase,
+    isUpdating,
+    updateError,
     warehouses,
     suppliers,
     products,
@@ -91,6 +94,7 @@ export const PurchasesPage: React.FC = () => {
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [isDetailOpen, setIsDetailOpen] = useState(false)
   const [selectedPurchase, setSelectedPurchase] = useState<PurchaseItem | null>(null)
+  const [editingPurchase, setEditingPurchase] = useState<PurchaseItem | null>(null)
 
   const [formState, setFormState] = useState<PurchaseFormState>(initialFormState)
   const [cartItems, setCartItems] = useState<PurchaseLineItem[]>([])
@@ -143,12 +147,94 @@ export const PurchasesPage: React.FC = () => {
 
   // Open Create Drawer
   const handleOpenCreate = useCallback(() => {
+    setEditingPurchase(null)
     setFormState(initialFormState())
     setCartItems([])
     setActiveLine(initialActiveLine())
     setIsCreateOpen(true)
     void fetchMasters()
   }, [fetchMasters])
+
+  // Open Edit Drawer
+  const handleEditPurchase = useCallback(
+    async (purchase: PurchaseItem) => {
+      setEditingPurchase(purchase)
+      void fetchMasters()
+
+      setFormState({
+        supplierId: purchase.supplierId ? String(purchase.supplierId) : '',
+        warehouseId: purchase.warehouseId ? String(purchase.warehouseId) : '',
+        purchaseDate: purchase.rawPurchaseDate ? purchase.rawPurchaseDate.slice(0, 10) : new Date().toISOString().slice(0, 10),
+        challanNo: purchase.challanNo ?? '',
+        challanDate: purchase.rawChallanDate ? purchase.rawChallanDate.slice(0, 10) : new Date().toISOString().slice(0, 10),
+        discountAmount: purchase.discountAmount ?? 0,
+        vatAmount: purchase.vatAmount ?? 0,
+        paidAmount: purchase.paidAmount ?? 0,
+      })
+
+      if (purchase.products && purchase.products.length > 0) {
+        setCartItems(
+          purchase.products.map((p) => {
+            const unit = quantityUnits.find((u) => String(u.id) === String(p.unit_id))
+            return {
+              id: String(p.id ?? crypto.randomUUID()),
+              productId: String(p.product_id),
+              productName: p.product_name,
+              productCode: p.product_code,
+              unitId: p.unit_id ? String(p.unit_id) : undefined,
+              unitName: unit?.lookup_value,
+              qty: Number(p.qty),
+              purchaseRate: Number(p.purchase_rate),
+              retailRate: Number(p.retail_rate),
+              salesRate: Number(p.sales_rate),
+              totalAmount: Number(p.total_amount),
+            }
+          })
+        )
+      } else {
+        setCartItems([])
+      }
+      setActiveLine(initialActiveLine())
+      setIsCreateOpen(true)
+
+      try {
+        const detailed = await getPurchaseDetails(purchase)
+        setFormState({
+          supplierId: detailed.supplierId ? String(detailed.supplierId) : '',
+          warehouseId: detailed.warehouseId ? String(detailed.warehouseId) : '',
+          purchaseDate: detailed.rawPurchaseDate ? detailed.rawPurchaseDate.slice(0, 10) : new Date().toISOString().slice(0, 10),
+          challanNo: detailed.challanNo ?? '',
+          challanDate: detailed.rawChallanDate ? detailed.rawChallanDate.slice(0, 10) : new Date().toISOString().slice(0, 10),
+          discountAmount: detailed.discountAmount ?? 0,
+          vatAmount: detailed.vatAmount ?? 0,
+          paidAmount: detailed.paidAmount ?? 0,
+        })
+        if (detailed.products && detailed.products.length > 0) {
+          setCartItems(
+            detailed.products.map((p) => {
+              const unit = quantityUnits.find((u) => String(u.id) === String(p.unit_id))
+              return {
+                id: String(p.id ?? crypto.randomUUID()),
+                productId: String(p.product_id),
+                productName: p.product_name,
+                productCode: p.product_code,
+                unitId: p.unit_id ? String(p.unit_id) : undefined,
+                unitName: unit?.lookup_value,
+                qty: Number(p.qty),
+                purchaseRate: Number(p.purchase_rate),
+                retailRate: Number(p.retail_rate),
+                salesRate: Number(p.sales_rate),
+                totalAmount: Number(p.total_amount),
+              }
+            })
+          )
+        }
+      } catch {
+        /* retain pre-populated fields from purchase */
+      }
+    },
+    [fetchMasters, getPurchaseDetails, quantityUnits]
+  )
 
   // Select Product Handler
   const handleSelectProduct = useCallback((productId: string) => {
@@ -282,7 +368,7 @@ export const PurchasesPage: React.FC = () => {
     }
 
     const payload: CreatePurchasePayload = {
-      id: null,
+      id: editingPurchase ? Number(editingPurchase.id) : null,
       shop_id: Number(selectedBranch),
       warehouse_id: Number(formState.warehouseId),
       supplier_id: Number(formState.supplierId),
@@ -302,11 +388,18 @@ export const PurchasesPage: React.FC = () => {
     }
 
     try {
-      await createPurchase(payload)
-      setIsCreateOpen(false)
-      toast.success('Purchase created successfully!')
+      if (editingPurchase) {
+        await updatePurchase(payload)
+        setIsCreateOpen(false)
+        setEditingPurchase(null)
+        toast.success(`Purchase ${editingPurchase.purchaseNumber} updated successfully!`)
+      } else {
+        await createPurchase(payload)
+        setIsCreateOpen(false)
+        toast.success('Purchase created successfully!')
+      }
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Failed to create purchase'
+      const msg = err instanceof Error ? err.message : (editingPurchase ? 'Failed to update purchase' : 'Failed to create purchase')
       toast.error(msg)
     }
   }, [
@@ -317,6 +410,8 @@ export const PurchasesPage: React.FC = () => {
     grossTotal,
     netAmount,
     dueAmount,
+    editingPurchase,
+    updatePurchase,
     createPurchase,
     toast,
   ])
@@ -328,23 +423,40 @@ export const PurchasesPage: React.FC = () => {
         isLoading={isLoading}
         isError={isError}
         error={error}
-        createError={createError}
+        createError={createError || updateError}
         onOpenCreate={handleOpenCreate}
         onRefetch={() => void refetch()}
         onViewPurchase={viewPurchase}
         onPrintPurchase={viewPurchase}
+        onEditPurchase={handleEditPurchase}
       />
 
-      {/* ─── Create Purchase Drawer ────────────────────────────────────────── */}
-      <SliderDrawer isOpen={isCreateOpen} onClose={() => setIsCreateOpen(false)} width="max-w-2xl">
-        <SliderDrawer.Header onClose={() => setIsCreateOpen(false)}>
+      {/* ─── Create / Edit Purchase Drawer ─────────────────────────────────── */}
+      <SliderDrawer
+        isOpen={isCreateOpen}
+        onClose={() => {
+          setIsCreateOpen(false)
+          setEditingPurchase(null)
+        }}
+        width="max-w-2xl"
+      >
+        <SliderDrawer.Header
+          onClose={() => {
+            setIsCreateOpen(false)
+            setEditingPurchase(null)
+          }}
+        >
           <div className="flex items-center gap-2.5">
             <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-500 text-slate-950">
               <Package className="h-4 w-4" />
             </div>
             <div>
-              <h2 className="text-sm font-bold text-slate-900 dark:text-white">Create Purchase</h2>
-              <p className="text-[10px] text-slate-400">Record supplier stock receiving and payment details</p>
+              <h2 className="text-sm font-bold text-slate-900 dark:text-white">
+                {editingPurchase ? `Edit Purchase — ${editingPurchase.purchaseNumber}` : 'Create Purchase'}
+              </h2>
+              <p className="text-[10px] text-slate-400">
+                {editingPurchase ? 'Modify stock quantities, rates, supplier, and challan details' : 'Record supplier stock receiving and payment details'}
+              </p>
             </div>
           </div>
         </SliderDrawer.Header>
@@ -628,7 +740,10 @@ export const PurchasesPage: React.FC = () => {
           <div className="flex justify-end gap-2">
             <button
               type="button"
-              onClick={() => setIsCreateOpen(false)}
+              onClick={() => {
+                setIsCreateOpen(false)
+                setEditingPurchase(null)
+              }}
               className="rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-semibold dark:border-slate-700"
             >
               Cancel
@@ -636,10 +751,12 @@ export const PurchasesPage: React.FC = () => {
             <button
               form="purchase-form"
               type="submit"
-              disabled={isCreating}
+              disabled={isCreating || isUpdating}
               className="rounded-xl bg-emerald-600 px-5 py-2.5 text-xs font-bold text-white shadow-xs transition hover:bg-emerald-500 disabled:opacity-50"
             >
-              {isCreating ? 'Saving...' : 'Save Purchase'}
+              {editingPurchase
+                ? (isUpdating ? 'Updating...' : 'Update Purchase')
+                : (isCreating ? 'Saving...' : 'Save Purchase')}
             </button>
           </div>
         </SliderDrawer.Footer>
@@ -747,7 +864,20 @@ export const PurchasesPage: React.FC = () => {
           )}
         </SliderDrawer.Body>
         <SliderDrawer.Footer>
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                if (!selectedPurchase) return
+                const target = selectedPurchase
+                setIsDetailOpen(false)
+                void handleEditPurchase(target)
+              }}
+              className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 shadow-xs transition hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+            >
+              <Edit3 className="h-4 w-4 text-amber-500" />
+              <span>Edit Purchase</span>
+            </button>
             <button
               type="button"
               onClick={() => window.print()}
