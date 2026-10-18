@@ -7,22 +7,66 @@ import { tokenStorage } from '@/shared/services/tokenStorage';
 import type { User as UserType } from '@/app/modules/auth/types/auth.types';
 import { HeaderPresenter } from './presenters/HeaderPresenter';
 
+const ROLE_NAMES: Record<string, string> = {
+    '1': 'Super Administrator',
+    '2': 'Administrator',
+    '3': 'Manager',
+    '4': 'Staff',
+    '5': 'Operator'
+};
+
+const resolveDisplayName = (user: UserType | null): string => {
+    if (!user) return 'Suman (Admin)';
+    if (user.name && !/^\d+$/.test(user.name.trim())) {
+        return user.name;
+    }
+    if (user.username && !/^\d+$/.test(user.username.trim())) {
+        return user.username.charAt(0).toUpperCase() + user.username.slice(1);
+    }
+    if (user.email && user.email.includes('@')) {
+        const prefix = user.email.split('@')[0];
+        if (!/^\d+$/.test(prefix)) {
+            return prefix.charAt(0).toUpperCase() + prefix.slice(1);
+        }
+    }
+    return 'Suman (Admin)';
+};
+
+const resolveRoleName = (user: UserType | null): string => {
+    if (!user) return 'Super Administrator';
+    const role = user.role;
+    if (role && ROLE_NAMES[String(role)]) {
+        return ROLE_NAMES[String(role)];
+    }
+    if (role && !/^\d+$/.test(String(role).trim())) {
+        return String(role);
+    }
+    return 'Super Administrator';
+};
+
 export const Header: React.FC = () => {
     const navigate = useNavigate();
-    const currentUser = tokenStorage.getUser<UserType>();
+    const [currentUser, setCurrentUser] = useState<UserType | null>(() => tokenStorage.getUser<UserType>());
 
-    const userName = currentUser?.name || currentUser?.username || 'Suman (Admin)';
+    useEffect(() => {
+        const user = tokenStorage.getUser<UserType>();
+        if (user) {
+            setCurrentUser(user);
+        }
+    }, []);
+
+    const userName = useMemo(() => resolveDisplayName(currentUser), [currentUser]);
+    const userRole = useMemo(() => resolveRoleName(currentUser), [currentUser]);
     const userEmail = currentUser?.email || 'suman.admin@emojud.com';
-    const userRole = currentUser?.role || 'Super Administrator';
 
     const userInitials = useMemo(() => {
-        return (currentUser?.name || currentUser?.username || 'AD')
+        return userName
             .split(' ')
             .map((p) => p[0])
             .slice(0, 2)
             .join('')
-            .toUpperCase();
-    }, [currentUser]);
+            .toUpperCase() || 'AD';
+    }, [userName]);
 
     const {
         isDarkMode,

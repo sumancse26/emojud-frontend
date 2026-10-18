@@ -75,22 +75,45 @@ export const authService = {
         const decoded = parseJwt(token);
 
         const userId = String(decoded?.user_id ?? decoded?.sub ?? 'usr_default');
-        const username = decoded?.username ?? credentials.username ?? 'user';
-        const roleId = String(decoded?.role_id);
-        // const roleName =
-        //     roleId === 1
-        //         ? 'Super Administrator'
-        //         : roleId === 2
-        //           ? 'Administrator'
-        //           : 'Staff';
+        const roleId = String(decoded?.role_id ?? '1');
         const companyId = String(decoded?.company_id ?? '1');
+
+        const ROLE_MAP: Record<string, string> = {
+            '1': 'Super Administrator',
+            '2': 'Administrator',
+            '3': 'Manager',
+            '4': 'Staff',
+            '5': 'Operator'
+        };
+
+        const rawRole = (decoded?.role_name || decoded?.roleName || decoded?.role || roleId) as string;
+        const roleName = ROLE_MAP[String(rawRole)] || (typeof rawRole === 'string' && !/^\d+$/.test(rawRole) ? rawRole : 'Super Administrator');
+
+        const rawName = (decoded?.name ||
+            decoded?.full_name ||
+            decoded?.fullName ||
+            decoded?.employee_name ||
+            decoded?.user_name ||
+            decoded?.displayName) as string | undefined;
+
+        const rawUsername = (decoded?.username || credentials.username || '') as string;
+
+        let displayName = rawName;
+        if (!displayName && rawUsername) {
+            displayName = /^\d+$/.test(rawUsername)
+                ? (credentials.email ? credentials.email.split('@')[0] : `User ${rawUsername}`)
+                : rawUsername === 'suman' ? 'Suman (Admin)' : rawUsername.charAt(0).toUpperCase() + rawUsername.slice(1);
+        }
+        if (!displayName || /^\d+$/.test(displayName)) {
+            displayName = 'Suman (Admin)';
+        }
 
         const user: User = {
             id: userId,
-            username: username,
-            name: username === 'suman' ? 'Suman (Admin)' : username.charAt(0).toUpperCase() + username.slice(1),
-            email: credentials.email || (username.includes('@') ? username : `${username}@emojud.com`),
-            role: roleId,
+            username: rawUsername || displayName,
+            name: displayName,
+            email: (decoded?.email as string | undefined) || credentials.email || (rawUsername.includes('@') ? rawUsername : `${rawUsername || 'user'}@emojud.com`),
+            role: roleName,
             branchId: companyId
         };
 
@@ -106,7 +129,7 @@ export const authService = {
 
         // Persist access token in cookie (will be attached to all subsequent API calls)
         tokenStorage.setToken(token, maxAgeSeconds);
-        tokenStorage.setUser<User>(user);
+        tokenStorage.setUser<User>(user, maxAgeSeconds);
 
         return { token, user };
     },

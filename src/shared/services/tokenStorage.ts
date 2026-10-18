@@ -77,31 +77,125 @@ export const tokenStorage = {
     deleteCookie(FALLBACK_TOKEN_KEY);
   },
 
-  /** Read user object from localStorage */
-  getUser<T>(): T | null {
-    if (typeof localStorage === 'undefined') return null;
+  /** Decode JWT token payload into an object */
+  decodeToken<T = Record<string, unknown>>(): T | null {
+    const token = this.getToken();
+    if (!token) return null;
     try {
-      const raw = localStorage.getItem(USER_KEY);
-      return raw ? (JSON.parse(raw) as T) : null;
+      const parts = token.split('.');
+      if (parts.length !== 3) return null;
+      const base64Url = parts[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split('')
+          .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+          .join('')
+      );
+      return JSON.parse(jsonPayload) as T;
     } catch {
       return null;
     }
   },
 
-  /** Persist user object in localStorage */
-  setUser<T>(user: T): void {
-    if (typeof localStorage === 'undefined') return;
-    try {
-      localStorage.setItem(USER_KEY, JSON.stringify(user));
-    } catch {
-      // Ignore quota errors
+  /** Read user object from cookie, localStorage, or decode from JWT token */
+  getUser<T>(): T | null {
+    // 1. Try reading user from cookies first
+    const cookieUserRaw = getCookie(USER_KEY) || getCookie('user') || getCookie('user_profile');
+    if (cookieUserRaw) {
+      try {
+        return JSON.parse(cookieUserRaw) as T;
+      } catch {
+        // Continue to localStorage
+      }
+    }
+
+    // 2. Try reading user from localStorage
+    if (typeof localStorage !== 'undefined') {
+      try {
+        const raw = localStorage.getItem(USER_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw) as T;
+          if (parsed) return parsed;
+        }
+      } catch {
+        // Continue to token decode
+      }
+    }
+
+    // 3. Fallback: decode directly from JWT access token in cookie
+    const decoded = this.decodeToken<Record<string, unknown>>();
+    if (decoded) {
+      const ROLE_MAP: Record<string, string> = {
+        '1': 'Super Administrator',
+        '2': 'Administrator',
+        '3': 'Manager',
+        '4': 'Staff',
+        '5': 'Operator'
+      };
+
+      const rawRole = decoded.role_name || decoded.roleName || decoded.role || decoded.role_id;
+      const roleStr = rawRole ? String(rawRole) : '1';
+      const roleName = ROLE_MAP[roleStr] || (!/^\d+$/.test(roleStr) ? roleStr : 'Super Administrator');
+
+      const rawName =
+        decoded.name ||
+        decoded.full_name ||
+        decoded.fullName ||
+        decoded.employee_name ||
+        decoded.user_name ||
+        decoded.displayName ||
+        decoded.username;
+
+      let displayName = rawName ? String(rawName) : '';
+      if (!displayName || /^\d+$/.test(displayName)) {
+        displayName = decoded.username && !/^\d+$/.test(String(decoded.username))
+          ? String(decoded.username)
+          : 'Suman (Admin)';
+      }
+
+      const reconstructedUser = {
+        id: String(decoded.user_id ?? decoded.id ?? decoded.sub ?? '1'),
+        username: String(decoded.username ?? displayName),
+        name: displayName,
+        email: decoded.email ? String(decoded.email) : undefined,
+        role: roleName,
+        branchId: String(decoded.company_id ?? decoded.branch_id ?? '1')
+      };
+
+      return reconstructedUser as unknown as T;
+    }
+
+    return null;
+  },
+
+  /** Persist user object in both localStorage and cookie */
+  setUser<T>(user: T, maxAgeSeconds: number = COOKIE_MAX_AGE_SECONDS): void {
+    if (!user) return;
+    const json = JSON.stringify(user);
+
+    // Save to cookies
+    setCookie(USER_KEY, json, maxAgeSeconds);
+    setCookie('user', json, maxAgeSeconds);
+
+    // Save to localStorage
+    if (typeof localStorage !== 'undefined') {
+      try {
+        localStorage.setItem(USER_KEY, json);
+      } catch {
+        // Ignore quota errors
+      }
     }
   },
 
-  /** Remove user object from localStorage */
+  /** Remove user object from both localStorage and cookies */
   removeUser(): void {
-    if (typeof localStorage === 'undefined') return;
-    localStorage.removeItem(USER_KEY);
+    deleteCookie(USER_KEY);
+    deleteCookie('user');
+    deleteCookie('user_profile');
+    if (typeof localStorage !== 'undefined') {
+      localStorage.removeItem(USER_KEY);
+    }
   },
 
   /** Clear both the token cookies and user data */
