@@ -15,8 +15,8 @@ export const TopProducts: React.FC<{ products?: TopSellingProductItem[] }> = Rea
                 <div className="space-y-3.5 text-xs">
                     {list.slice(0, 5).map((product, index) => {
                         const name = product.product_name ?? product.name ?? 'Unknown item';
-                        const units = Number(product.quantity ?? product.units_sold ?? product.unitsSold ?? 0);
-                        const revenue = Number(product.amount ?? product.revenue ?? product.sales ?? 0);
+                        const units = Number(product.quantity ?? product.units_sold ?? 0);
+                        const revenue = Number(product.amount ?? product.revenue ?? 0);
                         const id = product.product_id ?? product.name ?? index;
 
                         return (

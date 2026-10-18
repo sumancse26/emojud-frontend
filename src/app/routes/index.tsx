@@ -180,7 +180,6 @@ export const AppRouter: React.FC = () => {
 
 export * from './paths';
 export * from './types';
-export * from './components';
 export * from './NotFoundPage';
 export * from './ProtectedRoute';
 export default AppRouter;

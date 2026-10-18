@@ -1,6 +1,5 @@
 import { axios } from '@/shared/services/apiClient';
 import type {
-    ProductCategoryItem,
     CreateUpdateCategoryPayload,
     CategoryListResponse,
     CategoryMutationResponse

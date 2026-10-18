@@ -1,5 +1,5 @@
 import React from 'react';
-import { Save, User, Store, RefreshCw, AlertCircle, Loader2 } from 'lucide-react';
+import { Save, User, RefreshCw, AlertCircle, Loader2 } from 'lucide-react';
 import { PageHeader, Pagination, Skeleton, useTablePagination } from '@/shared';
 import type { UserPermissionMatrixRow } from '../UserShopPermissionPage';
 import type { ShopItem } from '../../types/shop.types';

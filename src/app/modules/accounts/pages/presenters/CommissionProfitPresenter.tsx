@@ -27,8 +27,6 @@ export const CommissionProfitPresenter: React.FC<CommissionProfitPresenterProps>
             [records, query]
         );
         const pagination = useTablePagination(filtered);
-        const totalCommission = records.reduce((sum, item) => sum + Number(item.commission_amount), 0);
-        const received = records.filter((item) => item.is_received_commission === 1).length;
         return (
             <section className="space-y-6">
                 <PageHeader>
