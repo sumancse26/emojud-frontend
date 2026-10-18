@@ -3,8 +3,17 @@
   publish = "dist"
 
 [build.environment]
-  VITE_API_URL = "https://emojud-omega.vercel.app"
+  # Empty URL forces client to use relative /api paths, which routes through the Netlify CORS proxy below
+  VITE_API_URL = ""
 
+# 1. API Reverse Proxy (Bypasses CORS completely - Netlify calls Vercel server-to-server)
+[[redirects]]
+  from = "/api/*"
+  to = "https://emojud-omega.vercel.app/api/:splat"
+  status = 200
+  force = true
+
+# 2. React Router SPA catch-all
 [[redirects]]
   from = "/*"
   to = "/index.html"
