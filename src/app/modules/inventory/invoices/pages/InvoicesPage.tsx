@@ -742,7 +742,7 @@ export const InvoicesPage: React.FC = () => {
                                     </FormField>
                                 </div>
 
-                                <div className="flex justify-end">
+                                <div className="flex justify-start">
                                     <button
                                         type="button"
                                         onClick={() => void handleCreateCustomer()}
@@ -1351,7 +1351,7 @@ export const InvoicesPage: React.FC = () => {
                 </SliderDrawer.Body>
 
                 <SliderDrawer.Footer>
-                    <div className="flex items-center justify-end gap-2.5">
+                    <div className="flex items-center justify-start gap-2.5">
                         {/* Provision for updating invoice until submitted */}
                         {selectedInvoice?.isSubmit !== 1 && (
                             <button

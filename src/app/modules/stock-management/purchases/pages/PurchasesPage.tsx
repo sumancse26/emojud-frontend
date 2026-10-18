@@ -737,7 +737,7 @@ export const PurchasesPage: React.FC = () => {
         </SliderDrawer.Body>
 
         <SliderDrawer.Footer>
-          <div className="flex justify-end gap-2">
+          <div className="flex justify-start gap-2">
             <button
               type="button"
               onClick={() => {
@@ -864,7 +864,7 @@ export const PurchasesPage: React.FC = () => {
           )}
         </SliderDrawer.Body>
         <SliderDrawer.Footer>
-          <div className="flex justify-end gap-2">
+          <div className="flex justify-start gap-2">
             <button
               type="button"
               onClick={() => {

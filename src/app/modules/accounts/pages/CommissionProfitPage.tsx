@@ -114,7 +114,7 @@ export const CommissionProfitPage: React.FC = () => {
                     </form>
                 </SliderDrawer.Body>
                 <SliderDrawer.Footer>
-                    <div className="flex justify-end gap-2">
+                    <div className="flex justify-start gap-2">
                         <button
                             type="button"
                             onClick={() => setIsOpen(false)}

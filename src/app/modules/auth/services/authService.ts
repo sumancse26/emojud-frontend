@@ -114,6 +114,8 @@ export const authService = {
             name: displayName,
             email: (decoded?.email as string | undefined) || credentials.email || (rawUsername.includes('@') ? rawUsername : `${rawUsername || 'user'}@emojud.com`),
             role: roleName,
+            roleId: roleId,
+            role_id: roleId,
             branchId: companyId
         };
 

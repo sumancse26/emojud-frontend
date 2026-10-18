@@ -255,7 +255,7 @@ export const RolesPresenter: React.FC<RolesPresenterProps> = ({
                 </SliderDrawer.Body>
 
                 <SliderDrawer.Footer>
-                    <div className="pt-4 flex items-center justify-end gap-2.5 border-t border-slate-100 dark:border-slate-800">
+                    <div className="pt-4 flex items-center justify-start gap-2.5 border-t border-slate-100 dark:border-slate-800">
                         <button
                             type="button"
                             onClick={onCloseDrawer}

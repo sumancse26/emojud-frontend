@@ -121,7 +121,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({ isOpen, onClos
             </SliderDrawer.Body>
 
             <SliderDrawer.Footer>
-                <div className="flex items-center justify-end gap-2.5">
+                <div className="flex items-center justify-start gap-2.5">
                     <button
                         type="button"
                         onClick={handleClose}

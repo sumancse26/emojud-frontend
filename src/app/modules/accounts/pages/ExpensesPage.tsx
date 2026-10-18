@@ -377,7 +377,7 @@ export const ExpensesPage: React.FC = () => {
         </SliderDrawer.Body>
 
         <SliderDrawer.Footer>
-          <div className="flex justify-end gap-2">
+          <div className="flex justify-start gap-2">
             <button
               type="button"
               onClick={handleCloseForm}
@@ -488,7 +488,7 @@ export const ExpensesPage: React.FC = () => {
         </SliderDrawer.Body>
 
         <SliderDrawer.Footer>
-          <div className="flex justify-end gap-2">
+          <div className="flex justify-start gap-2">
             {selectedExpense && (
               <button
                 type="button"

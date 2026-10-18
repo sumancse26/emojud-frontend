@@ -148,7 +148,7 @@ export const StockSummaryPage: React.FC = () => {
                     )}
                 </SliderDrawer.Body>
                 <SliderDrawer.Footer>
-                    <div className="flex justify-end">
+                    <div className="flex justify-start">
                         <button
                             type="button"
                             onClick={() => window.print()}

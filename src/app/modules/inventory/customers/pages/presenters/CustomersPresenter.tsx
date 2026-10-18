@@ -446,7 +446,7 @@ export const CustomersPresenter: React.FC<CustomersPresenterProps> = ({
                 </SliderDrawer.Body>
 
                 <SliderDrawer.Footer>
-                    <div className="flex items-center justify-end gap-2">
+                    <div className="flex items-center justify-start gap-2">
                         <button
                             type="button"
                             onClick={onCloseDrawer}

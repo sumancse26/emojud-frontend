@@ -61,7 +61,7 @@ const SliderDrawerBody: React.FC<SliderDrawerBodyProps> = ({ children, className
 
 const SliderDrawerFooter: React.FC<SliderDrawerFooterProps> = ({ children, className = '' }) => (
     <div
-        className={`shrink-0 px-5 py-4 border-t border-slate-200/80 dark:border-slate-800/70 bg-slate-50/80 dark:bg-slate-900/40 ${className}`}>
+        className={`shrink-0 px-5 py-4 border-t border-slate-200/80 dark:border-slate-800/70 bg-slate-50/80 dark:bg-slate-900/40 flex items-center justify-start gap-2.5 ${className}`}>
         {children}
     </div>
 );
